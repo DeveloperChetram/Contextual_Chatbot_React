@@ -35,7 +35,6 @@ const initSocketServer = (httpServer) => {
 
         socket.on('user-message', async (messagePayload) => {
             // user message vectors
-            // console.log(vectors)
             
             
             
@@ -49,6 +48,18 @@ const initSocketServer = (httpServer) => {
             
             // vector memory
             const vectors = await generateVector(messagePayload.content);
+            // console.log(vectors)
+
+            // pinecone query
+            const pineconeData = await queryMemory(
+               {queryVector:vectors,
+                limit:5,
+                metadata:{}
+               }
+            )
+
+            console.log(pineconeData)
+
             await createMemory({
                 vectors, messageId: userMessage._id, metadata: {
                     user: socket.user._id,
@@ -56,8 +67,11 @@ const initSocketServer = (httpServer) => {
                     message:messagePayload.content
                 }
             })
+
+         
             // STM
-            const chatHistory = await messageModel.find({ chatId: messagePayload.chatId })
+            const chatHistory = (await messageModel.find({ chatId: messagePayload.chatId }).sort({createdAt: -1}).limit(8).lean()).reverse()
+            // console.log(chatHistory)
             const STM = chatHistory.map((item) => {
                 return {
                     role: item.role,
@@ -75,7 +89,7 @@ const initSocketServer = (httpServer) => {
             })
             // response vectors
             const responseVectors = await generateVector(response)
-
+            //  console.log(responseVectors)
             // response vector memory
             await createMemory({vectors:responseVectors, messageId:responseMessage._id, metadata:{
                 chatId:messagePayload.chatId,

@@ -14,14 +14,15 @@ async function createMemory({vectors, metadata, messageId}){
     }])
 }
 
-async function queryMemory({queryVector, limit=5, metadata}){
+async function queryMemory({ queryVector, limit, metadata }) {
     const data = await llmIndex.query({
-        vector:queryVector,
-        topK:limit,
-        filter:metadata? {metadata} :undefined
-    })
+        vector: queryVector,
+        topK: limit,
+        filter: metadata || undefined
+    });
 
     return data.matches;
 }
+
 
 module.exports = {createMemory, queryMemory}
