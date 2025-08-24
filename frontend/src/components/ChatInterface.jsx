@@ -53,14 +53,13 @@ const TypingEffect = ({ text, onComplete, scrollToBottom }) => {
             setDisplayedText(prev => prev + text.charAt(index));
             index++;
             
-            // This is the key change: scroll as text reveals
             if (scrollToBottom) scrollToBottom();
 
             if (index >= text.length) {
                 clearInterval(intervalId);
                 if (onComplete) onComplete();
             }
-        }, 15); // Faster typing speed (milliseconds)
+        }, 15);
 
         return () => clearInterval(intervalId);
     }, [text, onComplete, scrollToBottom]);
@@ -73,6 +72,7 @@ const ChatInterface = () => {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isCreatingNewChat, setIsCreatingNewChat] = useState(false);
   const [newChatTitle, setNewChatTitle] = useState("");
+  const [titleError, setTitleError] = useState("");
   const [activeChatId, setActiveChatId] = useState('1');
   const [chats, setChats] = useState(initialChatData);
   const [historyItems, setHistoryItems] = useState(
@@ -85,8 +85,8 @@ const ChatInterface = () => {
   const sidebarRef = useRef(null);
   
   const activeChat = chats[activeChatId];
+  const MAX_TITLE_WORDS = 35;
 
-  // --- New Reusable Scroll Function ---
   const scrollToBottom = () => {
     if (chatAreaRef.current) {
       chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
@@ -99,7 +99,7 @@ const ChatInterface = () => {
 
   const handleNewChatSubmit = (e) => {
     e.preventDefault();
-    if (newChatTitle.trim()) {
+    if (newChatTitle.trim() && !titleError) {
       const newChatId = Date.now().toString();
       const newChat = { id: newChatId, text: newChatTitle };
       setHistoryItems(prev => [newChat, ...prev]);
@@ -107,6 +107,20 @@ const ChatInterface = () => {
       setActiveChatId(newChatId);
       setNewChatTitle("");
       setIsCreatingNewChat(false);
+    }
+  };
+
+  const handleTitleChange = (e) => {
+    const value = e.target.value;
+    setNewChatTitle(value);
+    
+    // Word count logic
+    const wordCount = value.trim().split(/\s+/).filter(Boolean).length;
+
+    if (wordCount > MAX_TITLE_WORDS) {
+      setTitleError(`Title cannot exceed ${MAX_TITLE_WORDS} words.`);
+    } else {
+      setTitleError("");
     }
   };
   
@@ -127,22 +141,15 @@ const ChatInterface = () => {
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (!inputValue.trim() || !activeChatId || isModelTyping) return;
-
     const userMessage = { id: `user-${Date.now()}`, from: 'user', text: inputValue };
-    
     setChats(prev => {
         const updatedChats = { ...prev };
         updatedChats[activeChatId].messages.push(userMessage);
         return updatedChats;
     });
-
     setInputValue("");
-    
-    // Use a timeout to ensure the state has updated before scrolling
     setTimeout(scrollToBottom, 0);
-
     setIsModelTyping(true);
-
     setTimeout(() => {
       const aiResponse = { id: `model-${Date.now()}`, from: 'model', text: `This is a simulated response to "${inputValue}". It is revealing character by character.` };
       setChats(prev => ({ ...prev, [activeChatId]: { ...prev[activeChatId], messages: [...prev[activeChatId].messages, aiResponse] } }));
@@ -156,15 +163,12 @@ const ChatInterface = () => {
   useEffect(() => {
     const handleClickOutside = (event) => {
         if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-            if(window.innerWidth < 768) {
-                setSidebarOpen(false);
-            }
+            if(window.innerWidth < 768) setSidebarOpen(false);
         }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
 
   useEffect(() => {
     if (window.innerWidth >= 768) setSidebarOpen(true);
@@ -175,9 +179,7 @@ const ChatInterface = () => {
     <div className="chat-container">
       <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`} ref={sidebarRef}>
         <div className="sidebar-header">
-            <div className="logo-container">
-              <LogoIcon />
-            </div>
+            <div className="logo-container"> <LogoIcon /> </div>
             <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)}>
                 <Icon path={<path d="M18 6L6 18M6 6l12 12" />} />
             </button>
@@ -191,23 +193,24 @@ const ChatInterface = () => {
           </nav>
         </div>
         <div className="library">
-          <div className="library-header">
-            <h3>History</h3>
-          </div>
+          <div className="library-header"> <h3>History</h3> </div>
           {isCreatingNewChat && (
-            <form onSubmit={handleNewChatSubmit} className="new-chat-form">
-              <input 
-                type="text"
-                placeholder="New chat title..."
-                value={newChatTitle}
-                onChange={(e) => setNewChatTitle(e.target.value)}
-                onBlur={() => !newChatTitle && setIsCreatingNewChat(false)}
-                autoFocus
-              />
-              <button type="submit" className="submit-new-chat-btn">
-                <Icon path={<path d="M20 6L9 17l-5-5" />} />
-              </button>
-            </form>
+            <div className="new-chat-form-container">
+              <form onSubmit={handleNewChatSubmit} className={`new-chat-form ${titleError ? 'error' : ''}`}>
+                <input 
+                  type="text"
+                  placeholder="New chat title..."
+                  value={newChatTitle}
+                  onChange={handleTitleChange}
+                  onBlur={() => !newChatTitle && setIsCreatingNewChat(false)}
+                  autoFocus
+                />
+                <button type="submit" className="submit-new-chat-btn" disabled={!!titleError}>
+                  <Icon path={titleError ? <path d="M18 6L6 18M6 6l12 12" /> : <path d="M20 6L9 17l-5-5" />} />
+                </button>
+              </form>
+              {titleError && <p className="title-error-warning">{titleError}</p>}
+            </div>
           )}
           <ul>
             {historyItems.map((item) => (
@@ -221,8 +224,13 @@ const ChatInterface = () => {
         </div>
         <div className="sidebar-bottom">
             <div className="user-profile">
-                <Icon path={<><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>} /> 
-                <span>Chetram</span>
+                <div className="user-info">
+                    <Icon path={<><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>} /> 
+                    <span>Chetram</span>
+                </div>
+                <div className="credits-container">
+                    <span>Credits: 50</span>
+                </div>
             </div>
         </div>
       </aside>
@@ -271,9 +279,7 @@ const ChatInterface = () => {
             )}
             {isModelTyping && activeChat?.messages[activeChat.messages.length - 1]?.from === 'user' && (
                 <div className="chat-turn model">
-                    <div className="message-header">
-                        <h3 className="message-sender">Model</h3>
-                    </div>
+                    <div className="message-header"> <h3 className="message-sender">Model</h3> </div>
                     <div className="typing-indicator">
                        <span className="typing-text">Typing</span>
                        <div className="dots-container">
@@ -286,15 +292,9 @@ const ChatInterface = () => {
         </section>
 
         <section className="chat-input-area">
-            {/* Input form remains the same */}
             <form className="input-form" onSubmit={handleSendMessage}>
             <div className="input-wrapper">
-              <input 
-                type="text" 
-                placeholder="Ask anything..."
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-              />
+              <input type="text" placeholder="Ask anything..." value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
               <div className="input-right-actions">
                  <select name="model" className="model-selector">
                     <option value="jhanvi">Jhanvi</option>
