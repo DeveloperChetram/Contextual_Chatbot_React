@@ -18,7 +18,9 @@ async function queryMemory({ queryVector, limit, metadata }) {
     const data = await llmIndex.query({
         vector: queryVector,
         topK: limit,
-        filter: metadata || undefined
+        filter: metadata ? metadata : undefined,
+        includeMetadata: true, 
+        
     });
 
     return data.matches;
