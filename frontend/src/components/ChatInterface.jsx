@@ -122,22 +122,32 @@ const ChatInterface = () => {
           </div>
         </section>
 
-        <section className="chat-input-area">
-          <form className="input-form" onSubmit={(e) => e.preventDefault()}>
-              <input type="text" defaultValue="hello" placeholder="Ask anything..."/>
-              <div className="input-actions">
-                <button type="button" className="icon-button file-btn">
-                    <Icon path={<><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" /></>} />
-                </button>
-                <button type="button" className="icon-button mic-btn">
-                    <Icon path={<><path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z" /><path d="M19 10v2a7 7 0 0 1-14 0v-2" /><line x1="12" y1="19" x2="12" y2="23" /><line x1="8" y1="23" x2="16" y2="23" /></>} />
-                </button>
-                <button type="submit" className="send-button">
-                    <Icon path={<><line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" /></>} />
-                </button>
-              </div>
-          </form>
-        </section>
+<section className="chat-input-area">
+  <form className="input-form" onSubmit={(e) => e.preventDefault()}>
+    <div className="utility-bar">
+      <button type="button" className="icon-button">
+        <Icon path={<><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></>} />
+      </button>
+      <button type="button" className="icon-button">
+        <Icon path={<><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></>} />
+      </button>
+      <button type="button" className="icon-button">
+        <Icon path={<><circle cx="12" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle></>} />
+      </button>
+    </div>
+    <div className="input-wrapper">
+      <input type="text" placeholder="Ask anything or @mention"/>
+      <div className="input-right-actions">
+        <button type="button" className="icon-button">
+          <Icon path={<><path d="M21.44 11.05l-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48" /></>} />
+        </button>
+        <button type="submit" className="send-button">
+          <Icon path={<><line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" /></>} />
+        </button>
+      </div>
+    </div>
+  </form>
+</section>
       </main>
     </div>
   );

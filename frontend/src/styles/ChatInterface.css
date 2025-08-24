@@ -290,7 +290,6 @@ a:hover .icon {
 .icon-button .icon {
   margin: 0;
 }
-
 .chat-input-area {
   padding: 16px 24px;
   background-color: var(--background-primary);
@@ -301,12 +300,13 @@ a:hover .icon {
 
 .input-form {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 8px;
   background-color: transparent;
   border: 1px solid var(--border-color);
   border-radius: 12px;
-  padding: 4px;
+  padding: 8px 12px;
   max-width: 720px;
   width: 100%;
   transition: border-color 0.3s, box-shadow 0.3s;
@@ -317,27 +317,43 @@ a:hover .icon {
   box-shadow: 0 0 10px var(--glow-color);
 }
 
-.input-form input {
+.utility-bar {
+  display: flex;
+  gap: 4px;
+}
+
+.input-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.input-wrapper input {
   flex-grow: 1;
   background: transparent;
   border: none;
   color: var(--text-primary);
   font-size: 16px;
-  padding: 12px;
   outline: none;
+  padding: 0;
 }
-.input-form input::placeholder {
+
+.input-wrapper input::placeholder {
   color: var(--text-secondary);
 }
 
-.input-actions {
+.input-right-actions {
   display: flex;
   align-items: center;
+  gap: 8px;
 }
 
-.send-button {
+.input-form .icon-button .icon {
+  margin: 0;
+}
+
+.input-form .send-button {
   background-color: var(--accent-color);
-  border: none;
   border-radius: 8px;
   color: white;
   width: 36px;
@@ -346,27 +362,23 @@ a:hover .icon {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  border: none;
   transition: box-shadow 0.3s;
 }
 
-.send-button:hover {
-    box-shadow: 0 0 8px var(--glow-color);
+.input-form .send-button:hover {
+  box-shadow: 0 0 8px var(--glow-color);
 }
 
-.send-button .icon {
-    stroke: white;
-    margin: 0;
-}
-
-
-.sidebar-toggle {
-  display: none;
+.input-form .send-button .icon {
+  stroke: white;
+  margin: 0;
 }
 
 
 @media (max-width: 768px) {
   .main-content {
-    margin-left: 0; /* Remove margin on small screens */
+    margin-left: 0;
   }
 
   .sidebar {
@@ -402,7 +414,7 @@ a:hover .icon {
     padding-left: 16px;
     padding-right: 16px;
   }
-  
+
   .response-footer {
     flex-direction: column;
     align-items: flex-start;

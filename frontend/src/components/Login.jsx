@@ -1,4 +1,3 @@
-
 import { Link } from 'react-router-dom';
 import '../styles/Auth.css';
 
@@ -6,7 +5,9 @@ const Login = () => {
   return (
     <div className="auth-container">
       <form className="auth-form" onSubmit={(e) => e.preventDefault()}>
-        <h2>Welcome Back</h2>
+        <div className="auth-header">
+          <h2>Welcome Back</h2>
+        </div>
         <div className="form-group">
           <label htmlFor="email">Email</label>
           <input type="email" id="email" placeholder="Enter your email" />
