@@ -1,38 +1,40 @@
+// frontend/src/components/Register.jsx
 import "../styles/Auth.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
-import { registerUserAction } from "../redux/actions/authActions";
-import { registerSuccess } from "../redux/reducers/authSlice";
+import { registerUser } from "../redux/actions/authActions"; // Updated import
 import { useEffect } from "react";
 
 const Register = () => {
-  const navigate = useNavigate()
-    const userData = useSelector((state)=>state.auth)
-    console.log(userData)
+  const navigate = useNavigate();
+  const { isAuthenticated, loading, error } = useSelector((state) => state.auth);
   const { register, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
+
   const submitHandler = async (data) => {
-       await  dispatch(
-      registerUserAction({
-        fullName: { firstName: data.firstName, lastName: data.lastName },
-        email: data.email,
-        password: data.password,
-      })
-    );
-    reset();
+    const result = await registerUser(dispatch, {
+      fullName: { firstName: data.firstName, lastName: data.lastName },
+      email: data.email,
+      password: data.password,
+    });
+
+    if (result.success) {
+      reset();
+    }
   };
 
-    useEffect(()=>{
-      if(userData.isAuthenticated){
-        navigate('/home')
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/home');
     }
-  },[userData, navigate])
+  }, [isAuthenticated, navigate]);
+
   return (
     <div className="auth-container">
       <form className="auth-form" onSubmit={handleSubmit(submitHandler)}>
         <div className="auth-header">
-            <h2>{userData.loading? "loading":"message"}</h2>
+          {error && <h2 style={{ fontSize: '1rem', color: 'red' }}>{error}</h2>}
           <h2>Create Account</h2>
         </div>
         <div className="form-group">
@@ -71,8 +73,8 @@ const Register = () => {
             placeholder="Enter your password"
           />
         </div>
-        <button type="submit" className="auth-button">
-          Register
+        <button type="submit" className="auth-button" disabled={loading}>
+          {loading ? 'Registering...' : 'Register'}
         </button>
         <p className="auth-switch">
           Already have an account? <Link to="/login">Login</Link>

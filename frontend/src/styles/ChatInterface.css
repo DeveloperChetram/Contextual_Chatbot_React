@@ -110,8 +110,18 @@ a:hover .icon {
   margin-top: 24px;
   flex-grow: 1;
   overflow-y: auto;
+
+  /* Hide scrollbar for Chrome, Safari, Edge */
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none;  /* IE 10+ */
 }
+
+.library::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
 .library ul li a {
+  margin-top: 5px;
     padding-left: 10px;
 }
 

@@ -1,51 +1,54 @@
-// frontend/src/redux/actions/authActions.jsx
-import axios from "../../api/axios";
+import { axiosInstance as axios } from "../../api/axios";
 import {
   registerRequest,
   registerSuccess,
   registerFailure,
   loginRequest,
+  loginSuccess,
   loginFailure,
+  logout as logoutAction,
 } from "../reducers/authSlice";
 
-export const getCurrenctUser = ()=>{
-  const isUser = localStorage.getItem('isLoggedIn')
-  console.log("isUser",isUser)
-}
-export const registerUserAction = (data) => async (dispatch) => {
-  dispatch(registerRequest());
 
+export const registerUser = async (dispatch, data) => {
+  dispatch(registerRequest());
   try {
-    const result = await axios.post("/auth/register", data);
-    
-    console.log("result from action ", result);
-    dispatch(registerSuccess(result.data.user)); 
-      localStorage.setItem('isLoggedIn', true)
+    const response = await axios.post("/auth/register", data);
+    dispatch(registerSuccess(response.data.user));
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+    return { success: true };
   } catch (error) {
-    dispatch(
-      registerFailure(
-        error.response?.data?.message || error.message || "Something went wrong"
-      )
-    );
-    return error;
+    const errorMessage = error.response?.data?.message || error.message || "Something went wrong";
+    dispatch(registerFailure(errorMessage));
+    return { success: false, error: errorMessage };
   }
 };
 
-export const loginUserAction = (data) => async (dispatch) => {
-  dispatch(loginRequest());
 
+export const loginUser = async (dispatch, data) => {
+  dispatch(loginRequest());
   try {
-    const result = await axios.post("/auth/login", data);
-    
-    console.log("result from action for login ", result);
-    dispatch(registerSuccess(result.data.user)); 
-    localStorage.setItem('isLoggedIn', true)
+    const response = await axios.post("/auth/login", data);
+    dispatch(loginSuccess(response.data.user));
+    localStorage.setItem('user', JSON.stringify(response.data.user));
+    return { success: true };
   } catch (error) {
-    dispatch(
-      loginFailure(
-        error.response?.data?.message || error.message || "Something went wrong"
-      )
-    );
-    return error;
+    const errorMessage = error.response?.data?.message || error.message || "Something went wrong";
+    dispatch(loginFailure(errorMessage));
+    return { success: false, error: errorMessage };
+  }
+};
+
+export const logoutUser = async (dispatch) => {
+  try {
+    await axios.get('/auth/logout');
+    dispatch(logoutAction());
+    localStorage.removeItem('user');
+    return { success: true };
+  } catch (error) {
+    console.error("Logout failed", error);
+    dispatch(logoutAction());
+    localStorage.removeItem('user');
+    return { success: false, error };
   }
 };

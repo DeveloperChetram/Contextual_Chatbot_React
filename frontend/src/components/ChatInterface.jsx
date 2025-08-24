@@ -50,11 +50,11 @@ const ChatInterface = () => {
                 <Icon path={<path d="M12 5v14m-7-7h14" />} />
                 <span>New Thread</span>
             </button>
-            <ul>
+            {/* <ul>
               <li><a href="#"><Icon path={<><rect x="2" y="7" width="20" height="14" rx="2" ry="2" /><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" /></>} /> <span>Finance</span></a></li>
               <li><a href="#"><Icon path={<><circle cx="12" cy="12" r="4" /><path d="M12 2v2" /><path d="M12 20v2" /><path d="m4.93 4.93 1.41 1.41" /><path d="m17.66 17.66 1.41 1.41" /><path d="M2 12h2" /><path d="M20 12h2" /><path d="m6.34 17.66-1.41 1.41" /><path d="m19.07 4.93-1.41 1.41" /></>} /> <span>Travel</span></a></li>
               <li><a href="#"><Icon path={<><path d="m22 9-1.5-1.5L18 10l-2.5-2.5L13 10V3H4v18h16V9z" /></>} /> <span>Academic</span></a></li>
-            </ul>
+            </ul> */}
           </nav>
         </div>
 
@@ -81,9 +81,10 @@ const ChatInterface = () => {
 
       <main className="main-content">
         <header className="main-header">
+          <div><h2>The title of chat will go here </h2></div>
             <div className="header-right">
                  <button className="icon-button"><Icon path={<><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>} /></button>
-                 <button className="share-btn">Share</button>
+                 <button className="share-btn">Log out</button>
             </div>
         </header>
 
