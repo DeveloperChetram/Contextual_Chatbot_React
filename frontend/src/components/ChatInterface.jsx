@@ -1,5 +1,8 @@
+// frontend/src/components/ChatInterface.jsx
+
 import React, { useState } from 'react';
-import '../styles/ChatInterface.css';
+import '../styles/theme.css'; // Import theme styles
+import '../styles/ChatInterface.css'; // Import component styles
 
 // A more robust Icon component that accepts SVG path data
 const Icon = ({ path, className = '' }) => (

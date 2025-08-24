@@ -1,12 +1,7 @@
+/* frontend/src/styles/ChatInterface.css */
+
 :root {
   --font-family: "Inter", -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  --background-primary: #121212;
-  --background-secondary: #1e1e1e;
-  --background-sidebar: #0a0a0a;
-  --text-primary: #e2e2e2;
-  --text-secondary: #888888;
-  --accent-color: #31B8C6;
-  --border-color: #2c2c2c;
   --sidebar-width: 250px;
   --header-height: 56px;
 }
@@ -33,6 +28,10 @@
   box-sizing: border-box;
   transition: transform 0.3s ease-in-out;
   flex-shrink: 0;
+  position: fixed; /* Keep sidebar fixed */
+  left: 0;
+  top: 0;
+  z-index: 100;
 }
 
 .sidebar a {
@@ -63,8 +62,9 @@
   padding: 10px;
   margin-bottom: 16px;
 }
+
 .logo-icon-svg {
-  color: #fff;
+  color: var(--text-primary);
 }
 
 .new-thread-btn {
@@ -79,14 +79,15 @@
     margin-bottom: 1rem;
     cursor: pointer;
     font-size: 14px;
+    transition: box-shadow 0.3s;
 }
 .new-thread-btn:hover {
     background-color: #2a2a2a;
+    box-shadow: 0 0 8px var(--glow-color);
 }
 .new-thread-btn .icon {
     margin-right: 8px;
 }
-
 
 .main-nav ul {
   display: flex;
@@ -149,8 +150,9 @@ a:hover .icon {
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  /* padding: 0; */
+  margin-left: var(--sidebar-width); /* Important: Pushes content to the right of the sidebar */
 }
+
 
 .main-header {
   display: flex;
@@ -178,6 +180,11 @@ a:hover .icon {
   cursor: pointer;
   font-weight: 500;
   font-size: 14px;
+  transition: box-shadow 0.3s;
+}
+
+.share-btn:hover {
+    box-shadow: 0 0 10px var(--glow-color);
 }
 
 .chat-area {
@@ -302,10 +309,12 @@ a:hover .icon {
   padding: 4px;
   max-width: 720px;
   width: 100%;
+  transition: border-color 0.3s, box-shadow 0.3s;
 }
 
 .input-form:focus-within {
   border-color: var(--accent-color);
+  box-shadow: 0 0 10px var(--glow-color);
 }
 
 .input-form input {
@@ -337,7 +346,13 @@ a:hover .icon {
   align-items: center;
   justify-content: center;
   cursor: pointer;
+  transition: box-shadow 0.3s;
 }
+
+.send-button:hover {
+    box-shadow: 0 0 8px var(--glow-color);
+}
+
 .send-button .icon {
     stroke: white;
     margin: 0;
@@ -350,13 +365,12 @@ a:hover .icon {
 
 
 @media (max-width: 768px) {
+  .main-content {
+    margin-left: 0; /* Remove margin on small screens */
+  }
+
   .sidebar {
-    position: fixed;
-    top: 0;
-    left: 0;
-    z-index: 1000;
     transform: translateX(-100%);
-    height: 100%;
   }
 
   .sidebar.open {

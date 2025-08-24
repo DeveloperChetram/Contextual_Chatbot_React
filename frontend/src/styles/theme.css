@@ -1,0 +1,39 @@
+/* frontend/src/styles/theme.css */
+
+/* Light theme variables (default) */
+:root {
+  --background-primary: #ffffff;
+  --background-secondary: #f0f0f0;
+  --background-sidebar: #fafafa;
+  --text-primary: #1a1a1a;
+  --text-secondary: #666666;
+  --accent-color: #007bff;
+  --border-color: #e0e0e0;
+  --glow-color: rgba(0, 123, 255, 0.5);
+}
+
+/* Dark theme variables */
+[data-theme='dark'] {
+  --background-primary: #121212;
+  --background-secondary: #1e1e1e;
+  --background-sidebar: #0a0a0a;
+  --text-primary: #e2e2e2;
+  --text-secondary: #888888;
+  --accent-color: #31B8C6;
+  --border-color: #2c2c2c;
+  --glow-color: rgba(49, 184, 198, 0.5);
+}
+
+/* Applies dark theme automatically based on system preference */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --background-primary: #121212;
+    --background-secondary: #1e1e1e;
+    --background-sidebar: #0a0a0a;
+    --text-primary: #e2e2e2;
+    --text-secondary: #888888;
+    --accent-color: #31B8C6;
+    --border-color: #2c2c2c;
+    --glow-color: rgba(49, 184, 198, 0.5);
+  }
+}
