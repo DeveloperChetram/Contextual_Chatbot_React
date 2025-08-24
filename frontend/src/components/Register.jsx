@@ -1,33 +1,38 @@
 import "../styles/Auth.css";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUserAction } from "../redux/actions/authActions";
 import { registerSuccess } from "../redux/reducers/authSlice";
+import { useEffect } from "react";
 
 const Register = () => {
-    const data = useSelector((state)=>state.auth)
-    console.log(data)
+  const navigate = useNavigate()
+    const userData = useSelector((state)=>state.auth)
+    console.log(userData)
   const { register, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
   const submitHandler = async (data) => {
-    // dispatch(registerSuccess())
-    console.log(data);
-  const result = await  dispatch(
+       await  dispatch(
       registerUserAction({
         fullName: { firstName: data.firstName, lastName: data.lastName },
         email: data.email,
         password: data.password,
       })
     );
-
-    console.log(result)
+    reset();
   };
+
+    useEffect(()=>{
+      if(userData.isAuthenticated){
+        navigate('/home')
+    }
+  },[userData, navigate])
   return (
     <div className="auth-container">
       <form className="auth-form" onSubmit={handleSubmit(submitHandler)}>
         <div className="auth-header">
-            <h2>message</h2>
+            <h2>{userData.loading? "loading":"message"}</h2>
           <h2>Create Account</h2>
         </div>
         <div className="form-group">
