@@ -21,7 +21,7 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser())
 app.use('/', indexRouter)
 
-app.use('/chat', chatRouter)
+app.use('/api/chat', chatRouter)
 app.use('/api/auth', authRouter)
 
 module.exports = app;   

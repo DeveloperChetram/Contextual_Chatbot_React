@@ -3,6 +3,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import '../styles/theme.css'; // Import theme styles
 import '../styles/ChatInterface.css'; // Import component styles
+import { useDispatch, useSelector } from 'react-redux';
+import { logoutUser } from '../redux/actions/authActions';
+import { io } from "socket.io-client";
+import {axiosInstance as axios} from '../api/axios';
 
 // Icon component remains the same...
 const Icon = ({ path, className = '' }) => (
@@ -43,14 +47,24 @@ const initialChatData = {
 };
 
 // --- Updated Typing Effect Component ---
+// --- Updated Typing Effect Component ---
+
 const TypingEffect = ({ text, onComplete, scrollToBottom }) => {
-    const [displayedText, setDisplayedText] = useState('');
-    
-    useEffect(() => {
+  const [displayedText, setDisplayedText] = useState(null);
+  
+  useEffect(() => {
         setDisplayedText(''); // Reset on new text
+        
+        // --- CHANGE START ---
+        // Calculate the delay to ensure the reveal takes ~3 seconds (3000ms)
+        // We set a minimum speed of 5ms for very long texts to keep it readable.
+        const totalDuration = 500;
+        const intervalDelay = Math.max(totalDuration / text.length, 5);
+        // --- CHANGE END ---
+
         let index = 0;
         const intervalId = setInterval(() => {
-            setDisplayedText(prev => prev + text.charAt(index));
+          setDisplayedText(prev => prev + text.charAt(index));
             index++;
             
             if (scrollToBottom) scrollToBottom();
@@ -59,16 +73,18 @@ const TypingEffect = ({ text, onComplete, scrollToBottom }) => {
                 clearInterval(intervalId);
                 if (onComplete) onComplete();
             }
-        }, 15);
-
+        }, intervalDelay); // Use the calculated delay
+        
         return () => clearInterval(intervalId);
     }, [text, onComplete, scrollToBottom]);
 
     return <p className="message-text">{displayedText}</p>;
 };
-
-
-const ChatInterface = () => {
+    
+    
+    const ChatInterface = () => {
+      const [socket, setSocket] = useState(null)
+  const userData = useSelector((state=>state.auth))
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isCreatingNewChat, setIsCreatingNewChat] = useState(false);
   const [newChatTitle, setNewChatTitle] = useState("");
@@ -76,31 +92,53 @@ const ChatInterface = () => {
   const [activeChatId, setActiveChatId] = useState('1');
   const [chats, setChats] = useState(initialChatData);
   const [historyItems, setHistoryItems] = useState(
-      Object.entries(initialChatData).map(([id, data]) => ({ id, text: data.title }))
+     []
   );
   const [inputValue, setInputValue] = useState("");
   const [copiedMessageId, setCopiedMessageId] = useState(null);
   const [isModelTyping, setIsModelTyping] = useState(false);
   const chatAreaRef = useRef(null);
   const sidebarRef = useRef(null);
+  const textareaRef = useRef(null);
   
   const activeChat = chats[activeChatId];
   const MAX_TITLE_WORDS = 35;
-
+  const MAX_PROMPT_CHARS = 1400;
+const dispatch = useDispatch()
   const scrollToBottom = () => {
     if (chatAreaRef.current) {
       chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
     }
   };
+  const logoutHandler = ()=>{
+    console.log('clicked')
+dispatch(logoutUser())
+  }
+
+    useEffect(()=>{
+      console.log('use effect')
+      const newSocket = io("http://localhost:3000",{ withCredentials: true,})
+      
+      setSocket(newSocket)
+
+      newSocket.on('ai-response',(data)=>{
+        console.log(data)
+      })
+
+
+    },[])
 
   const handleCreateNewChat = () => {
     setIsCreatingNewChat(true);
   };
 
-  const handleNewChatSubmit = (e) => {
+  const handleNewChatSubmit = async (e) => {
     e.preventDefault();
+    console.log('su')
     if (newChatTitle.trim() && !titleError) {
-      const newChatId = Date.now().toString();
+      const result = await axios.post('/chat',{title:newChatTitle})
+      console.log(result)
+      const newChatId = result.data.chat._id;
       const newChat = { id: newChatId, text: newChatTitle };
       setHistoryItems(prev => [newChat, ...prev]);
       setChats(prev => ({ ...prev, [newChatId]: { title: newChatTitle, messages: [] } }));
@@ -110,20 +148,20 @@ const ChatInterface = () => {
     }
   };
 
-  const handleTitleChange = (e) => {
+  const handleTitleChange = async (e) => {
     const value = e.target.value;
-    setNewChatTitle(value);
     
-    // Word count logic
+    setNewChatTitle(value);
     const wordCount = value.trim().split(/\s+/).filter(Boolean).length;
-
     if (wordCount > MAX_TITLE_WORDS) {
       setTitleError(`Title cannot exceed ${MAX_TITLE_WORDS} words.`);
     } else {
       setTitleError("");
     }
   };
-  
+  const titleSubmitHandler = async(title)=>{
+    
+  }
   const handleHistoryClick = (id) => {
     setActiveChatId(id);
     if (window.innerWidth < 768) {
@@ -140,7 +178,7 @@ const ChatInterface = () => {
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (!inputValue.trim() || !activeChatId || isModelTyping) return;
+    if (!inputValue.trim() || !activeChatId || isModelTyping || inputValue.length > MAX_PROMPT_CHARS) return;
     const userMessage = { id: `user-${Date.now()}`, from: 'user', text: inputValue };
     setChats(prev => {
         const updatedChats = { ...prev };
@@ -155,6 +193,13 @@ const ChatInterface = () => {
       setChats(prev => ({ ...prev, [activeChatId]: { ...prev[activeChatId], messages: [...prev[activeChatId].messages, aiResponse] } }));
     }, 1000);
   };
+
+  useEffect(() => {
+      if (textareaRef.current) {
+        textareaRef.current.style.height = 'auto';
+        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+      }
+  }, [inputValue]);
 
   useEffect(() => {
     scrollToBottom();
@@ -203,6 +248,7 @@ const ChatInterface = () => {
                   value={newChatTitle}
                   onChange={handleTitleChange}
                   onBlur={() => !newChatTitle && setIsCreatingNewChat(false)}
+                  onSubmit={()=>titleSubmitHandler(newChatTitle)}
                   autoFocus
                 />
                 <button type="submit" className="submit-new-chat-btn" disabled={!!titleError}>
@@ -226,7 +272,7 @@ const ChatInterface = () => {
             <div className="user-profile">
                 <div className="user-info">
                     <Icon path={<><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>} /> 
-                    <span>Chetram</span>
+                    <span>{userData?.user?userData?.user?.fullName?.firstName:  "Username"}</span>
                 </div>
                 <div className="credits-container">
                     <span>Credits: 50</span>
@@ -246,7 +292,7 @@ const ChatInterface = () => {
                 </div>
             </div>
             <div className="header-right">
-                 <button className="share-btn">Log out</button>
+                 <button className="share-btn logout" onClick={logoutHandler}>Log out</button>
             </div>
         </header>
 
@@ -293,19 +339,38 @@ const ChatInterface = () => {
 
         <section className="chat-input-area">
             <form className="input-form" onSubmit={handleSendMessage}>
-            <div className="input-wrapper">
-              <input type="text" placeholder="Ask anything..." value={inputValue} onChange={(e) => setInputValue(e.target.value)} />
-              <div className="input-right-actions">
-                 <select name="model" className="model-selector">
-                    <option value="jhanvi">Jhanvi</option>
-                    <option value="chandni">Chandni</option>
-                 </select>
-                <button type="submit" className="send-button" disabled={!inputValue.trim() || isModelTyping}>
-                  <Icon path={<><line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" /></>} />
-                </button>
-              </div>
-            </div>
-          </form>
+                <div className="input-wrapper">
+                  <textarea 
+                    ref={textareaRef}
+                    rows="1"
+                    placeholder="Ask anything..." 
+                    value={inputValue} 
+                    onChange={(e) => setInputValue(e.target.value)}
+                    onKeyDown={(e) => {
+                        if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendMessage(e);
+                        }
+                    }}
+                  />
+                </div>
+                <div className="input-footer">
+                    <div className="input-footer-left">
+                        <select name="model" className="model-selector">
+                            <option value="jhanvi">Jhanvi</option>
+                            <option value="chandni">Chandni</option>
+                        </select>
+                        <div className={`char-counter ${inputValue.length > MAX_PROMPT_CHARS  ? 'error' : ''}`}>
+                            {MAX_PROMPT_CHARS - inputValue.length +" / 1400"}
+                        </div>
+                    </div>
+                    <div className="input-footer-right">
+                        <button type="submit" className="send-button" disabled={!inputValue.trim() || isModelTyping || inputValue.length > MAX_PROMPT_CHARS}>
+                          <Icon path={<><line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" /></>} />
+                        </button>
+                    </div>
+                </div>
+            </form>
         </section>
       </main>
     </div>

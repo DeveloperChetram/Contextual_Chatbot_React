@@ -105,7 +105,7 @@
     transition: box-shadow 0.3s;
 }
 .new-thread-btn:hover {
-    background-color: #2a2a2a;
+    /* background-color: #03172200; */
     box-shadow: 0 0 8px var(--glow-color);
 }
 .new-thread-btn .icon {
@@ -318,13 +318,25 @@ a:hover .icon {
   justify-content: center;
   scrollbar-width: thin;
   scrollbar-color: var(--accent-color) var(--background-secondary);
+}/* --- Custom Scrollbar Thumb --- */
+.chat-area::-webkit-scrollbar {
+  width: 8px; /* Width of the scrollbar area */
+  background: transparent; /* Makes the track invisible */
 }
-.chat-area::-webkit-scrollbar { width: 8px; }
-.chat-area::-webkit-scrollbar-track { background: var(--background-secondary); }
+/* --- Hides the scrollbar arrows --- */
+.chat-area::-webkit-scrollbar-button {
+  display: none;
+}
 .chat-area::-webkit-scrollbar-thumb {
   background-color: var(--accent-color);
   border-radius: 10px;
-  border: 2px solid var(--background-secondary);
+  border: 2px solid var(--background-primary); /* Creates padding around thumb */
+}
+
+/* For Firefox */
+.chat-area {
+  scrollbar-width: thin;
+  scrollbar-color: var(--accent-color) transparent;
 }
 
 .chat-content-wrapper { max-width: 720px; width: 100%; }
@@ -421,18 +433,44 @@ a:hover .icon {
   border-color: var(--accent-color);
   box-shadow: 0 0 10px var(--glow-color);
 }
-.input-wrapper { display: flex; align-items: center; gap: 8px; }
-.input-wrapper input {
+.input-wrapper { display: flex; align-items: flex-end; gap: 8px; }
+
+.input-wrapper textarea {
   flex-grow: 1;
   background: transparent;
   border: none;
   color: var(--text-primary);
   font-size: 16px;
+  line-height: 1.5;
   outline: none;
-  padding: 12px 0; 
+  padding: 10px 0; 
+  resize: none;
+  height: auto;
+  max-height: 80px; /* Approx 3 lines */
+  transition: height 0.2s ease;
+  scrollbar-width: none;
 }
-.input-wrapper input::placeholder { color: var(--text-secondary); }
-.input-right-actions { display: flex; align-items: center; gap: 8px; }
+
+.input-wrapper textarea::-webkit-scrollbar {
+  display: none;
+}
+
+.input-wrapper textarea::placeholder { color: var(--text-secondary); }
+
+.input-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+.input-footer-left {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.input-footer-right {
+  display: flex;
+}
+
 .input-form .send-button {
   background-color: var(--accent-color);
   border-radius: 8px;
@@ -449,6 +487,16 @@ a:hover .icon {
 .input-form .send-button:hover { box-shadow: 0 0 8px var(--glow-color); }
 .input-form .send-button .icon { stroke: white; margin: 0; }
 .send-button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.char-counter {
+    font-size: 12px;
+    color: var(--text-secondary);
+    text-align: right;
+}
+.char-counter.error {
+    color: var(--error-color);
+}
+
 
 .new-chat-form-container { margin-bottom: 8px; }
 .new-chat-form { position: relative; }
