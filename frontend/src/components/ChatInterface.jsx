@@ -23,27 +23,7 @@ const LogoIcon = () => (
 );
 
 const initialChatData = {
-  '1': {
-    title: 'hello',
-    messages: [
-      { id: 'user1', from: 'user', text: 'hello' },
-      { id: 'model1', from: 'model', text: "Hello Chetram! Good to see you here again. It's quite late - 11:05 PM on a Saturday night. Are you having one of those late-night coding sessions, or perhaps working on a new project?" },
-    ]
-  },
-  '2': {
-    title: '/* theme.css */ /* Impor',
-    messages: [
-      { id: 'user2', from: 'user', text: '/* theme.css */ /* Impor' },
-      { id: 'model2', from: 'model', text: "This seems to be a CSS comment. Are you working on styling a web page?" },
-    ]
-  },
-   '3': {
-    title: 'Search all major job boa',
-    messages: [
-       { id: 'user3', from: 'user', text: 'Search all major job boa' },
-       { id: 'model3', from: 'model', text: "I can help with that. Which job boards are you interested in?" },
-    ]
-  }
+
 };
 
 // --- Updated Typing Effect Component ---
@@ -121,10 +101,23 @@ dispatch(logoutUser())
       
       setSocket(newSocket)
 
+      newSocket.emit('user-message',{chatId:activeChatId,content:inputValue})
       newSocket.on('ai-response',(data)=>{
         console.log(data)
       })
+      
 
+
+      
+      axios.get('/chat')
+      .then((res)=>{
+        console.log(res.data.chats)
+        setChats(res.data.chats)
+        setHistoryItems(res.data.chats.map((chat)=>({id:chat._id,text:chat.title})))
+      })
+      .catch((err)=>{
+        console.log(err)
+      })
 
     },[])
 
@@ -159,10 +152,20 @@ dispatch(logoutUser())
       setTitleError("");
     }
   };
-  const titleSubmitHandler = async(title)=>{
+  // const titleSubmitHandler = async(title)=>{
     
-  }
+  // }
   const handleHistoryClick = (id) => {
+    console.log(id)
+    axios.get(`/chat/${id}`)
+    .then((res)=>{
+      // console.log(res.data.chat)
+      setChats(res.data.chat)
+      setActiveChatId(id)
+    })
+    .catch((err)=>{
+      console.log(err)
+    })
     setActiveChatId(id);
     if (window.innerWidth < 768) {
       setSidebarOpen(false);
@@ -178,11 +181,13 @@ dispatch(logoutUser())
 
   const handleSendMessage = (e) => {
     e.preventDefault();
+
     if (!inputValue.trim() || !activeChatId || isModelTyping || inputValue.length > MAX_PROMPT_CHARS) return;
+    
     const userMessage = { id: `user-${Date.now()}`, from: 'user', text: inputValue };
     setChats(prev => {
         const updatedChats = { ...prev };
-        updatedChats[activeChatId].messages.push(userMessage);
+        updatedChats[activeChatId].messages?.push(userMessage);
         return updatedChats;
     });
     setInputValue("");
@@ -248,7 +253,7 @@ dispatch(logoutUser())
                   value={newChatTitle}
                   onChange={handleTitleChange}
                   onBlur={() => !newChatTitle && setIsCreatingNewChat(false)}
-                  onSubmit={()=>titleSubmitHandler(newChatTitle)}
+                  // onSubmit={()=>titleSubmitHandler(newChatTitle)}
                   autoFocus
                 />
                 <button type="submit" className="submit-new-chat-btn" disabled={!!titleError}>
@@ -259,13 +264,13 @@ dispatch(logoutUser())
             </div>
           )}
           <ul>
-            {historyItems.map((item) => (
+            {historyItems?.length>0?historyItems.map((item) => (
               <li key={item.id} className={item.id === activeChatId ? 'active' : ''}>
                 <a href="#" onClick={(e) => { e.preventDefault(); handleHistoryClick(item.id); }}>
                     <span>{item.text}</span>
                 </a>
               </li>
-            ))}
+            )):<a href="#"><span>No chats found</span></a>}
           </ul>
         </div>
         <div className="sidebar-bottom">
@@ -298,7 +303,7 @@ dispatch(logoutUser())
 
         <section className="chat-area" ref={chatAreaRef}>
           <div className="chat-content-wrapper">
-            {activeChat?.messages.length > 0 ? (
+            {activeChat?.messages?.length > 0 ? (
               activeChat.messages.map((msg, index) => {
                 const isLastMessage = index === activeChat.messages.length - 1;
                 return (
