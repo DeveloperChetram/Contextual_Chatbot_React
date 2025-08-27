@@ -1,117 +1,147 @@
-// frontend/src/components/ChatInterface.jsx
+import React, { useState, useEffect, useRef } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { io } from "socket.io-client";
+import ReactMarkdown from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
+import {
+  getChats,
+  createChat,
+  getMessages,
+  sendMessage,
+} from "../redux/actions/chatActions";
+import {
+  setActiveChatId,
+  addMessage,
+  setModelTyping,
+} from "../redux/reducers/chatSlice";
+import { logoutUser } from "../redux/actions/authActions";
+import TypingIndicator from "./TypingIndicator";
+import "../styles/theme.css";
+import "../styles/ChatInterface.css";
+// Removed problematic import: import "rehype-highlight/styles/github-dark.css"; // Or your preferred theme
 
-import React, { useState, useEffect, useRef } from 'react';
-import '../styles/theme.css'; // Import theme styles
-import '../styles/ChatInterface.css'; // Import component styles
-
-// Icon component remains the same...
-const Icon = ({ path, className = '' }) => (
-  <svg className={`icon ${className}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    {path}
-  </svg>
-);
-
-// Logo component remains the same...
-const LogoIcon = () => (
-    <svg className="logo-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12.48 3.52a1 1 0 0 0-1 1v2.92a1 1 0 0 0 .52.88l5.44 3.14a1 1 0 0 0 1.5-.87V7.52a1 1 0 0 0-.52-.88l-5.44-3.14a1 1 0 0 0-.5 0zM5.08 7.52a1 1 0 0 0-.52.88v2.92a1 1 0 0 0 .52.88l5.44 3.14a1 1 0 0 0 1.5-.87V11.4a1 1 0 0 0-.52-.88L6.58 7.52a1 1 0 0 0-1.5 0zM12 14.5l-5.44 3.14a1 1 0 0 0-.52.88v2.92a1 1 0 0 0 1.5.87l5.44-3.14a1 1 0 0 0 .52-.88v-2.92a1 1 0 0 0-1.5-.87z"/>
+// --- Helper Components ---
+const Icon = ({ path, className = "" }) => (
+    <svg
+      className={`icon ${className}`}
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {path}
     </svg>
-);
+  );
 
-const initialChatData = {
-  '1': {
-    title: 'hello',
-    messages: [
-      { id: 'user1', from: 'user', text: 'hello' },
-      { id: 'model1', from: 'model', text: "Hello Chetram! Good to see you here again. It's quite late - 11:05 PM on a Saturday night. Are you having one of those late-night coding sessions, or perhaps working on a new project?" },
-    ]
-  },
-  '2': {
-    title: '/* theme.css */ /* Impor',
-    messages: [
-      { id: 'user2', from: 'user', text: '/* theme.css */ /* Impor' },
-      { id: 'model2', from: 'model', text: "This seems to be a CSS comment. Are you working on styling a web page?" },
-    ]
-  },
-   '3': {
-    title: 'Search all major job boa',
-    messages: [
-       { id: 'user3', from: 'user', text: 'Search all major job boa' },
-       { id: 'model3', from: 'model', text: "I can help with that. Which job boards are you interested in?" },
-    ]
-  }
-};
+  const LogoIcon = () => (
+    <svg
+      className="logo-icon-svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
+      <path d="M12.48 3.52a1 1 0 0 0-1 1v2.92a1 1 0 0 0 .52.88l5.44 3.14a1 1 0 0 0 1.5-.87V7.52a1 1 0 0 0-.52-.88l-5.44-3.14a1 1 0 0 0-.5 0zM5.08 7.52a1 1 0 0 0-.52.88v2.92a1 1 0 0 0 .52.88l5.44 3.14a1 1 0 0 0 1.5-.87V11.4a1 1 0 0 0-.52-.88L6.58 7.52a1 1 0 0 0-1.5 0zM12 14.5l-5.44 3.14a1 1 0 0 0-.52.88v2.92a1 1 0 0 0 1.5.87l5.44-3.14a1 1 0 0 0 .52-.88v-2.92a1 1 0 0 0-1.5-.87z" />
+    </svg>
+  );
 
-// --- Updated Typing Effect Component ---
-const TypingEffect = ({ text, onComplete, scrollToBottom }) => {
-    const [displayedText, setDisplayedText] = useState('');
-    
-    useEffect(() => {
-        setDisplayedText(''); // Reset on new text
-        let index = 0;
-        const intervalId = setInterval(() => {
-            setDisplayedText(prev => prev + text.charAt(index));
-            index++;
-            
-            // This is the key change: scroll as text reveals
-            if (scrollToBottom) scrollToBottom();
-
-            if (index >= text.length) {
-                clearInterval(intervalId);
-                if (onComplete) onComplete();
-            }
-        }, 15); // Faster typing speed (milliseconds)
-
-        return () => clearInterval(intervalId);
-    }, [text, onComplete, scrollToBottom]);
-
-    return <p className="message-text">{displayedText}</p>;
-};
-
-
+// --- Main Chat Component ---
 const ChatInterface = () => {
+  const dispatch = useDispatch();
+  const { user } = useSelector((state) => state.auth);
+  const { chats, messages, activeChatId, loading, isModelTyping } = useSelector(
+    (state) => state.chat
+  );
+
+  // --- Local State ---
+  const [socket, setSocket] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isCreatingNewChat, setIsCreatingNewChat] = useState(false);
   const [newChatTitle, setNewChatTitle] = useState("");
-  const [activeChatId, setActiveChatId] = useState('1');
-  const [chats, setChats] = useState(initialChatData);
-  const [historyItems, setHistoryItems] = useState(
-      Object.entries(initialChatData).map(([id, data]) => ({ id, text: data.title }))
-  );
+  const [titleError, setTitleError] = useState("");
   const [inputValue, setInputValue] = useState("");
   const [copiedMessageId, setCopiedMessageId] = useState(null);
-  const [isModelTyping, setIsModelTyping] = useState(false);
-  const chatAreaRef = useRef(null);
-  const sidebarRef = useRef(null);
-  
-  const activeChat = chats[activeChatId];
 
-  // --- New Reusable Scroll Function ---
-  const scrollToBottom = () => {
+  // --- Refs ---
+  const chatAreaRef = useRef(null);
+  const textareaRef = useRef(null);
+
+  // --- Constants ---
+  const MAX_TITLE_WORDS = 35;
+  const MAX_PROMPT_CHARS = 1400;
+
+  // --- Effects ---
+
+  useEffect(() => {
+    dispatch(getChats());
+
+    const newSocket = io("http://localhost:3000", { withCredentials: true });
+    setSocket(newSocket);
+
+    return () => newSocket.disconnect();
+  }, [dispatch]);
+
+  useEffect(() => {
+    if (socket) {
+      socket.on("ai-response", ({ chatId, response }) => {
+        dispatch(setModelTyping({ chatId, isTyping: false }));
+
+        const modelMessage = {
+          _id: `model-${Date.now()}`,
+          chatId,
+          content: response,
+          role: "model",
+        };
+        dispatch(addMessage({ chatId, message: modelMessage }));
+      });
+    }
+  }, [socket, dispatch]);
+
+  useEffect(() => {
     if (chatAreaRef.current) {
       chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
     }
-  };
+  }, [messages, activeChatId, isModelTyping]);
 
-  const handleCreateNewChat = () => {
-    setIsCreatingNewChat(true);
-  };
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = "auto";
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [inputValue]);
+
+  // --- Event Handlers ---
+
+  const handleCreateNewChat = () => setIsCreatingNewChat(true);
 
   const handleNewChatSubmit = (e) => {
     e.preventDefault();
-    if (newChatTitle.trim()) {
-      const newChatId = Date.now().toString();
-      const newChat = { id: newChatId, text: newChatTitle };
-      setHistoryItems(prev => [newChat, ...prev]);
-      setChats(prev => ({ ...prev, [newChatId]: { title: newChatTitle, messages: [] } }));
-      setActiveChatId(newChatId);
-      setNewChatTitle("");
-      setIsCreatingNewChat(false);
-    }
+    if (!newChatTitle.trim() || titleError) return;
+    dispatch(createChat(newChatTitle));
+    setNewChatTitle("");
+    setIsCreatingNewChat(false);
   };
-  
+
+  const handleTitleChange = (e) => {
+    const value = e.target.value;
+    setNewChatTitle(value);
+    const wordCount = value.trim().split(/\s+/).filter(Boolean).length;
+    setTitleError(
+      wordCount > MAX_TITLE_WORDS
+        ? `Title cannot exceed ${MAX_TITLE_WORDS} words.`
+        : ""
+    );
+  };
+
   const handleHistoryClick = (id) => {
-    setActiveChatId(id);
+    dispatch(setActiveChatId(id));
+    if (!messages[id]) {
+      dispatch(getMessages(id));
+    }
     if (window.innerWidth < 768) {
       setSidebarOpen(false);
     }
@@ -126,67 +156,41 @@ const ChatInterface = () => {
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (!inputValue.trim() || !activeChatId || isModelTyping) return;
-
-    const userMessage = { id: `user-${Date.now()}`, from: 'user', text: inputValue };
-    
-    setChats(prev => {
-        const updatedChats = { ...prev };
-        updatedChats[activeChatId].messages.push(userMessage);
-        return updatedChats;
-    });
-
+    if (
+      !inputValue.trim() ||
+      !activeChatId ||
+      inputValue.length > MAX_PROMPT_CHARS
+    )
+      return;
+    dispatch(sendMessage(socket, activeChatId, inputValue));
     setInputValue("");
-    
-    // Use a timeout to ensure the state has updated before scrolling
-    setTimeout(scrollToBottom, 0);
-
-    setIsModelTyping(true);
-
-    setTimeout(() => {
-      const aiResponse = { id: `model-${Date.now()}`, from: 'model', text: `This is a simulated response to "${inputValue}". It is revealing character by character.` };
-      setChats(prev => ({ ...prev, [activeChatId]: { ...prev[activeChatId], messages: [...prev[activeChatId].messages, aiResponse] } }));
-    }, 1000);
   };
 
-  useEffect(() => {
-    scrollToBottom();
-  }, [activeChat?.messages, isModelTyping]);
+  const logoutHandler = () => {
+    dispatch(logoutUser());
+  };
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-        if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-            if(window.innerWidth < 768) {
-                setSidebarOpen(false);
-            }
-        }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-
-  useEffect(() => {
-    if (window.innerWidth >= 768) setSidebarOpen(true);
-    else setSidebarOpen(false);
-  }, []);
+  const activeChat = chats.find((chat) => chat._id === activeChatId);
 
   return (
     <div className="chat-container">
-      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`} ref={sidebarRef}>
+       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="sidebar-header">
-            <div className="logo-container">
-              <LogoIcon />
-            </div>
-            <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)}>
-                <Icon path={<path d="M18 6L6 18M6 6l12 12" />} />
-            </button>
+          <div className="logo-container">
+            <LogoIcon />
+          </div>
+          <button
+            className="sidebar-close-btn"
+            onClick={() => setSidebarOpen(false)}
+          >
+            <Icon path={<path d="M18 6L6 18M6 6l12 12" />} />
+          </button>
         </div>
-         <div className="sidebar-top">
+        <div className="sidebar-top">
           <nav className="main-nav">
-             <button className="new-thread-btn" onClick={handleCreateNewChat}>
-                <Icon path={<path d="M12 5v14m-7-7h14" />} />
-                <span>New Chat</span>
+            <button className="new-thread-btn" onClick={handleCreateNewChat}>
+              <Icon path={<path d="M12 5v14m-7-7h14" />} />
+              <span>New Chat</span>
             </button>
           </nav>
         </div>
@@ -195,113 +199,203 @@ const ChatInterface = () => {
             <h3>History</h3>
           </div>
           {isCreatingNewChat && (
-            <form onSubmit={handleNewChatSubmit} className="new-chat-form">
-              <input 
-                type="text"
-                placeholder="New chat title..."
-                value={newChatTitle}
-                onChange={(e) => setNewChatTitle(e.target.value)}
-                onBlur={() => !newChatTitle && setIsCreatingNewChat(false)}
-                autoFocus
-              />
-              <button type="submit" className="submit-new-chat-btn">
-                <Icon path={<path d="M20 6L9 17l-5-5" />} />
-              </button>
-            </form>
+            <div className="new-chat-form-container">
+              <form
+                onSubmit={handleNewChatSubmit}
+                className={`new-chat-form ${titleError ? "error" : ""}`}
+              >
+                <input
+                  type="text"
+                  placeholder="New chat title..."
+                  value={newChatTitle}
+                  onChange={handleTitleChange}
+                  onBlur={() => !newChatTitle && setIsCreatingNewChat(false)}
+                  autoFocus
+                />
+                <button
+                  type="submit"
+                  className="submit-new-chat-btn"
+                  disabled={!!titleError}
+                >
+                  <Icon
+                    path={
+                      titleError ? (
+                        <path d="M18 6L6 18M6 6l12 12" />
+                      ) : (
+                        <path d="M20 6L9 17l-5-5" />
+                      )
+                    }
+                  />
+                </button>
+              </form>
+              {titleError && (
+                <p className="title-error-warning">{titleError}</p>
+              )}
+            </div>
           )}
           <ul>
-            {historyItems.map((item) => (
-              <li key={item.id} className={item.id === activeChatId ? 'active' : ''}>
-                <a href="#" onClick={(e) => { e.preventDefault(); handleHistoryClick(item.id); }}>
-                    <span>{item.text}</span>
+            {chats.length > 0 ? (
+              chats.map((item) => (
+                <li
+                  key={item._id}
+                  className={item._id === activeChatId ? "active" : ""}
+                >
+                  <a
+                    href="#"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleHistoryClick(item._id);
+                    }}
+                  >
+                    <span>{item.title}</span>
+                  </a>
+                </li>
+              ))
+            ) : (
+              <li>
+                <a href="#" className="no-chats">
+                  <span>No chats found</span>
                 </a>
               </li>
-            ))}
+            )}
           </ul>
         </div>
         <div className="sidebar-bottom">
-            <div className="user-profile">
-                <Icon path={<><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>} /> 
-                <span>Chetram</span>
+          <div className="user-profile">
+            <div className="user-info">
+              <Icon
+                path={
+                  <>
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+                    <circle cx="12" cy="7" r="4" />
+                  </>
+                }
+              />
+              <span>{user?.fullName?.firstName || "Username"}</span>
             </div>
+            <div className="credits-container">
+              <span>Credits: 50</span>
+            </div>
+          </div>
         </div>
       </aside>
-
       <main className="main-content">
-        <header className="main-header">
-            <div className="header-left">
-                <button className="header-hamburger" onClick={() => setSidebarOpen(prev => !prev)}>
-                    <Icon path={<><path d="M3 12h18" /><path d="M3 6h18" /><path d="M3 18h18" /></>} />
-                </button>
-                <div className="header-title-wrapper">
-                    <h2>{activeChat?.title || "New Chat"}</h2>
-                </div>
+      <header className="main-header">
+          <div className="header-left">
+            <button
+              className="header-hamburger"
+              onClick={() => setSidebarOpen((prev) => !prev)}
+            >
+              <Icon
+                path={
+                  <>
+                    <path d="M3 12h18" />
+                    <path d="M3 6h18" />
+                    <path d="M3 18h18" />
+                  </>
+                }
+              />
+            </button>
+            <div className="header-title-wrapper">
+              <h2>{activeChat?.title || "Welcome"}</h2>
             </div>
-            <div className="header-right">
-                 <button className="share-btn">Log out</button>
-            </div>
+          </div>
+          <div className="header-right">
+            <button className="share-btn logout" onClick={logoutHandler}>
+              Log out
+            </button>
+          </div>
         </header>
-
         <section className="chat-area" ref={chatAreaRef}>
           <div className="chat-content-wrapper">
-            {activeChat?.messages.length > 0 ? (
-              activeChat.messages.map((msg, index) => {
-                const isLastMessage = index === activeChat.messages.length - 1;
-                return (
-                  <div key={msg.id} className={`chat-turn ${msg.from}`}>
-                    <div className="message-header">
-                      <h3 className="message-sender">{msg.from === 'user' ? 'You' : 'Model'}</h3>
-                      <button className="copy-btn" onClick={() => handleCopyMessage(msg.text, msg.id)}>
-                          <Icon path={copiedMessageId === msg.id ? <path d="M20 6L9 17l-5-5"/> : <><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>} />
-                      </button>
-                    </div>
-                    {msg.from === 'model' && isLastMessage && isModelTyping ? (
-                      <TypingEffect text={msg.text} onComplete={() => setIsModelTyping(false)} scrollToBottom={scrollToBottom} />
-                    ) : (
-                      <p className="message-text">{msg.text}</p>
-                    )}
-                  </div>
-                )
-              })
-            ) : (
-              <div className="empty-chat-placeholder">
-                <h2>Start a new conversation</h2>
-                <p>Type your first message below.</p>
-              </div>
-            )}
-            {isModelTyping && activeChat?.messages[activeChat.messages.length - 1]?.from === 'user' && (
-                <div className="chat-turn model">
-                    <div className="message-header">
-                        <h3 className="message-sender">Model</h3>
-                    </div>
-                    <div className="typing-indicator">
-                       <span className="typing-text">Typing</span>
-                       <div className="dots-container">
-                          <span></span><span></span><span></span>
-                       </div>
-                    </div>
+            {loading && <div className="empty-chat-placeholder"><h2>Loading...</h2></div>}
+
+            {!loading && messages[activeChatId]?.length > 0 && messages[activeChatId].map((msg) => (
+              <div key={msg._id} className={`chat-turn ${msg.role}`}>
+                <div className="message-header">
+                  <h3 className="message-sender">{msg.role === "user" ? "You" : "Model"}</h3>
+                  <button className="copy-btn" onClick={() => handleCopyMessage(msg.content, msg._id)}>
+                    <Icon path={copiedMessageId === msg._id ? <path d="M20 6L9 17l-5-5" /> : <><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>} />
+                  </button>
                 </div>
+                <div className="message-text">
+                  {msg.role === "model" ? (
+                    <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{msg.content}</ReactMarkdown>
+                  ) : (
+                    msg.content
+                  )}
+                </div>
+              </div>
+            ))}
+
+            {isModelTyping[activeChatId] && <TypingIndicator />}
+
+            {!loading && (!messages[activeChatId] || messages[activeChatId].length === 0) && !isModelTyping[activeChatId] && (
+                 <div className="empty-chat-placeholder">
+                 <h2>
+                   {activeChatId
+                     ? "Start a new conversation"
+                     : "Select or create a chat to begin"}
+                 </h2>
+                 <p>
+                   {activeChatId
+                     ? "Type your first message below."
+                     : "Choose a chat from the sidebar or create a new one."}
+                 </p>
+               </div>
             )}
           </div>
         </section>
 
         <section className="chat-input-area">
-            {/* Input form remains the same */}
-            <form className="input-form" onSubmit={handleSendMessage}>
+        <form className="input-form" onSubmit={handleSendMessage}>
             <div className="input-wrapper">
-              <input 
-                type="text" 
+              <textarea
+                ref={textareaRef}
+                rows="1"
                 placeholder="Ask anything..."
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault();
+                    handleSendMessage(e);
+                  }
+                }}
               />
-              <div className="input-right-actions">
-                 <select name="model" className="model-selector">
-                    <option value="jhanvi">Jhanvi</option>
-                    <option value="chandni">Chandni</option>
-                 </select>
-                <button type="submit" className="send-button" disabled={!inputValue.trim() || isModelTyping}>
-                  <Icon path={<><line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" /></>} />
+            </div>
+            <div className="input-footer">
+              <div className="input-footer-left">
+                <select name="model" className="model-selector">
+                  <option value="jhanvi">Jhanvi</option>
+                  <option value="chandni">Chandni</option>
+                </select>
+                <div
+                  className={`char-counter ${
+                    inputValue.length > MAX_PROMPT_CHARS ? "error" : ""
+                  }`}
+                >
+                  {MAX_PROMPT_CHARS - inputValue.length} / 1400
+                </div>
+              </div>
+              <div className="input-footer-right">
+                <button
+                  type="submit"
+                  className="send-button"
+                  disabled={
+                    !inputValue.trim() ||
+                    inputValue.length > MAX_PROMPT_CHARS ||
+                    !activeChatId
+                  }
+                >
+                  <Icon
+                    path={
+                      <>
+                        <line x1="12" y1="19" x2="12" y2="5" />
+                        <polyline points="5 12 12 5 19 12" />
+                      </>
+                    }
+                  />
                 </button>
               </div>
             </div>

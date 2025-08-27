@@ -7,15 +7,14 @@ import { useSelector } from 'react-redux'
 import AuthRoute from './AuthRoute'
 
 const MainRoutes = () => {
-  const userData = useSelector((state)=>state.auth);
 
   return (
     <Routes>
 
-      <Route path='/' element={<Login />} />
+      <Route path='/' element={<><ChatInterface /></>} />
       <Route path='/login' element={<Login />} />
       <Route path='/register' element={<Register />} />
-      <Route path='/home' element={<AuthRoute><ChatInterface /></AuthRoute>} />
+      <Route path='/home' element={<><ChatInterface /></>} />
     </Routes>
   )
 }

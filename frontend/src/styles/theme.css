@@ -27,12 +27,12 @@
   --text-secondary: #888888;
   --accent-color: #31B8C6;
   --border-color: #2c2c2c;
-  --glow-color: rgba(49, 184, 198, 0.5);
+  --glow-color: rgba(198, 54, 49, 0.5);
     --auth-bg-dark: #0d1a22;
   --auth-grid-color: rgba(49, 184, 198, 0.15);
   --glass-bg-color: rgba(13, 26, 34, 0.5);
   --glass-border-color: rgba(49, 184, 198, 0.3);
-  --auth-blob-color-1: #31B8C6;
+  --auth-blob-color-1: #1ab7c9;
   --auth-blob-color-2: #1e5a78;
 }
 

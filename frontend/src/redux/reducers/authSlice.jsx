@@ -59,7 +59,7 @@ export const {
   registerRequest,    
   registerSuccess,    
   registerFailure,    
-  logout,
+    logout,
   setUserFromStorage, 
 } = authSlice.actions;
 
