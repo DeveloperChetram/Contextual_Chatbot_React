@@ -1,52 +1,63 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { io } from "socket.io-client";
+import ReactMarkdown from "react-markdown";
+import rehypeHighlight from "rehype-highlight";
 import {
   getChats,
   createChat,
   getMessages,
   sendMessage,
 } from "../redux/actions/chatActions";
-import { setActiveChatId, addMessage } from "../redux/reducers/chatSlice";
+import {
+  setActiveChatId,
+  addMessage,
+  setModelTyping,
+} from "../redux/reducers/chatSlice";
 import { logoutUser } from "../redux/actions/authActions";
+import TypingIndicator from "./TypingIndicator";
 import "../styles/theme.css";
 import "../styles/ChatInterface.css";
+// Removed problematic import: import "rehype-highlight/styles/github-dark.css"; // Or your preferred theme
 
+// --- Helper Components ---
 const Icon = ({ path, className = "" }) => (
-  <svg
-    className={`icon ${className}`}
-    width="20"
-    height="20"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    {path}
-  </svg>
-);
+    <svg
+      className={`icon ${className}`}
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      {path}
+    </svg>
+  );
 
-const LogoIcon = () => (
-  <svg
-    className="logo-icon-svg"
-    width="24"
-    height="24"
-    viewBox="0 0 24 24"
-    fill="currentColor"
-  >
-    <path d="M12.48 3.52a1 1 0 0 0-1 1v2.92a1 1 0 0 0 .52.88l5.44 3.14a1 1 0 0 0 1.5-.87V7.52a1 1 0 0 0-.52-.88l-5.44-3.14a1 1 0 0 0-.5 0zM5.08 7.52a1 1 0 0 0-.52.88v2.92a1 1 0 0 0 .52.88l5.44 3.14a1 1 0 0 0 1.5-.87V11.4a1 1 0 0 0-.52-.88L6.58 7.52a1 1 0 0 0-1.5 0zM12 14.5l-5.44 3.14a1 1 0 0 0-.52.88v2.92a1 1 0 0 0 1.5.87l5.44-3.14a1 1 0 0 0 .52-.88v-2.92a1 1 0 0 0-1.5-.87z" />
-  </svg>
-);
+  const LogoIcon = () => (
+    <svg
+      className="logo-icon-svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="currentColor"
+    >
+      <path d="M12.48 3.52a1 1 0 0 0-1 1v2.92a1 1 0 0 0 .52.88l5.44 3.14a1 1 0 0 0 1.5-.87V7.52a1 1 0 0 0-.52-.88l-5.44-3.14a1 1 0 0 0-.5 0zM5.08 7.52a1 1 0 0 0-.52.88v2.92a1 1 0 0 0 .52.88l5.44 3.14a1 1 0 0 0 1.5-.87V11.4a1 1 0 0 0-.52-.88L6.58 7.52a1 1 0 0 0-1.5 0zM12 14.5l-5.44 3.14a1 1 0 0 0-.52.88v2.92a1 1 0 0 0 1.5.87l5.44-3.14a1 1 0 0 0 .52-.88v-2.92a1 1 0 0 0-1.5-.87z" />
+    </svg>
+  );
 
+// --- Main Chat Component ---
 const ChatInterface = () => {
   const dispatch = useDispatch();
   const { user } = useSelector((state) => state.auth);
-  const { chats, messages, activeChatId, loading } = useSelector(
+  const { chats, messages, activeChatId, loading, isModelTyping } = useSelector(
     (state) => state.chat
   );
 
+  // --- Local State ---
   const [socket, setSocket] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isCreatingNewChat, setIsCreatingNewChat] = useState(false);
@@ -55,12 +66,15 @@ const ChatInterface = () => {
   const [inputValue, setInputValue] = useState("");
   const [copiedMessageId, setCopiedMessageId] = useState(null);
 
+  // --- Refs ---
   const chatAreaRef = useRef(null);
-  const sidebarRef = useRef(null);
   const textareaRef = useRef(null);
 
+  // --- Constants ---
   const MAX_TITLE_WORDS = 35;
   const MAX_PROMPT_CHARS = 1400;
+
+  // --- Effects ---
 
   useEffect(() => {
     dispatch(getChats());
@@ -74,6 +88,8 @@ const ChatInterface = () => {
   useEffect(() => {
     if (socket) {
       socket.on("ai-response", ({ chatId, response }) => {
+        dispatch(setModelTyping({ chatId, isTyping: false }));
+
         const modelMessage = {
           _id: `model-${Date.now()}`,
           chatId,
@@ -89,7 +105,7 @@ const ChatInterface = () => {
     if (chatAreaRef.current) {
       chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
     }
-  }, [messages, activeChatId]);
+  }, [messages, activeChatId, isModelTyping]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -98,9 +114,9 @@ const ChatInterface = () => {
     }
   }, [inputValue]);
 
-  const handleCreateNewChat = () => {
-    setIsCreatingNewChat(true);
-  };
+  // --- Event Handlers ---
+
+  const handleCreateNewChat = () => setIsCreatingNewChat(true);
 
   const handleNewChatSubmit = (e) => {
     e.preventDefault();
@@ -158,11 +174,10 @@ const ChatInterface = () => {
 
   return (
     <div className="chat-container">
-      <aside className={`sidebar ${sidebarOpen ? "open" : ""}`} ref={sidebarRef}>
+       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="sidebar-header">
           <div className="logo-container">
-            {" "}
-            <LogoIcon />{" "}
+            <LogoIcon />
           </div>
           <button
             className="sidebar-close-btn"
@@ -181,8 +196,7 @@ const ChatInterface = () => {
         </div>
         <div className="library">
           <div className="library-header">
-            {" "}
-            <h3>History</h3>{" "}
+            <h3>History</h3>
           </div>
           {isCreatingNewChat && (
             <div className="new-chat-form-container">
@@ -265,9 +279,8 @@ const ChatInterface = () => {
           </div>
         </div>
       </aside>
-
       <main className="main-content">
-        <header className="main-header">
+      <header className="main-header">
           <div className="header-left">
             <button
               className="header-hamburger"
@@ -293,67 +306,49 @@ const ChatInterface = () => {
             </button>
           </div>
         </header>
-
         <section className="chat-area" ref={chatAreaRef}>
           <div className="chat-content-wrapper">
-            {loading ? (
-              <div className="empty-chat-placeholder">
-                <h2>Loading...</h2>
-              </div>
-            ) : messages[activeChatId]?.length > 0 ? (
-              messages[activeChatId].map((msg) => (
-                <div key={msg._id} className={`chat-turn ${msg.role}`}>
-                  <div className="message-header">
-                    <h3 className="message-sender">
-                      {msg.role === "user" ? "You" : "Model"}
-                    </h3>
-                    <button
-                      className="copy-btn"
-                      onClick={() => handleCopyMessage(msg.content, msg._id)}
-                    >
-                      <Icon
-                        path={
-                          copiedMessageId === msg._id ? (
-                            <path d="M20 6L9 17l-5-5" />
-                          ) : (
-                            <>
-                              <rect
-                                x="9"
-                                y="9"
-                                width="13"
-                                height="13"
-                                rx="2"
-                                ry="2"
-                              />
-                              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" />
-                            </>
-                          )
-                        }
-                      />
-                    </button>
-                  </div>
-                  <p className="message-text">{msg.content}</p>
+            {loading && <div className="empty-chat-placeholder"><h2>Loading...</h2></div>}
+
+            {!loading && messages[activeChatId]?.length > 0 && messages[activeChatId].map((msg) => (
+              <div key={msg._id} className={`chat-turn ${msg.role}`}>
+                <div className="message-header">
+                  <h3 className="message-sender">{msg.role === "user" ? "You" : "Model"}</h3>
+                  <button className="copy-btn" onClick={() => handleCopyMessage(msg.content, msg._id)}>
+                    <Icon path={copiedMessageId === msg._id ? <path d="M20 6L9 17l-5-5" /> : <><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>} />
+                  </button>
                 </div>
-              ))
-            ) : (
-              <div className="empty-chat-placeholder">
-                <h2>
-                  {activeChatId
-                    ? "Start a new conversation"
-                    : "Select or create a chat to begin"}
-                </h2>
-                <p>
-                  {activeChatId
-                    ? "Type your first message below."
-                    : "Choose a chat from the sidebar or create a new one."}
-                </p>
+                <div className="message-text">
+                  {msg.role === "model" ? (
+                    <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{msg.content}</ReactMarkdown>
+                  ) : (
+                    msg.content
+                  )}
+                </div>
               </div>
+            ))}
+
+            {isModelTyping[activeChatId] && <TypingIndicator />}
+
+            {!loading && (!messages[activeChatId] || messages[activeChatId].length === 0) && !isModelTyping[activeChatId] && (
+                 <div className="empty-chat-placeholder">
+                 <h2>
+                   {activeChatId
+                     ? "Start a new conversation"
+                     : "Select or create a chat to begin"}
+                 </h2>
+                 <p>
+                   {activeChatId
+                     ? "Type your first message below."
+                     : "Choose a chat from the sidebar or create a new one."}
+                 </p>
+               </div>
             )}
           </div>
         </section>
 
         <section className="chat-input-area">
-          <form className="input-form" onSubmit={handleSendMessage}>
+        <form className="input-form" onSubmit={handleSendMessage}>
             <div className="input-wrapper">
               <textarea
                 ref={textareaRef}

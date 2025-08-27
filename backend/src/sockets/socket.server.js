@@ -157,7 +157,7 @@ const initSocketServer = (httpServer) => {
       });
 
 
-      socket.emit("ai-response ", { chatId: messagePayload.chatId, response });
+      socket.emit("ai-response", { chatId: messagePayload.chatId, response });
 
       // response vectors
       const responseVectors = await generateVector(response);

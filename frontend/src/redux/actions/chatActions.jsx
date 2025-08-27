@@ -7,6 +7,7 @@ import {
   setLoading,
   setError,
   setActiveChatId,
+  setModelTyping, // Import the new action
 } from "../reducers/chatSlice";
 
 export const getChats = () => async (dispatch) => {
@@ -58,6 +59,9 @@ export const sendMessage = (socket, chatId, content) => (dispatch) => {
     role: "user",
   };
   dispatch(addMessage({ chatId, message: userMessage }));
+
+  // Set typing status to true right after sending
+  dispatch(setModelTyping({ chatId, isTyping: true }));
 
   socket.emit("user-message", {
     chatId: chatId,

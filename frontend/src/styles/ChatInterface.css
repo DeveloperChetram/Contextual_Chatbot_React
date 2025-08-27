@@ -585,3 +585,25 @@ a:hover .icon {
   .main-header { padding: 0 16px; }
   .chat-area, .chat-input-area { padding-left: 16px; padding-right: 16px; }
 }
+
+
+/* Styling for Markdown Code Blocks */
+.message-text pre {
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 8px;
+  padding: 16px;
+  overflow-x: auto;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.message-text code {
+  font-family: 'Courier New', Courier, monospace;
+}
+
+.message-text pre code {
+  padding: 0;
+  background-color: transparent;
+  color: inherit;
+}
