@@ -18,13 +18,11 @@ const createChatController = async (req, res) =>{
 
 const getChatController = async (req, res)=>{
     const user = req.user
-    const chats = await chatModel.find({user:user._id})
+    const chats = await chatModel.find({user:user._id}).sort({ createdAt: -1 });
     res.status(200).json({
         message:"chats fetched",
         chats
     })
-
-
 }
 
 const getMessagesController = async (req, res)=>{
