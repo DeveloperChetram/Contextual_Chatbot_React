@@ -3,7 +3,7 @@ const cookie = require("cookie");
 const userModel = require("../models/user.model");
 const jwt = require("jsonwebtoken");
 const { generateResponse, generateVector } = require("../services/ai.service");
-const messageModel = require("../models/messege.model");
+const messageModel = require("../models/message.model");
 const { createMemory, queryMemory } = require("../services/vector.service");
 const initSocketServer = (httpServer) => {
   const io = new Server(httpServer, {
@@ -157,7 +157,7 @@ const initSocketServer = (httpServer) => {
       });
 
 
-      socket.emit("ai-response", { chatId: messagePayload.chatId, response });
+      socket.emit("ai-response ", { chatId: messagePayload.chatId, response });
 
       // response vectors
       const responseVectors = await generateVector(response);

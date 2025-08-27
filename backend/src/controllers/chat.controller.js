@@ -26,33 +26,13 @@ const getChatController = async (req, res)=>{
 
 
 }
-const getChatByIdController = async (req, res) => {
-    const user = req.user;
-    const chatId = req.params.id;
 
-    try {
-        const chat = await chatModel.findOne({ _id: chatId, user: user._id });
-        if (!chat) {
-            return res.status(404).json({ message: "Chat not found" });
-        }
-        res.status(200).json({
-            message: "chat fetched",
-            chat
-        });
-    } catch (error) {
-        res.status(500).json({ message: "Server error", error: error.message });
-    }
-}
-
-const chatHistoryController = async (req, res) => {
-    const user = req.user;
-    const chatId = req.params.id;
-
-    const chat = await messageModel.find({ chat: chatId });
+const getMessagesController = async (req, res)=>{
+    const user = req.user
+    const messages = await messageModel.find({user:user._id})
     res.status(200).json({
-        message: "chat history fetched",
-        chat
+        message:"messages fetched",
+        messages
     })
 }
-
-module.exports = {createChatController,getChatController,getChatByIdController,chatHistoryController}
+module.exports = {createChatController,getChatController,getMessagesController}

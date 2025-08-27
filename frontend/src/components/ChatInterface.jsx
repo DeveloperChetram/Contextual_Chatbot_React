@@ -1,125 +1,169 @@
-// frontend/src/components/ChatInterface.jsx
-
 import React, { useState, useEffect, useRef } from 'react';
-import '../styles/theme.css'; // Import theme styles
-import '../styles/ChatInterface.css'; // Import component styles
 import { useDispatch, useSelector } from 'react-redux';
-import { logoutUser } from '../redux/actions/authActions';
 import { io } from "socket.io-client";
-import {axiosInstance as axios} from '../api/axios';
+import { logoutUser } from '../redux/actions/authActions';
+import { axiosInstance as axios } from '../api/axios';
+import '../styles/theme.css';
+import '../styles/ChatInterface.css';
 
-// Icon component remains the same...
+// --- Helper Components (Unchanged) ---
 const Icon = ({ path, className = '' }) => (
   <svg className={`icon ${className}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     {path}
   </svg>
 );
 
-// Logo component remains the same...
 const LogoIcon = () => (
     <svg className="logo-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
         <path d="M12.48 3.52a1 1 0 0 0-1 1v2.92a1 1 0 0 0 .52.88l5.44 3.14a1 1 0 0 0 1.5-.87V7.52a1 1 0 0 0-.52-.88l-5.44-3.14a1 1 0 0 0-.5 0zM5.08 7.52a1 1 0 0 0-.52.88v2.92a1 1 0 0 0 .52.88l5.44 3.14a1 1 0 0 0 1.5-.87V11.4a1 1 0 0 0-.52-.88L6.58 7.52a1 1 0 0 0-1.5 0zM12 14.5l-5.44 3.14a1 1 0 0 0-.52.88v2.92a1 1 0 0 0 1.5.87l5.44-3.14a1 1 0 0 0 .52-.88v-2.92a1 1 0 0 0-1.5-.87z"/>
     </svg>
 );
 
-const initialChatData = {
+// --- Main Chat Component ---
+const ChatInterface = () => {
+  const userData = useSelector((state) => state.auth);
+  const dispatch = useDispatch();
 
-};
-
-// --- Updated Typing Effect Component ---
-// --- Updated Typing Effect Component ---
-
-const TypingEffect = ({ text, onComplete, scrollToBottom }) => {
-  const [displayedText, setDisplayedText] = useState(null);
-  
-  useEffect(() => {
-        setDisplayedText(''); // Reset on new text
-        
-        // --- CHANGE START ---
-        // Calculate the delay to ensure the reveal takes ~3 seconds (3000ms)
-        // We set a minimum speed of 5ms for very long texts to keep it readable.
-        const totalDuration = 500;
-        const intervalDelay = Math.max(totalDuration / text.length, 5);
-        // --- CHANGE END ---
-
-        let index = 0;
-        const intervalId = setInterval(() => {
-          setDisplayedText(prev => prev + text.charAt(index));
-            index++;
-            
-            if (scrollToBottom) scrollToBottom();
-
-            if (index >= text.length) {
-                clearInterval(intervalId);
-                if (onComplete) onComplete();
-            }
-        }, intervalDelay); // Use the calculated delay
-        
-        return () => clearInterval(intervalId);
-    }, [text, onComplete, scrollToBottom]);
-
-    return <p className="message-text">{displayedText}</p>;
-};
-    
-    
-    const ChatInterface = () => {
-      const [socket, setSocket] = useState(null)
-  const userData = useSelector((state=>state.auth))
+  // --- State Management ---
+  const [socket, setSocket] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [isCreatingNewChat, setIsCreatingNewChat] = useState(false);
   const [newChatTitle, setNewChatTitle] = useState("");
   const [titleError, setTitleError] = useState("");
-  const [activeChatId, setActiveChatId] = useState('1');
-  const [chats, setChats] = useState(initialChatData);
-  const [historyItems, setHistoryItems] = useState(
-     []
-  );
+  const [activeChatId, setActiveChatId] = useState(null);
+  const [chats, setChats] = useState({}); // Stores all chat data, keyed by chat ID
+  const [historyItems, setHistoryItems] = useState([]); // For sidebar display
   const [inputValue, setInputValue] = useState("");
   const [copiedMessageId, setCopiedMessageId] = useState(null);
   const [isModelTyping, setIsModelTyping] = useState(false);
+
+  // --- Refs ---
   const chatAreaRef = useRef(null);
   const sidebarRef = useRef(null);
   const textareaRef = useRef(null);
-  
-  const activeChat = chats[activeChatId];
+
+  // --- Constants ---
   const MAX_TITLE_WORDS = 35;
   const MAX_PROMPT_CHARS = 1400;
-const dispatch = useDispatch()
+
+  // --- Derived State ---
+  const activeChat = chats[activeChatId] || null;
+
+  // --- Helper Functions ---
   const scrollToBottom = () => {
     if (chatAreaRef.current) {
       chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
     }
   };
-  const logoutHandler = ()=>{
-    console.log('clicked')
-dispatch(logoutUser())
-  }
 
-    useEffect(()=>{
-      console.log('use effect')
-      const newSocket = io("http://localhost:3000",{ withCredentials: true,})
-      
-      setSocket(newSocket)
+  const logoutHandler = () => {
+    dispatch(logoutUser());
+  };
 
-      newSocket.emit('user-message',{chatId:activeChatId,content:inputValue})
-      newSocket.on('ai-response',(data)=>{
-        console.log(data)
+  // --- Effects ---
+
+  // Effect for Initial Data Fetch
+  useEffect(() => {
+    // API_CALL_PLACEHOLDER: Fetch all chat histories for the logged-in user.
+    axios.get('/chat')
+      .then((res) => {
+        const fetchedChats = res.data.chats; // Assuming the API returns an array of chats
+        
+        if (fetchedChats && fetchedChats.length > 0) {
+          const history = fetchedChats.map(chat => ({ id: chat._id, text: chat.title }));
+          const chatsData = fetchedChats.reduce((acc, chat) => {
+            acc[chat._id] = { title: chat.title, messages: chat.messages || [] };
+            return acc;
+          }, {});
+
+          setHistoryItems(history);
+          setChats(chatsData);
+          setActiveChatId(fetchedChats[0]._id); // Activate the most recent chat
+        }
       })
-      
+      .catch((err) => {
+        console.error("Failed to fetch chats:", err);
+        // Optionally, handle the error in the UI
+      });
+  }, []);
+
+  // Effect for WebSocket Connection
+  useEffect(() => {
+    // API_CALL_PLACEHOLDER: Ensure your backend URL is correct.
+    const newSocket = io("http://localhost:3000", { withCredentials: true });
+    setSocket(newSocket);
+
+    // Listener for streaming AI response
+    newSocket.on('ai-response-chunk', ({ chatId, chunk }) => {
+      if (chatId === activeChatId) {
+        setChats(prev => {
+          const updatedMessages = [...prev[chatId].messages];
+          const lastMessage = updatedMessages[updatedMessages.length - 1];
+          if (lastMessage && lastMessage.from === 'model') {
+            lastMessage.text += chunk;
+          }
+          return { ...prev, [chatId]: { ...prev[chatId], messages: updatedMessages } };
+        });
+      }
+    });
+    
+    // Listener for when the AI response is complete
+    newSocket.on('ai-response-end', ({ chatId }) => {
+        if (chatId === activeChatId) {
+            setIsModelTyping(false);
+        }
+    });
+
+    // Listener for error events
+    newSocket.on('error', ({ message, error }) => {
+        console.error('Socket error:', message, error);
+        setIsModelTyping(false);
+        // You could show a user-friendly error message here
+        alert(`Error: ${message}`);
+    });
 
 
-      
-      axios.get('/chat')
-      .then((res)=>{
-        console.log(res.data.chats)
-        setChats(res.data.chats)
-        setHistoryItems(res.data.chats.map((chat)=>({id:chat._id,text:chat.title})))
-      })
-      .catch((err)=>{
-        console.log(err)
-      })
+    return () => newSocket.disconnect();
+  }, [activeChatId]); // Re-connect if active chat changes, or remove dependency if socket is global
 
-    },[])
+  // Effect for auto-scrolling
+  useEffect(() => {
+    scrollToBottom();
+  }, [activeChat?.messages, isModelTyping]);
+
+  // Effect for auto-resizing textarea
+  useEffect(() => {
+    if (textareaRef.current) {
+      textareaRef.current.style.height = 'auto';
+      textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
+    }
+  }, [inputValue]);
+  
+  // Effect for responsive sidebar behavior
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) setSidebarOpen(true);
+      else setSidebarOpen(false);
+    };
+    
+    const handleClickOutside = (event) => {
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
+        if (window.innerWidth < 768) setSidebarOpen(false);
+      }
+    };
+    
+    window.addEventListener('resize', handleResize);
+    document.addEventListener("mousedown", handleClickOutside);
+    handleResize(); // Initial check
+
+    return () => {
+        window.removeEventListener('resize', handleResize);
+        document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
+
+  // --- Event Handlers ---
 
   const handleCreateNewChat = () => {
     setIsCreatingNewChat(true);
@@ -127,46 +171,51 @@ dispatch(logoutUser())
 
   const handleNewChatSubmit = async (e) => {
     e.preventDefault();
-    console.log('su')
-    if (newChatTitle.trim() && !titleError) {
-      const result = await axios.post('/chat',{title:newChatTitle})
-      console.log(result)
-      const newChatId = result.data.chat._id;
-      const newChat = { id: newChatId, text: newChatTitle };
-      setHistoryItems(prev => [newChat, ...prev]);
-      setChats(prev => ({ ...prev, [newChatId]: { title: newChatTitle, messages: [] } }));
-      setActiveChatId(newChatId);
+    if (!newChatTitle.trim() || titleError) return;
+    
+    try {
+      // API_CALL_PLACEHOLDER: Send new chat title to the backend.
+      const response = await axios.post('/chat', { title: newChatTitle });
+      const newChat = response.data.chat; // Assuming backend returns the new chat object
+      console.log("newChat",newChat)
+      const newChatItem = { id: newChat._id, text: newChat.title };
+      
+      setHistoryItems(prev => [newChatItem, ...prev]);
+      setChats(prev => ({ ...prev, [newChat._id]: { title: newChat.title, messages: [] } }));
+      setActiveChatId(newChat._id);
+      
       setNewChatTitle("");
       setIsCreatingNewChat(false);
+    } catch (err) {
+      console.error("Failed to create new chat:", err);
+      // Optionally, set an error state to show the user
     }
   };
 
-  const handleTitleChange = async (e) => {
+  const handleTitleChange = (e) => {
     const value = e.target.value;
-    
     setNewChatTitle(value);
     const wordCount = value.trim().split(/\s+/).filter(Boolean).length;
-    if (wordCount > MAX_TITLE_WORDS) {
-      setTitleError(`Title cannot exceed ${MAX_TITLE_WORDS} words.`);
-    } else {
-      setTitleError("");
-    }
+    setTitleError(wordCount > MAX_TITLE_WORDS ? `Title cannot exceed ${MAX_TITLE_WORDS} words.` : "");
   };
-  // const titleSubmitHandler = async(title)=>{
-    
-  // }
+
   const handleHistoryClick = (id) => {
-    console.log(id)
-    axios.get(`/chat/${id}`)
-    .then((res)=>{
-      // console.log(res.data.chat)
-      setChats(res.data.chat)
-      setActiveChatId(id)
-    })
-    .catch((err)=>{
-      console.log(err)
-    })
     setActiveChatId(id);
+    
+    // Only fetch if messages aren't already loaded
+    if (!chats[id] || chats[id].messages.length === 0) {
+      // API_CALL_PLACEHOLDER: Fetch messages for the selected chat.
+      axios.get(`/chat/${id}`)
+        .then(res => {
+          const fetchedChat = res.data.chat;
+          setChats(prev => ({
+            ...prev,
+            [id]: { title: fetchedChat.title, messages: fetchedChat.messages || [] }
+          }));
+        })
+        .catch(err => console.error("Failed to fetch chat history:", err));
+    }
+
     if (window.innerWidth < 768) {
       setSidebarOpen(false);
     }
@@ -181,49 +230,43 @@ dispatch(logoutUser())
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-
     if (!inputValue.trim() || !activeChatId || isModelTyping || inputValue.length > MAX_PROMPT_CHARS) return;
     
+    // Additional safety check for activeChatId
+    if (!activeChatId) {
+      console.error("No active chat selected");
+      return;
+    }
+    
     const userMessage = { id: `user-${Date.now()}`, from: 'user', text: inputValue };
+    const modelPlaceholder = { id: `model-${Date.now()}`, from: 'model', text: "" };
+
+    // Optimistically update UI
     setChats(prev => {
-        const updatedChats = { ...prev };
-        updatedChats[activeChatId].messages?.push(userMessage);
-        return updatedChats;
+      if (!prev[activeChatId]) {
+        console.error("Chat not found:", activeChatId);
+        return prev;
+      }
+      return {
+        ...prev,
+        [activeChatId]: {
+          ...prev[activeChatId],
+          messages: [...prev[activeChatId].messages, userMessage, modelPlaceholder]
+        }
+      };
     });
     setInputValue("");
-    setTimeout(scrollToBottom, 0);
     setIsModelTyping(true);
-    setTimeout(() => {
-      const aiResponse = { id: `model-${Date.now()}`, from: 'model', text: `This is a simulated response to "${inputValue}". It is revealing character by character.` };
-      setChats(prev => ({ ...prev, [activeChatId]: { ...prev[activeChatId], messages: [...prev[activeChatId].messages, aiResponse] } }));
-    }, 1000);
+    setTimeout(scrollToBottom, 0);
+
+    // API_CALL_PLACEHOLDER: Send message via WebSocket.
+    if (socket) {
+      socket.emit('user-message', {
+        chatId: activeChatId,
+        content: inputValue
+      });
+    }
   };
-
-  useEffect(() => {
-      if (textareaRef.current) {
-        textareaRef.current.style.height = 'auto';
-        textareaRef.current.style.height = `${textareaRef.current.scrollHeight}px`;
-      }
-  }, [inputValue]);
-
-  useEffect(() => {
-    scrollToBottom();
-  }, [activeChat?.messages, isModelTyping]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-        if (sidebarRef.current && !sidebarRef.current.contains(event.target)) {
-            if(window.innerWidth < 768) setSidebarOpen(false);
-        }
-    };
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
-
-  useEffect(() => {
-    if (window.innerWidth >= 768) setSidebarOpen(true);
-    else setSidebarOpen(false);
-  }, []);
 
   return (
     <div className="chat-container">
@@ -234,7 +277,7 @@ dispatch(logoutUser())
                 <Icon path={<path d="M18 6L6 18M6 6l12 12" />} />
             </button>
         </div>
-         <div className="sidebar-top">
+        <div className="sidebar-top">
           <nav className="main-nav">
              <button className="new-thread-btn" onClick={handleCreateNewChat}>
                 <Icon path={<path d="M12 5v14m-7-7h14" />} />
@@ -253,7 +296,6 @@ dispatch(logoutUser())
                   value={newChatTitle}
                   onChange={handleTitleChange}
                   onBlur={() => !newChatTitle && setIsCreatingNewChat(false)}
-                  // onSubmit={()=>titleSubmitHandler(newChatTitle)}
                   autoFocus
                 />
                 <button type="submit" className="submit-new-chat-btn" disabled={!!titleError}>
@@ -264,20 +306,20 @@ dispatch(logoutUser())
             </div>
           )}
           <ul>
-            {historyItems?.length>0?historyItems.map((item) => (
+            {historyItems.length > 0 ? historyItems.map((item) => (
               <li key={item.id} className={item.id === activeChatId ? 'active' : ''}>
                 <a href="#" onClick={(e) => { e.preventDefault(); handleHistoryClick(item.id); }}>
                     <span>{item.text}</span>
                 </a>
               </li>
-            )):<a href="#"><span>No chats found</span></a>}
+            )) : <li><a href="#" className="no-chats"><span>No chats found</span></a></li>}
           </ul>
         </div>
         <div className="sidebar-bottom">
             <div className="user-profile">
                 <div className="user-info">
                     <Icon path={<><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>} /> 
-                    <span>{userData?.user?userData?.user?.fullName?.firstName:  "Username"}</span>
+                    <span>{userData?.user?.fullName?.firstName || "Username"}</span>
                 </div>
                 <div className="credits-container">
                     <span>Credits: 50</span>
@@ -293,7 +335,7 @@ dispatch(logoutUser())
                     <Icon path={<><path d="M3 12h18" /><path d="M3 6h18" /><path d="M3 18h18" /></>} />
                 </button>
                 <div className="header-title-wrapper">
-                    <h2>{activeChat?.title || "New Chat"}</h2>
+                    <h2>{activeChat?.title || "Welcome"}</h2>
                 </div>
             </div>
             <div className="header-right">
@@ -304,9 +346,8 @@ dispatch(logoutUser())
         <section className="chat-area" ref={chatAreaRef}>
           <div className="chat-content-wrapper">
             {activeChat?.messages?.length > 0 ? (
-              activeChat.messages.map((msg, index) => {
-                const isLastMessage = index === activeChat.messages.length - 1;
-                return (
+              activeChat.messages.map((msg) => (
+                msg.text || (msg.from === 'model' && isModelTyping) ? ( // Render model message only if it has text or is the one currently typing
                   <div key={msg.id} className={`chat-turn ${msg.from}`}>
                     <div className="message-header">
                       <h3 className="message-sender">{msg.from === 'user' ? 'You' : 'Model'}</h3>
@@ -314,21 +355,17 @@ dispatch(logoutUser())
                           <Icon path={copiedMessageId === msg.id ? <path d="M20 6L9 17l-5-5"/> : <><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>} />
                       </button>
                     </div>
-                    {msg.from === 'model' && isLastMessage && isModelTyping ? (
-                      <TypingEffect text={msg.text} onComplete={() => setIsModelTyping(false)} scrollToBottom={scrollToBottom} />
-                    ) : (
-                      <p className="message-text">{msg.text}</p>
-                    )}
+                    <p className="message-text">{msg.text}</p>
                   </div>
-                )
-              })
+                ) : null
+              ))
             ) : (
               <div className="empty-chat-placeholder">
-                <h2>Start a new conversation</h2>
-                <p>Type your first message below.</p>
+                <h2>{activeChatId ? "Start a new conversation" : "Select or create a chat to begin"}</h2>
+                <p>{activeChatId ? "Type your first message below." : "Choose a chat from the sidebar or create a new one."}</p>
               </div>
             )}
-            {isModelTyping && activeChat?.messages[activeChat.messages.length - 1]?.from === 'user' && (
+            {isModelTyping && activeChat?.messages[activeChat.messages.length - 1]?.from === 'model' && !activeChat.messages[activeChat.messages.length - 1]?.text && (
                 <div className="chat-turn model">
                     <div className="message-header"> <h3 className="message-sender">Model</h3> </div>
                     <div className="typing-indicator">
@@ -366,11 +403,11 @@ dispatch(logoutUser())
                             <option value="chandni">Chandni</option>
                         </select>
                         <div className={`char-counter ${inputValue.length > MAX_PROMPT_CHARS  ? 'error' : ''}`}>
-                            {MAX_PROMPT_CHARS - inputValue.length +" / 1400"}
+                            {MAX_PROMPT_CHARS - inputValue.length} / 1400
                         </div>
                     </div>
                     <div className="input-footer-right">
-                        <button type="submit" className="send-button" disabled={!inputValue.trim() || isModelTyping || inputValue.length > MAX_PROMPT_CHARS}>
+                        <button type="submit" className="send-button" disabled={!inputValue.trim() || isModelTyping || inputValue.length > MAX_PROMPT_CHARS || !activeChatId}>
                           <Icon path={<><line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" /></>} />
                         </button>
                     </div>

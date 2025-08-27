@@ -24,4 +24,4 @@ app.use('/', indexRouter)
 app.use('/api/chat', chatRouter)
 app.use('/api/auth', authRouter)
 
-module.exports = app;   
+module.exports = app;     

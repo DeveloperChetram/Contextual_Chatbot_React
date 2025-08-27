@@ -11,10 +11,10 @@ const MainRoutes = () => {
   return (
     <Routes>
 
-      <Route path='/' element={<AuthRoute><ChatInterface /></AuthRoute>} />
+      <Route path='/' element={<><ChatInterface /></>} />
       <Route path='/login' element={<Login />} />
       <Route path='/register' element={<Register />} />
-      <Route path='/home' element={<AuthRoute><ChatInterface /></AuthRoute>} />
+      <Route path='/home' element={<><ChatInterface /></>} />
     </Routes>
   )
 }
