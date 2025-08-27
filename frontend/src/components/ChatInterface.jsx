@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { io } from "socket.io-client";
 import ReactMarkdown from "react-markdown";
-import rehypeHighlight from "rehype-highlight";
+import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
+import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import {
   getChats,
   createChat,
@@ -18,7 +19,6 @@ import { logoutUser } from "../redux/actions/authActions";
 import TypingIndicator from "./TypingIndicator";
 import "../styles/theme.css";
 import "../styles/ChatInterface.css";
-// Removed problematic import: import "rehype-highlight/styles/github-dark.css"; // Or your preferred theme
 
 // --- Helper Components ---
 const Icon = ({ path, className = "" }) => (
@@ -320,7 +320,28 @@ const ChatInterface = () => {
                 </div>
                 <div className="message-text">
                   {msg.role === "model" ? (
-                    <ReactMarkdown rehypePlugins={[rehypeHighlight]}>{msg.content}</ReactMarkdown>
+                    <ReactMarkdown
+                      children={msg.content}
+                      components={{
+                        code(props) {
+                          const {children, className, node, ...rest} = props
+                          const match = /language-(\w+)/.exec(className || '')
+                          return match ? (
+                            <SyntaxHighlighter
+                              {...rest}
+                              children={String(children).replace(/\n$/, '')}
+                              style={vscDarkPlus}
+                              language={match[1]}
+                              PreTag="div"
+                            />
+                          ) : (
+                            <code {...rest} className={className}>
+                              {children}
+                            </code>
+                          )
+                        }
+                      }}
+                    />
                   ) : (
                     msg.content
                   )}
