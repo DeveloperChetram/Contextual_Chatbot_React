@@ -1,139 +1,104 @@
 const { Server } = require("socket.io");
 const cookie = require("cookie");
-const userModel = require("../models/user.model");
 const jwt = require("jsonwebtoken");
-const { generateResponse, generateVector } = require("../services/ai.service");
+const userModel = require("../models/user.model");
 const messageModel = require("../models/message.model");
+const { generateResponse, generateVector } = require("../services/ai.service");
 const { createMemory, queryMemory } = require("../services/vector.service");
+
 const initSocketServer = (httpServer) => {
   const io = new Server(httpServer, {
-     cors: {
-      origin: "http://localhost:5173",   
-      credentials: true, 
+    cors: {
+      origin: "http://localhost:5173",
+      credentials: true,
     },
   });
 
-  // middleware
+  // Middleware 
   io.use(async (socket, next) => {
-    const cookies = cookie.parse(socket.handshake.headers?.cookie || "");
-    // console.log(cookies)
-    if (!cookies.token) {
-      next(new Error("unauthorized : token not found"));
-    }
     try {
+      const cookies = cookie.parse(socket.handshake.headers?.cookie || "");
+      if (!cookies.token) {
+        return next(new Error("Unauthorized: Token not found"));
+      }
       const decoded = jwt.verify(cookies.token, process.env.JWT_SECRET);
-      const user = await userModel.findById(decoded.id);
+      const user = await userModel.findById(decoded.id).select("credits"); 
+      if (!user) {
+        return next(new Error("Unauthorized: User not found"));
+      }
       socket.user = user;
       next();
     } catch (error) {
-      // console.log('error')
-      next(new Error("Invalid token" + error));
+      next(new Error("Invalid token"));
     }
   });
 
   io.on("connection", (socket) => {
-    console.log('a user connected')
+    console.log(`User connected: ${socket.user._id}`);
+
     socket.on("user-message", async (messagePayload) => {
-      // user message vectors
+      try {
+        // latest credits
+        const user = await userModel.findById(socket.user._id).select("credits");
+        if (!user || typeof user.credits !== "number" || user.credits <= 0) {
+          socket.emit("ai-response", {
+            chatId: messagePayload.chatId,
+            response:
+              "You are out of credits. For more credits, please contact @developerchetram on Instagram or email me at patelchetram49@gmail.com.",
+          });
+          return;
+        }
 
-      /* 
-           
-           
-            // mongo model
-            const userMessage =   await messageModel.create({
-                user: socket.user._id,
-                chatId: messagePayload.chatId,
-                content: messagePayload.content,
-                role: "user"
-            })
-            
-            // vector memory
-            const vectors = await generateVector(messagePayload.content);
-            // console.log(vectors)
- */
+        // decrement credits
+        const updatedUser = await userModel.findOneAndUpdate(
+          { _id: socket.user._id, credits: { $gt: 0 } },
+          { $inc: { credits: -1 } },
+          { new: true }
+        ).select("credits");
 
-      const [userMessage, vectors] = await Promise.all([
-        (messageModel.create({
-          user: socket.user._id,
-          chatId: messagePayload.chatId,
-          content: messagePayload.content,
-          role: "user",
-        })),
-        // vector memory
-        (generateVector(messagePayload.content)),
-      ]);
-/*
-      // pinecone query
-      const pineconeData = await queryMemory({
-        queryVector: vectors,
-        limit: 5,
-        metadata: {
-          user: socket.user._id,
-        },
-      });
-      */
-      /*
-      // console.log(pineconeData)
-      await createMemory({
-        vectors,
-        messageId: userMessage._id,
-        metadata: {
-          user: socket.user._id,
-          chatId: messagePayload.chatId,
-          message: messagePayload.content,
-        },
-      });
+        if (!updatedUser) {
+          // 0 credits
+          socket.emit("ai-response", {
+            chatId: messagePayload.chatId,
+            response:
+              "You are out of credits. For more credits, please contact @developerchetram on Instagram or email me at patelchetram49@gmail.com. NOTE: your messages wont be saved after and with this response. NOTE: your messages wont be saved after and with this response.",
+          });
+          return;
+        }
 
-    //   STM
-      const chatHistory = (
-        await messageModel
-          .find({ chatId: messagePayload.chatId })
-          .sort({ createdAt: -1 })
-          .limit(8)
-          .lean()
-      ).reverse();
+        // DB save & vector generation
+        const [userMessage, vectors] = await Promise.all([
+          messageModel.create({
+            user: socket.user._id,
+            chatId: messagePayload.chatId,
+            content: messagePayload.content,
+            role: "user",
+          }),
+          generateVector(messagePayload.content),
+        ]);
 
-      */
-
-      const [_,pineconeData, chatHistory] = await Promise.all([
-        (createMemory({
-        vectors,
-        messageId: userMessage._id,
-        metadata: {
-          user: socket.user._id,
-          chatId: messagePayload.chatId,
-          message: messagePayload.content,
-        },
-      })),
-      queryMemory({
-        queryVector: vectors,
-        limit: 5,
-        metadata: {
-          user: socket.user._id,
-        },
-      }),
-      (
-         (
-        await messageModel
-          .find({ chatId: messagePayload.chatId })
-          .sort({ createdAt: -1 })
-          .limit(8)
-          .lean()
-      ).reverse()
-      )
-      ])
-
-      // console.log(chatHistory)
-
-      const stm = chatHistory.map((item) => {
-        return {
+        // Query memories and get chat history 
+        const [pineconeData, chatHistory] = await Promise.all([
+          queryMemory({
+            queryVector: vectors,
+            limit: 5,
+            metadata: { user: socket.user._id.toString() },
+          }),
+          messageModel
+            .find({ chatId: messagePayload.chatId })
+            .sort({ createdAt: -1 })
+            .limit(8)
+            .lean()
+            .then((messages) => messages.reverse()), 
+        ]);
+        
+        //  context for the AI
+        const stm = chatHistory.map((item) => ({
           role: item.role,
           parts: [{ text: item.content }],
-        };
-      }); //.slice(-4)
+        }));
 
-      const ltm = [
-        {
+        const ltm = [{
           role: "user",
           parts: [
             {
@@ -142,37 +107,55 @@ const initSocketServer = (httpServer) => {
                 .join("\n")}`,
             },
           ],
-        },
-      ];
-      console.log(pineconeData);
-      // console.log("ltm:-",ltm, "stm:-", stm)
-      const response = await generateResponse([...ltm, ...stm]);
+        }];
 
-      // mongo model
-      const responseMessage = await messageModel.create({
-        user: socket.user._id,
-        chatId: messagePayload.chatId,
-        content: response,
-        role: "model",
-      });
+        // Generate response
+        const response = await generateResponse([...ltm, ...stm]);
 
+        socket.emit("ai-response", { chatId: messagePayload.chatId, response });
 
-      socket.emit("ai-response", { chatId: messagePayload.chatId, response });
+        // save response
+        const responseMessage = await messageModel.create({
+            user: socket.user._id,
+            chatId: messagePayload.chatId,
+            content: response,
+            role: "model",
+        });
 
-      // response vectors
-      const responseVectors = await generateVector(response);
-      //  console.log(responseVectors)
+        const responseVectors = await generateVector(response);
+        // pinecone save response
+        await Promise.all([
+            createMemory({
+                vectors,
+                messageId: userMessage._id,
+                metadata: {
+                    user: socket.user._id.toString(),
+                    chatId: messagePayload.chatId,
+                    message: messagePayload.content,
+                },
+            }),
+            // pinecone save response message 
+            createMemory({
+                vectors: responseVectors,
+                messageId: responseMessage._id,
+                metadata: {
+                    chatId: messagePayload.chatId,
+                    user: socket.user._id.toString(),
+                    message: response,
+                },
+            })
+        ]);
 
-      // response vector memory
-      await createMemory({
-        vectors: responseVectors,
-        messageId: responseMessage._id,
-        metadata: {
-          chatId: messagePayload.chatId,
-          user: socket.user._id,
-          message: response,
-        },
-      });
+      } catch (error) {
+        console.error("Error in user-message handler:", error.message);
+        socket.emit("error", { 
+              message: "Sorry, an error occurred while processing your request." 
+          });
+      }
+    });
+
+    socket.on('disconnect', () => {
+        console.log(`User disconnected: ${socket.user._id}`);
     });
   });
 };

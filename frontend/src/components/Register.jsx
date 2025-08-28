@@ -5,6 +5,7 @@ import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
 import { registerUser } from "../redux/actions/authActions"; // Updated import
 import { useEffect } from "react";
+import { resetAuthState } from "../redux/reducers/authSlice";
 
 const Register = () => {
   const navigate = useNavigate();
@@ -29,6 +30,11 @@ const Register = () => {
       navigate('/home');
     }
   }, [isAuthenticated, navigate]);
+
+  // Reset loading state when component mounts
+  useEffect(() => {
+    dispatch(resetAuthState());
+  }, [dispatch]);
 
   return (
     <div className="auth-container">

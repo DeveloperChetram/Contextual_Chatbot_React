@@ -19,6 +19,7 @@ const registerController = async (req, res)=>{
             lastName
         },
         email,
+        credits: 50,
         passwordHash: await bcrypt.hash(password, 10)
     })
 
