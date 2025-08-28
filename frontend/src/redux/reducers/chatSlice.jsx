@@ -2,59 +2,53 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   chats: [],
-  messages: {},
+  allMessages: [], // Changed from 'messages: {}' to 'allMessages: []'
   activeChatId: null,
   loading: false,
   error: null,
-  isModelTyping: {}, // Add this line
+  isModelTyping: {},
 };
 
 const chatSlice = createSlice({
   name: "chat",
   initialState,
   reducers: {
-    setChats: (state, action) => {
-      state.chats = action.payload;
-    },
-    addChat: (state, action) => {
-      state.chats.unshift(action.payload);
-    },
-    setMessages: (state, action) => {
-      console.log('Setting messages for chatId:', action.payload.chatId);
-      console.log('Messages:', action.payload.messages);
-      state.messages[action.payload.chatId] = action.payload.messages;
-    },
-    addMessage: (state, action) => {
-      if (!state.messages[action.payload.chatId]) {
-        state.messages[action.payload.chatId] = [];
-      }
-      state.messages[action.payload.chatId].push(action.payload.message);
-    },
-    setActiveChatId: (state, action) => {
-      state.activeChatId = action.payload;
-    },
     setLoading: (state, action) => {
       state.loading = action.payload;
     },
     setError: (state, action) => {
       state.error = action.payload;
     },
-    // Add this new reducer
+    setChats: (state, action) => {
+      state.chats = action.payload;
+    },
+    addChat: (state, action) => {
+      state.chats.unshift(action.payload);
+    },
+    setAllMessages: (state, action) => { // New reducer for all messages
+      state.allMessages = action.payload;
+    },
+    addMessage: (state, action) => {
+      state.allMessages.push(action.payload.message);
+    },
+    setActiveChatId: (state, action) => {
+      state.activeChatId = action.payload;
+    },
     setModelTyping: (state, action) => {
-      const { chatId, isTyping } = action.payload;
-      state.isModelTyping[chatId] = isTyping;
+      state.isModelTyping[action.payload.chatId] = action.payload.isTyping;
     },
   },
 });
 
 export const {
-  setChats,
-  addChat,
-  setMessages,
-  addMessage,
-  setActiveChatId,
   setLoading,
   setError,
-  setModelTyping, // Export the new action
+  setChats,
+  addChat,
+  setAllMessages, // Export the new action
+  addMessage,
+  setActiveChatId,
+  setModelTyping,
 } = chatSlice.actions;
+
 export default chatSlice.reducer;

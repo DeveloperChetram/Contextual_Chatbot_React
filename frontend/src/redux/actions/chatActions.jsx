@@ -2,22 +2,39 @@ import { axiosInstance as axios } from "../../api/axios";
 import {
   setChats,
   addChat,
-  setMessages,
+  setAllMessages, // Updated import
   addMessage,
   setLoading,
   setError,
   setActiveChatId,
-  setModelTyping, // Import the new action
+  setModelTyping,
 } from "../reducers/chatSlice";
 
+// Fetches ALL messages for the logged-in user
+export const getAllMessages = () => async (dispatch) => {
+  dispatch(setLoading(true));
+  try {
+    const response = await axios.get(`/chat/messages`);
+    dispatch(setAllMessages(response.data.messages));
+  } catch (error) {
+    console.error('Error getting all messages:', error);
+    dispatch(setError(error.message));
+  } finally {
+    dispatch(setLoading(false));
+  }
+};
+
+// Fetches all chat sessions
 export const getChats = () => async (dispatch) => {
   dispatch(setLoading(true));
   try {
     const response = await axios.get("/chat");
     dispatch(setChats(response.data.chats));
     if (response.data.chats.length > 0) {
+      // Set the first chat as active by default
       dispatch(setActiveChatId(response.data.chats[0]._id));
-      dispatch(getMessages(response.data.chats[0]._id));
+      // Fetch all messages for all chats at once
+      dispatch(getAllMessages());
     }
   } catch (error) {
     dispatch(setError(error.message));
@@ -26,6 +43,7 @@ export const getChats = () => async (dispatch) => {
   }
 };
 
+// Creates a new chat session
 export const createChat = (title) => async (dispatch) => {
   dispatch(setLoading(true));
   try {
@@ -39,35 +57,19 @@ export const createChat = (title) => async (dispatch) => {
   }
 };
 
-export const getMessages = (chatId) => async (dispatch) => {
-  console.log('Getting messages for chatId:', chatId);
-  dispatch(setLoading(true));
+// Sends a message
+export const sendMessage = (messageData) => async (dispatch) => {
   try {
-    const response = await axios.get(`/chat/messages?chatId=${chatId}`);
-    console.log('Messages response:', response.data);
-    dispatch(setMessages({ chatId, messages: response.data.messages }));
+    dispatch(addMessage({ message: messageData.userMessage }));
+    dispatch(setModelTyping({ chatId: messageData.chatId, isTyping: true }));
+
+    const response = await axios.post(`/chat/message`, messageData);
+
+    dispatch(addMessage({ message: response.data.message }));
   } catch (error) {
-    console.error('Error getting messages:', error);
+    console.error("Error sending message:", error);
     dispatch(setError(error.message));
   } finally {
-    dispatch(setLoading(false));
+    dispatch(setModelTyping({ chatId: messageData.chatId, isTyping: false }));
   }
-};
-
-export const sendMessage = (socket, chatId, content) => (dispatch) => {
-  const userMessage = {
-    _id: `user-${Date.now()}`,
-    chatId,
-    content,
-    role: "user",
-  };
-  dispatch(addMessage({ chatId, message: userMessage }));
-
-  // Set typing status to true right after sending
-  dispatch(setModelTyping({ chatId, isTyping: true }));
-
-  socket.emit("user-message", {
-    chatId: chatId,
-    content: content,
-  });
 };
