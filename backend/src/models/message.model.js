@@ -20,6 +20,10 @@ const messageSchema = new mongoose.Schema({
         enum:['user', 'model'],
         default:"user"
     },
+    character:{
+        type:String,
+        default:"default"
+    },
     lastActivity:{
         type:Date,
         default:Date.now

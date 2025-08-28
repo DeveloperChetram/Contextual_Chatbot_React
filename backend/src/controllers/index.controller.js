@@ -1,4 +1,5 @@
 const userModel = require('../models/user.model')
+const { changeCharacter } = require('../services/ai.service')
 
 const indexController = (req, res)=>{
     res.json({
@@ -6,7 +7,7 @@ const indexController = (req, res)=>{
     })
 }
 
-async function creditsController(req, res) {
+const creditsController =  async (req, res)=> {
   try {
     // req.user is already the user object set by auth middleware
     const userId = req.user && req.user._id ? req.user._id : null;
@@ -24,4 +25,11 @@ async function creditsController(req, res) {
   }
 }
 
-module.exports = { indexController, creditsController }
+const changeCharacterController = async (req, res)=>{
+    const {character} = req.params;
+    const systemInstruction = await changeCharacter(character);
+    res.json({message: "Character changed successfully"});
+}
+
+
+module.exports = { indexController, creditsController, changeCharacterController }
