@@ -20,6 +20,8 @@ const chatSlice = createSlice({
       state.chats.unshift(action.payload);
     },
     setMessages: (state, action) => {
+      console.log('Setting messages for chatId:', action.payload.chatId);
+      console.log('Messages:', action.payload.messages);
       state.messages[action.payload.chatId] = action.payload.messages;
     },
     addMessage: (state, action) => {

@@ -40,11 +40,14 @@ export const createChat = (title) => async (dispatch) => {
 };
 
 export const getMessages = (chatId) => async (dispatch) => {
+  console.log('Getting messages for chatId:', chatId);
   dispatch(setLoading(true));
   try {
     const response = await axios.get(`/chat/messages?chatId=${chatId}`);
+    console.log('Messages response:', response.data);
     dispatch(setMessages({ chatId, messages: response.data.messages }));
   } catch (error) {
+    console.error('Error getting messages:', error);
     dispatch(setError(error.message));
   } finally {
     dispatch(setLoading(false));

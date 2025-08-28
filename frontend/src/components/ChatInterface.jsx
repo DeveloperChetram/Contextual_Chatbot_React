@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import ReactMarkdown from "react-markdown";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -51,7 +52,11 @@ const Icon = ({ path, className = "" }) => (
 
 // --- Main Chat Component ---
 const ChatInterface = () => {
+  const [isCreditsVisible, setIsCreditsVisible] = useState(false);
+  const creditsTimeoutRef = useRef(null);
+
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { user } = useSelector((state) => state.auth);
   const { chats, messages, activeChatId, loading, isModelTyping } = useSelector(
     (state) => state.chat
@@ -67,6 +72,7 @@ const ChatInterface = () => {
   const [copiedMessageId, setCopiedMessageId] = useState(null);
 
   // --- Refs ---
+  
   const chatAreaRef = useRef(null);
   const textareaRef = useRef(null);
 
@@ -75,6 +81,14 @@ const ChatInterface = () => {
   const MAX_PROMPT_CHARS = 1400;
 
   // --- Effects ---
+  useEffect(() => {
+    // Cleanup timeout on component unmount
+    return () => {
+      if (creditsTimeoutRef.current) {
+        clearTimeout(creditsTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     dispatch(getChats());
@@ -115,7 +129,23 @@ const ChatInterface = () => {
   }, [inputValue]);
 
   // --- Event Handlers ---
+// ... inside the component, near other handlers
 
+const handleCreditsClick = () => {
+  // If a timer is already running, clear it to reset
+  if (creditsTimeoutRef.current) {
+    clearTimeout(creditsTimeoutRef.current);
+  }
+
+  // Show the credits text
+  setIsCreditsVisible(true);
+
+  // Set a new timer to hide the credits after 5 seconds
+  creditsTimeoutRef.current = setTimeout(() => {
+    setIsCreditsVisible(false);
+    creditsTimeoutRef.current = null; // Clear the ref after timeout
+  }, 5000);
+};
   const handleCreateNewChat = () => setIsCreatingNewChat(true);
 
   const handleNewChatSubmit = (e) => {
@@ -138,10 +168,18 @@ const ChatInterface = () => {
   };
 
   const handleHistoryClick = (id) => {
+    console.log('Clicking on chat with ID:', id);
+    console.log('Current messages:', messages);
+    console.log('Current activeChatId:', activeChatId);
+    
     dispatch(setActiveChatId(id));
     if (!messages[id]) {
+      console.log('Messages not found for this chat, fetching...');
       dispatch(getMessages(id));
+    } else {
+      console.log('Messages already available for this chat');
     }
+    
     if (window.innerWidth < 768) {
       setSidebarOpen(false);
     }
@@ -166,8 +204,11 @@ const ChatInterface = () => {
     setInputValue("");
   };
 
-  const logoutHandler = () => {
-    dispatch(logoutUser());
+  const logoutHandler = async () => {
+    const result = await dispatch(logoutUser());
+    if (result.success) {
+      navigate('/login');
+    }
   };
 
   const activeChat = chats.find((chat) => chat._id === activeChatId);
@@ -273,7 +314,10 @@ const ChatInterface = () => {
               />
               <span>{user?.fullName?.firstName || "Username"}</span>
             </div>
-            <div className="credits-container">
+            <div 
+  className={`credits-container ${isCreditsVisible ? 'show-text' : ''}`}
+  onClick={handleCreditsClick}
+>
               <span>Credits: 50</span>
             </div>
           </div>
@@ -308,9 +352,13 @@ const ChatInterface = () => {
         </header>
         <section className="chat-area" ref={chatAreaRef}>
           <div className="chat-content-wrapper">
+            {/* Debug info - remove this after fixing */}
+            <div style={{color: 'red', fontSize: '12px', marginBottom: '10px'}}>
+              Debug: activeChatId: {activeChatId}, messages count: {activeChatId ? (messages[activeChatId]?.length || 0) : 0}
+            </div>
             {loading && <div className="empty-chat-placeholder"><h2>Loading...</h2></div>}
 
-            {!loading && messages[activeChatId]?.length > 0 && messages[activeChatId].map((msg) => (
+            {!loading && activeChatId && messages[activeChatId]?.length > 0 && messages[activeChatId].map((msg) => (
               <div key={msg._id} className={`chat-turn ${msg.role}`}>
                 <div className="message-header">
                   <h3 className="message-sender">{msg.role === "user" ? "You" : "Model"}</h3>

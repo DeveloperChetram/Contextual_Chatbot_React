@@ -188,46 +188,160 @@ a:hover .icon {
     color: var(--text-primary);
     font-weight: 500;
 }
-
+/* --- Credits Container --- */
+/* --- Themed Clickable Credits Container --- */
+/* --- Themed Clickable Credits Container (Corrected) --- */
 .credits-container {
-    font-size: 12px;
-    font-weight: 500;
-    padding: 6px 10px;
-    position: relative;
-    background-color: var(--background-sidebar);
-    border-radius: 8px;
-    overflow: hidden;
-}
-.credits-container::before {
-    content: '';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    width: 150%;
-    height: 150%;
-    background: conic-gradient(
-        from 0deg, 
-        var(--accent-color), 
-        #fff, 
-        var(--accent-color)
-    );
-    animation: spin 6s linear infinite; /* Slower animation */
-    transform: translate(-50%, -50%);
-    z-index: 0;
-}
-.credits-container span {
-    position: relative;
-    z-index: 1;
-    background-color: var(--background-sidebar);
-    padding: 2px 4px;
-    border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+  position: relative;
+  border-radius: 8px;
+  overflow: hidden;
+  cursor: pointer;
+  padding: 1px;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  -webkit-backdrop-filter: blur(3px);
+  backdrop-filter: blur(3px);
+  transition: backdrop-filter 0.4s ease;
 }
 
-@keyframes spin {
-    100% {
-        transform: translate(-50%, -50%) rotate(360deg);
-    }
+/* Animated Gradient Border */
+.credits-container::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 150%;
+  height: 150%;
+  background: conic-gradient(from 0deg, transparent, var(--accent-color), transparent);
+  animation: spin 4s linear infinite;
+  transform: translate(-50%, -50%);
+  z-index: 0;
 }
+
+/* Text Span - The inner content area */
+.credits-container span {
+  position: relative;
+  display: block;
+  padding: 6px 10px;
+  border-radius: 7px;
+  z-index: 1;
+  font-weight: 600;
+  
+  /* The CTA background from the theme color */
+  background: linear-gradient(90deg, 
+      var(--accent-color), 
+      color-mix(in srgb, var(--accent-color) 70%, #ffffff)
+  );
+  
+  /* FIX: Hide text by default */
+  color: transparent; 
+  
+  transition: color 0.4s ease;
+}
+
+/* Themed Blurry Noise & Glow Effect */
+.credits-container::after {
+  content: '';
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  right: 1px;
+  bottom: 1px;
+  z-index: 2;
+  pointer-events: none;
+  border-radius: 7px;
+  transition: opacity 0.4s ease;
+  background-image: 
+      radial-gradient(circle at 25% 25%, var(--accent-color) 0.5px, transparent 1px),
+      radial-gradient(circle at 75% 75%, var(--accent-color) 0.5px, transparent 1px),
+      radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.7) 1px, transparent 2px),
+      radial-gradient(circle at 45% 65%, var(--accent-color) 0.5px, transparent 1px);
+  background-size: 20px 20px;
+  filter: blur(0.7px);
+  opacity: 1;
+  animation: Glimmer 0.15s infinite linear alternate;
+}
+
+/* State when text should be visible */
+.credits-container.show-text span {
+  /* FIX: Make text visible on click with high contrast */
+  color: #0a0a0a !important; 
+}
+
+.credits-container.show-text::after {
+  opacity: 0; /* Hides the noise overlay */
+}
+
+.credits-container.show-text {
+  -webkit-backdrop-filter: blur(0px);
+  backdrop-filter: blur(0px);
+}
+
+/* Keyframes */
+@keyframes spin {
+  100% {
+      transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+@keyframes Glimmer {
+  from {
+      transform: translate(-0.5px, -0.5px);
+  }
+  to {
+      transform: translate(0.5px, 0.5px);
+  }
+}
+/* State when text should be visible */
+.credits-container.show-text span {
+  color: var(--text-primary); /* Makes text visible */
+}
+
+.credits-container.show-text::after {
+  opacity: 0; /* Hides the noise overlay */
+}
+
+.credits-container.show-text {
+  -webkit-backdrop-filter: blur(0px); /* Removes blur for readability */
+  backdrop-filter: blur(0px);
+}
+
+
+/* Keyframe for the border rotation */
+@keyframes spin {
+  100% {
+      transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
+/* Keyframe for the noise glimmer effect */
+@keyframes Glimmer {
+  from {
+      transform: translate(-0.5px, -0.5px);
+  }
+  to {
+      transform: translate(0.5px, 0.5px);
+  }
+}
+/* State when text should be visible */
+.credits-container.show-text span {
+  color: var(--text-primary); /* Makes text visible */
+}
+
+.credits-container.show-text::after {
+  opacity: 0; /* Hides the noise overlay */
+}
+
+/* Keep the spin animation defined */
+@keyframes spin {
+  100% {
+      transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+/* Make sure the spin animation is present */
 
 .main-content {
   flex-grow: 1;
@@ -339,7 +453,7 @@ a:hover .icon {
   scrollbar-color: var(--accent-color) transparent;
 }
 
-.chat-content-wrapper { max-width: 720px; width: 100%; }
+.chat-content-wrapper { max-width: 700px; width: 100%; }
 
 .chat-turn {
   padding-bottom: 24px;
@@ -411,7 +525,7 @@ a:hover .icon {
 .icon-button .icon { margin: 0; }
 .chat-input-area {
   
-  padding: 16px 24px;
+  padding: 35px 24px 16px 24px;
   background-color: var(--background-primary);
   flex-shrink: 0;
   display: flex;
@@ -426,7 +540,7 @@ a:hover .icon {
   border: 1px solid var(--border-color);
   border-radius: 12px;
   padding: 8px 12px;
-  max-width: 720px;
+  max-width: 800px;
   width: 100%;
   transition: border-color 0.3s, box-shadow 0.3s;
 }

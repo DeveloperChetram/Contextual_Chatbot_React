@@ -147,7 +147,7 @@ const initSocketServer = (httpServer) => {
       console.log(pineconeData);
       // console.log("ltm:-",ltm, "stm:-", stm)
       const response = await generateResponse([...ltm, ...stm]);
-
+      console.log(response);
       // mongo model
       const responseMessage = await messageModel.create({
         user: socket.user._id,
@@ -158,6 +158,7 @@ const initSocketServer = (httpServer) => {
 
 
       socket.emit("ai-response", { chatId: messagePayload.chatId, response });
+
 
       // response vectors
       const responseVectors = await generateVector(response);
