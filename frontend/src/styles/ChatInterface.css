@@ -205,6 +205,7 @@ a:hover .icon {
   -webkit-backdrop-filter: blur(3px);
   backdrop-filter: blur(3px);
   transition: backdrop-filter 0.4s ease;
+  animation: pulse 3s ease-in-out infinite;
 }
 
 /* Animated Gradient Border */
@@ -224,11 +225,15 @@ a:hover .icon {
 /* Text Span - The inner content area */
 .credits-container span {
   position: relative;
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   padding: 6px 10px;
   border-radius: 7px;
   z-index: 1;
   font-weight: 600;
+  min-width: 80px; /* Set minimum width to prevent shrinking */
+  min-height: 28px; /* Maintain consistent height */
   
   /* The CTA background from the theme color */
   background: linear-gradient(90deg, 
@@ -293,6 +298,80 @@ a:hover .icon {
   }
   to {
       transform: translate(0.5px, 0.5px);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(49, 184, 198, 0.7);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(49, 184, 198, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(49, 184, 198, 0);
+  }
+}
+
+/* Loading state for credits container */
+.credits-container.loading {
+  pointer-events: none;
+  opacity: 0.7;
+}
+
+  .credits-container.loading span {
+    /* opacity: 0.7; */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+.credits-container.loading .loading-spinner {
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 50%;
+  border-top-color: var(--accent-color);
+  animation: spin-loading 1s ease-in-out infinite;
+}
+
+@keyframes spin-loading {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Zero credits state */
+.credits-container.zero-credits {
+  animation: pulse-red 2s ease-in-out infinite;
+}
+
+.credits-container.zero-credits::before {
+  background: conic-gradient(from 0deg, transparent, #ff4444, transparent);
+}
+
+.credits-container.zero-credits span {
+  background: linear-gradient(90deg, 
+      #ff4444, 
+      color-mix(in srgb, #ff4444 70%, #ffffff)
+  );
+}
+
+@keyframes pulse-red {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 68, 68, 0.7);
+  }
+  50% {
+    transform: scale(1.05);
+    box-shadow: 0 0 0 10px rgba(255, 68, 68, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(255, 68, 68, 0);
   }
 }
 /* State when text should be visible */

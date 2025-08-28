@@ -2,7 +2,7 @@ import { axiosInstance as axios } from "../../api/axios";
 import {
   setChats,
   addChat,
-  setAllMessages, // Updated import
+  setAllMessages, // <-- Use the new action
   addMessage,
   setLoading,
   setError,
@@ -10,11 +10,11 @@ import {
   setModelTyping,
 } from "../reducers/chatSlice";
 
-// Fetches ALL messages for the logged-in user
+// Action to fetch ALL messages for the user at once
 export const getAllMessages = () => async (dispatch) => {
   dispatch(setLoading(true));
   try {
-    const response = await axios.get(`/chat/messages`);
+    const response = await axios.get("/chat/messages");
     dispatch(setAllMessages(response.data.messages));
   } catch (error) {
     console.error('Error getting all messages:', error);
@@ -24,7 +24,7 @@ export const getAllMessages = () => async (dispatch) => {
   }
 };
 
-// Fetches all chat sessions
+// Updated to fetch chats and then fetch all messages
 export const getChats = () => async (dispatch) => {
   dispatch(setLoading(true));
   try {
@@ -33,7 +33,7 @@ export const getChats = () => async (dispatch) => {
     if (response.data.chats.length > 0) {
       // Set the first chat as active by default
       dispatch(setActiveChatId(response.data.chats[0]._id));
-      // Fetch all messages for all chats at once
+      // Fetch all messages for all chats
       dispatch(getAllMessages());
     }
   } catch (error) {
@@ -43,13 +43,13 @@ export const getChats = () => async (dispatch) => {
   }
 };
 
-// Creates a new chat session
 export const createChat = (title) => async (dispatch) => {
   dispatch(setLoading(true));
   try {
     const response = await axios.post("/chat", { title });
     dispatch(addChat(response.data.chat));
     dispatch(setActiveChatId(response.data.chat._id));
+    // No need to fetch messages here, as we already have them all
   } catch (error) {
     dispatch(setError(error.message));
   } finally {
@@ -57,19 +57,19 @@ export const createChat = (title) => async (dispatch) => {
   }
 };
 
-// Sends a message
-export const sendMessage = (messageData) => async (dispatch) => {
-  try {
-    dispatch(addMessage({ message: messageData.userMessage }));
-    dispatch(setModelTyping({ chatId: messageData.chatId, isTyping: true }));
+// sendMessage is now simplified
+export const sendMessage = (socket, chatId, content) => (dispatch) => {
+  const userMessage = {
+    _id: `user-${Date.now()}`,
+    chatId,
+    content,
+    role: "user",
+  };
+  dispatch(addMessage({ message: userMessage }));
+  dispatch(setModelTyping({ chatId, isTyping: true }));
 
-    const response = await axios.post(`/chat/message`, messageData);
-
-    dispatch(addMessage({ message: response.data.message }));
-  } catch (error) {
-    console.error("Error sending message:", error);
-    dispatch(setError(error.message));
-  } finally {
-    dispatch(setModelTyping({ chatId: messageData.chatId, isTyping: false }));
-  }
+  socket.emit("user-message", {
+    chatId: chatId,
+    content: content,
+  });
 };

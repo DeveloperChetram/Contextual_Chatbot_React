@@ -48,6 +48,11 @@ const authSlice = createSlice({
     setUserFromStorage(state, action) {
       state.isAuthenticated = true;
       state.user = action.payload;
+    },
+    // Reset loading and error state
+    resetAuthState(state) {
+      state.loading = false;
+      state.error = null;
     }
   },
 });
@@ -59,8 +64,9 @@ export const {
   registerRequest,    
   registerSuccess,    
   registerFailure,    
-    logout,
-  setUserFromStorage, 
+  logout,
+  setUserFromStorage,
+  resetAuthState,
 } = authSlice.actions;
 
 export default authSlice.reducer;

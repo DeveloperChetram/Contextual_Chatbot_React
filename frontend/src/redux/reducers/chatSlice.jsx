@@ -2,7 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   chats: [],
-  allMessages: [], // Changed from 'messages: {}' to 'allMessages: []'
+  allMessages: [], // Using a single array for all messages
   activeChatId: null,
   loading: false,
   error: null,
@@ -25,11 +25,15 @@ const chatSlice = createSlice({
     addChat: (state, action) => {
       state.chats.unshift(action.payload);
     },
-    setAllMessages: (state, action) => { // New reducer for all messages
+    setAllMessages: (state, action) => {
       state.allMessages = action.payload;
     },
     addMessage: (state, action) => {
-      state.allMessages.push(action.payload.message);
+        // action.payload is expected to be { chatId, message }
+      const exists = state.allMessages.some(msg => msg._id === action.payload.message._id);
+      if (!exists) {
+        state.allMessages.push(action.payload.message);
+      }
     },
     setActiveChatId: (state, action) => {
       state.activeChatId = action.payload;
@@ -45,7 +49,7 @@ export const {
   setError,
   setChats,
   addChat,
-  setAllMessages, // Export the new action
+  setAllMessages,
   addMessage,
   setActiveChatId,
   setModelTyping,
