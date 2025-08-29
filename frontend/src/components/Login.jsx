@@ -1,6 +1,6 @@
 // frontend/src/components/Login.jsx
 import { Link, useNavigate } from 'react-router-dom';
-import '../styles/auth.css';
+import '../styles/Auth.css';
 import { useForm } from 'react-hook-form';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../redux/actions/authActions'; // Updated import
