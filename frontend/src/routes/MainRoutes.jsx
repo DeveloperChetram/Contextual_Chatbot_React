@@ -25,6 +25,7 @@ const MainRoutes = () => {
       </Routes>
     </Suspense>
   );
+  
 };
 
 export default MainRoutes;
