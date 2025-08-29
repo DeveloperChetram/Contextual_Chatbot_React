@@ -1,53 +1,30 @@
-import React from 'react'
-import { Route, Routes, Navigate } from 'react-router-dom'
-import Login from '../components/Login'
-import Register from '../components/Register'
-import ChatInterface from '../components/ChatInterface'
-import NotFound from '../components/NotFound'
-import { useSelector } from 'react-redux'
-import AuthRoute from './AuthRoute'
+import React, { Suspense, lazy } from 'react';
+import { Route, Routes, Navigate } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import AuthRoute from './AuthRoute';
+import TypingIndicator from '../components/TypingIndicator'; 
+
+// lazy imports 
+const Login = lazy(() => import('../components/Login'));
+const Register = lazy(() => import('../components/Register'));
+const ChatInterface = lazy(() => import('../components/ChatInterface'));
+const NotFound = lazy(() => import('../components/NotFound'));
 
 const MainRoutes = () => {
-  const { isAuthenticated } = useSelector((state) => state.auth)
+  const { isAuthenticated } = useSelector((state) => state.auth);
 
   return (
-    <Routes>
-      {/* Protected routes */}
-      <Route
-        path="/"
-        element={
-          <AuthRoute>
-            <ChatInterface />
-          </AuthRoute>
-        }
-      />
-      <Route
-        path="/home"
-        element={
-          <AuthRoute>
-            <ChatInterface />
-          </AuthRoute>
-        }
-      />
+    <Suspense fallback={<TypingIndicator />}>
+      <Routes>
 
-      {/* Public routes */}
-      <Route
-        path="/login"
-        element={
-          isAuthenticated ? <Navigate to="/" replace /> : <Login />
-        }
-      />
-      <Route
-        path="/register"
-        element={
-          isAuthenticated ? <Navigate to="/" replace /> : <Register />
-        }
-      />
+        <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
+        <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <Register />} />
+        <Route path="/" element={<AuthRoute><ChatInterface /></AuthRoute>} />
+        <Route path="/home" element={<AuthRoute><ChatInterface /></AuthRoute>} />
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </Suspense>
+  );
+};
 
-      {/* Catch-all: show 404 page for unknown routes */}
-      <Route path="*" element={<NotFound />} />
-    </Routes>
-  )
-}
-
-export default MainRoutes
+export default MainRoutes;

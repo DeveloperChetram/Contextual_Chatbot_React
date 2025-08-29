@@ -1,5 +1,5 @@
 // frontend/src/components/Register.jsx
-import "../styles/Auth.css";
+import "../styles/auth.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { useDispatch, useSelector } from "react-redux";
