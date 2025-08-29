@@ -37,6 +37,7 @@ const initSocketServer = (httpServer) => {
     console.log(`User connected: ${socket.user._id}`);
 
     socket.on("user-message", async (messagePayload) => {
+      console.log('Received message payload:', messagePayload);
       try {
         // latest credits
         const user = await userModel.findById(socket.user._id).select("credits");
@@ -73,6 +74,7 @@ const initSocketServer = (httpServer) => {
             chatId: messagePayload.chatId,
             content: messagePayload.content,
             role: "user",
+            character: messagePayload.character || "atomic",
           }),
           generateVector(messagePayload.content),
         ]);
@@ -109,16 +111,17 @@ const initSocketServer = (httpServer) => {
           ],
         }];
 
-        // Generate response
-        const response = await generateResponse([...ltm, ...stm]);
+        // Generate response with the selected character
+        const {response, character: responseCharacter} = await generateResponse([...ltm, ...stm], messagePayload.character);
 
-        socket.emit("ai-response", { chatId: messagePayload.chatId, response });
+        socket.emit("ai-response", { chatId: messagePayload.chatId, response, character: responseCharacter });
 
         // save response
         const responseMessage = await messageModel.create({
             user: socket.user._id,
             chatId: messagePayload.chatId,
             content: response,
+            character: responseCharacter,
             role: "model",
         });
 

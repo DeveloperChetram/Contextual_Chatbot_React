@@ -7,6 +7,7 @@ const initialState = {
   loading: false,
   error: null,
   isModelTyping: {},
+  character: "atomic",
 };
 
 const chatSlice = createSlice({
@@ -41,6 +42,9 @@ const chatSlice = createSlice({
     setModelTyping: (state, action) => {
       state.isModelTyping[action.payload.chatId] = action.payload.isTyping;
     },
+    setCharacter: (state, action) => {
+      state.character = action.payload;
+    },
   },
 });
 
@@ -53,6 +57,7 @@ export const {
   addMessage,
   setActiveChatId,
   setModelTyping,
+  setCharacter,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;

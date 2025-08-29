@@ -560,7 +560,7 @@ a:hover .icon {
   text-transform: capitalize;
 }
 .chat-turn.user .message-sender { color: var(--accent-color); }
-.chat-turn.model .message-sender { color: var(--text-primary); }
+.chat-turn.model .message-sender { color: var(--accent-color); }
 .message-text {
   line-height: 1.7;
   font-size: 16px;
@@ -742,8 +742,23 @@ a:hover .icon {
     padding: 6px 8px;
     font-size: 13px;
     cursor: pointer;
+    transition: all 0.3s ease;
 }
 .model-selector:focus { outline: none; border-color: var(--accent-color); }
+
+.model-selector.loading {
+    opacity: 0.7;
+    cursor: not-allowed;
+    background-color: var(--background-primary);
+    color: var(--text-secondary);
+}
+
+.model-selector:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+    background-color: var(--background-primary);
+    color: var(--text-secondary);
+}
 .empty-chat-placeholder {
   display: flex;
   flex-direction: column;

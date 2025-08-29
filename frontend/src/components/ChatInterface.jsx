@@ -20,6 +20,7 @@ import { logoutUser } from "../redux/actions/authActions";
 import TypingIndicator from "./TypingIndicator";
 import "../styles/theme.css";
 import "../styles/ChatInterface.css";
+import { changeCharacter } from "../redux/actions/chatActions";
 
 // --- Helper Components ---
 const Icon = ({ path, className = "" }) => ( <svg className={`icon ${className}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"> {path} </svg> );
@@ -33,7 +34,7 @@ const ChatInterface = () => {
   const { user } = useSelector((state) => state.auth);
   console.log(user);
   // --- LOGIC CHANGE: Select 'allMessages' instead of 'messages' ---
-  const { chats, allMessages, activeChatId, loading, isModelTyping } = useSelector(
+  const { chats, allMessages, activeChatId, loading, isModelTyping, character } = useSelector(
     (state) => state.chat
   );
 
@@ -45,6 +46,7 @@ const ChatInterface = () => {
   const [inputValue, setInputValue] = useState("");
   const [copiedMessageId, setCopiedMessageId] = useState(null);
   const [creditsLoading, setCreditsLoading] = useState(false);
+  const [characterLoading, setCharacterLoading] = useState(false);
   const chatAreaRef = useRef(null);
   const textareaRef = useRef(null);
   const MAX_TITLE_WORDS = 35;
@@ -52,6 +54,7 @@ const ChatInterface = () => {
   const [credits, setCredits] = useState(0);
 
   useEffect(() => {
+    handleCreditsClick();
     return () => { if (creditsTimeoutRef.current) clearTimeout(creditsTimeoutRef.current) };
   }, []);
 
@@ -64,9 +67,9 @@ const ChatInterface = () => {
 
   useEffect(() => {
     if (socket) {
-      socket.on("ai-response", ({ chatId, response }) => {
+      socket.on("ai-response", ({ chatId, response, character }) => {
         dispatch(setModelTyping({ chatId, isTyping: false }));
-        const modelMessage = { _id: `model-${Date.now()}`, chatId, content: response, role: "model" };
+        const modelMessage = { _id: `model-${Date.now()}`, chatId, content: response, role: "model", character: character };
         dispatch(addMessage({ chatId, message: modelMessage }));
       });
     }
@@ -139,13 +142,26 @@ const ChatInterface = () => {
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (!inputValue.trim() || !activeChatId || inputValue.length > MAX_PROMPT_CHARS) return;
-    dispatch(sendMessage(socket, activeChatId, inputValue));
+    console.log('Sending message with character:', character);
+    dispatch(sendMessage(socket, activeChatId, inputValue, character));
     setInputValue("");
   };
 
   const logoutHandler = async () => {
     const result = await dispatch(logoutUser());
     if (result.success) navigate('/login');
+  };
+
+  const handleChangeCharacter = async (e) => {
+    const character = e.target.value;
+    setCharacterLoading(true);
+    try {
+      await dispatch(changeCharacter(character));
+    } catch (error) {
+      console.error('Error changing character:', error);
+    } finally {
+      setCharacterLoading(false);
+    }
   };
 
   const activeChat = chats.find((chat) => chat._id === activeChatId);
@@ -174,12 +190,12 @@ const ChatInterface = () => {
             {/* --- LOGIC CHANGE: Render the filtered 'activeChatMessages' array --- */}
             {!loading && activeChatMessages.length > 0 && activeChatMessages.map((msg) => (
               <div key={msg._id} className={`chat-turn ${msg.role}`}>
-                <div className="message-header"> <h3 className="message-sender">{msg.role === "user" ? "You" : "Model"}</h3> <button className="copy-btn" onClick={() => handleCopyMessage(msg.content, msg._id)}> <Icon path={copiedMessageId === msg._id ? <path d="M20 6L9 17l-5-5" /> : <><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>} /> </button> </div>
+                                 <div className="message-header"> <h3 className="message-sender">{msg.role === "user" ? "You" : (msg.character || "AI Assistant")}</h3> <button className="copy-btn" onClick={() => handleCopyMessage(msg.content, msg._id)}> <Icon path={copiedMessageId === msg._id ? <path d="M20 6L9 17l-5-5" /> : <><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>} /> </button> </div>
                 <div className="message-text"> {msg.role === "model" ? ( <ReactMarkdown children={msg.content} components={{ code(props) { const {children, className, node, ...rest} = props; const match = /language-(\w+)/.exec(className || ''); return match ? ( <SyntaxHighlighter {...rest} children={String(children).replace(/\n$/, '')} style={vscDarkPlus} language={match[1]} PreTag="div" /> ) : ( <code {...rest} className={className}> {children} </code> ) } }} /> ) : ( msg.content )} </div>
               </div>
             ))}
 
-            {isModelTyping[activeChatId] && <TypingIndicator />}
+            {isModelTyping[activeChatId] && <TypingIndicator character={character} />}
 
             {/* --- LOGIC CHANGE: Placeholder logic uses the filtered array --- */}
             {!loading && activeChatMessages.length === 0 && !isModelTyping[activeChatId] && (
@@ -191,10 +207,10 @@ const ChatInterface = () => {
         {/* --- Input area with your full UI --- */}
         <section className="chat-input-area">
           <form className="input-form" onSubmit={handleSendMessage}>
-            <div className="input-wrapper"> <textarea ref={textareaRef} rows="1" placeholder="Ask anything..." value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(e); } }} /> </div>
+            <div className="input-wrapper"> <textarea ref={textareaRef} rows="1" placeholder={characterLoading ? "Changing character..." : "Ask anything..."} value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(e); } }} disabled={characterLoading} /> </div>
             <div className="input-footer">
-              <div className="input-footer-left"> <select name="model" className="model-selector"> <option value="jhanvi">Jhanvi</option> <option value="chandni">Chandni</option> </select> <div className={`char-counter ${ inputValue.length > MAX_PROMPT_CHARS ? "error" : "" }`} > {MAX_PROMPT_CHARS - inputValue.length} / 1400 </div> </div>
-              <div className="input-footer-right"> <button type="submit" className="send-button" disabled={ !inputValue.trim() || inputValue.length > MAX_PROMPT_CHARS || !activeChatId } > <Icon path={ <> <line x1="12" y1="19" x2="12" y2="5" /> <polyline points="5 12 12 5 19 12" /> </> } /> </button> </div>
+                             <div className="input-footer-left"> <select name="model" value={character} className={`model-selector ${characterLoading ? 'loading' : ''}`} onChange={handleChangeCharacter} disabled={characterLoading}> <option value="jahnvi">Jahnvi</option> <option value="atomic">Atomic</option> <option value="chandni">Chandni</option> <option value="osho">Osho</option> </select> <div className={`char-counter ${ inputValue.length > MAX_PROMPT_CHARS ? "error" : "" }`} > {MAX_PROMPT_CHARS - inputValue.length} / 1400 </div> </div>
+              <div className="input-footer-right"> <button type="submit" className="send-button" disabled={ !inputValue.trim() || inputValue.length > MAX_PROMPT_CHARS || !activeChatId || characterLoading } > <Icon path={ <> <line x1="12" y1="19" x2="12" y2="5" /> <polyline points="5 12 12 5 19 12" /> </> } /> </button> </div>
             </div>
           </form>
         </section>

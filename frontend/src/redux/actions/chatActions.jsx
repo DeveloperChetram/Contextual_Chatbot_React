@@ -8,6 +8,7 @@ import {
   setError,
   setActiveChatId,
   setModelTyping,
+  setCharacter,
 } from "../reducers/chatSlice";
 
 // Action to fetch ALL messages for the user at once
@@ -58,7 +59,7 @@ export const createChat = (title) => async (dispatch) => {
 };
 
 // sendMessage is now simplified
-export const sendMessage = (socket, chatId, content) => (dispatch) => {
+export const sendMessage = (socket, chatId, content, character) => (dispatch) => {
   const userMessage = {
     _id: `user-${Date.now()}`,
     chatId,
@@ -71,5 +72,15 @@ export const sendMessage = (socket, chatId, content) => (dispatch) => {
   socket.emit("user-message", {
     chatId: chatId,
     content: content,
+    character: character,
   });
+};
+export const changeCharacter = (character) => async (dispatch) => {
+  try {
+    const response = await axios.get(`/change-character/${character}`);
+    dispatch(setCharacter(character));
+    
+  } catch (error) {
+    console.error('Error changing character:', error);
+  }
 };
