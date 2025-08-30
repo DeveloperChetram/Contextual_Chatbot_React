@@ -6,6 +6,7 @@
   justify-content: center;
   align-items: center;
   min-height: 100vh;
+  min-height: 100dvh;
   background-color: var(--background-primary);
   color: var(--text-primary);
   position: relative;
@@ -179,9 +180,8 @@
 /* --- Theme Toggler --- */
 .theme-toggle-button {
   position: absolute;
-  top: 24px;
-  right: 24px;
-  z-index: 10;
+  top: 16px;
+  right: 16px;
   background-color: var(--background-secondary);
   border: 1px solid var(--border-color);
   border-radius: 20px;
@@ -192,6 +192,14 @@
   gap: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   transition: all 0.3s ease;
+  font-size: 12px;
+  font-weight: 500;
+  z-index: 10;
+}
+
+.theme-toggle-button:hover {
+  opacity: 0.7;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .theme-toggle-icon-container {
@@ -209,10 +217,10 @@
   height: 18px;
   color: var(--text-secondary);
   transition: transform 0.4s ease, opacity 0.4s ease;
+  opacity: 0;
 }
 
 .sun-icon {
-  opacity: 0;
   transform: translateY(10px) rotate(45deg);
 }
 .sun-icon.active {
@@ -221,7 +229,6 @@
 }
 
 .moon-icon {
-  opacity: 0;
   transform: translateY(-10px) rotate(-45deg);
 }
 .moon-icon.active {
@@ -238,14 +245,51 @@
 
 /* Responsive adjustments */
 @media (max-width: 480px) {
+  .auth-container {
+    min-height: 100vh;
+    min-height: 100dvh;
+    padding: 16px;
+    align-items: center;
+    justify-content: center;
+  }
+  
   .auth-form {
     padding: 24px;
     height: auto;
-    margin-top: 60px;
+    margin-top: 0;
+    max-width: 100%;
   }
   /* The rule that stacked the name fields has been removed */
-   .theme-toggle-button {
-    top: 16px;
-    right: 16px;
+  .theme-toggle-button {
+    top: 12px;
+    right: 12px;
+    padding: 3px;
+    gap: 6px;
+  }
+  
+  .theme-toggle-text {
+    font-size: 11px;
+    padding-right: 6px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 360px) {
+  .auth-container {
+    padding: 12px;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .auth-form {
+    padding: 20px;
+  }
+  
+  .auth-header h2 {
+    font-size: 22px;
+  }
+  
+  .auth-header p {
+    font-size: 14px;
   }
 }

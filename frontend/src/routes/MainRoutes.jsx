@@ -19,8 +19,8 @@ const MainRoutes = () => {
 
         <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
         <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <Register />} />
-        <Route path="/" element={<AuthRoute><ChatInterface /></AuthRoute>} />
-        <Route path="/home" element={<AuthRoute><ChatInterface /></AuthRoute>} />
+        <Route path="/" element={<ChatInterface />} />
+        <Route path="/home" element={<ChatInterface />} />
         <Route path="*" element={<NotFound />} />
       </Routes>
     </Suspense>

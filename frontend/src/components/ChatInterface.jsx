@@ -18,7 +18,8 @@ import {
 } from "../redux/reducers/chatSlice";
 import { logoutUser } from "../redux/actions/authActions";
 import TypingIndicator from "./TypingIndicator";
-import "../styles/theme.css";
+import ThemeToggler from "./ThemeToggler";
+
 import "../styles/ChatInterface.css";
 import { changeCharacter } from "../redux/actions/chatActions";
 
@@ -31,7 +32,7 @@ const ChatInterface = () => {
   const creditsTimeoutRef = useRef(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const { user } = useSelector((state) => state.auth);
+  const { user, isAuthenticated } = useSelector((state) => state.auth);
   console.log(user);
   // --- LOGIC CHANGE: Select 'allMessages' instead of 'messages' ---
   const { chats, allMessages, activeChatId, loading, isModelTyping, character } = useSelector(
@@ -39,8 +40,9 @@ const ChatInterface = () => {
   );
 
   const [socket, setSocket] = useState(null);
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
   const [isCreatingNewChat, setIsCreatingNewChat] = useState(false);
+  const [isCreatingFirstChat, setIsCreatingFirstChat] = useState(false);
   const [newChatTitle, setNewChatTitle] = useState("");
   const [titleError, setTitleError] = useState("");
   const [inputValue, setInputValue] = useState("");
@@ -54,16 +56,20 @@ const ChatInterface = () => {
   const [credits, setCredits] = useState(0);
 
   useEffect(() => {
-    handleCreditsClick();
+    if (isAuthenticated) {
+      handleCreditsClick();
+    }
     return () => { if (creditsTimeoutRef.current) clearTimeout(creditsTimeoutRef.current) };
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
-    dispatch(getChats()); // This fetches chats and then all messages
-    const newSocket = io("http://localhost:3001", { withCredentials: true });
-    setSocket(newSocket);
-    return () => newSocket.disconnect();
-  }, [dispatch]);
+    if (isAuthenticated) {
+      dispatch(getChats()); // This fetches chats and then all messages
+      const newSocket = io("http://localhost:3001", { withCredentials: true });
+      setSocket(newSocket);
+      return () => newSocket.disconnect();
+    }
+  }, [dispatch, isAuthenticated]);
 
   useEffect(() => {
     if (socket) {
@@ -71,6 +77,7 @@ const ChatInterface = () => {
         dispatch(setModelTyping({ chatId, isTyping: false }));
         const modelMessage = { _id: `model-${Date.now()}`, chatId, content: response, role: "model", character: character };
         dispatch(addMessage({ chatId, message: modelMessage }));
+        handleCreditsClick();
       });
     }
   }, [socket, dispatch]);
@@ -86,6 +93,28 @@ const ChatInterface = () => {
     }
   }, [inputValue]);
 
+  // Handle window resize for sidebar state
+  useEffect(() => {
+    const handleResize = () => {
+      if (window.innerWidth >= 768) {
+        setSidebarOpen(true);
+      } else {
+        setSidebarOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Auto-show first chat form for new users
+  useEffect(() => {
+    if (isAuthenticated && !loading && chats.length === 0) {
+      setIsCreatingFirstChat(true);
+      setNewChatTitle("Untitled Chat");
+    }
+  }, [isAuthenticated, loading, chats.length]);
+
   // --- LOGIC CHANGE: Use useMemo to filter messages on the client-side ---
   const activeChatMessages = useMemo(() => {
     if (!activeChatId) return [];
@@ -93,6 +122,11 @@ const ChatInterface = () => {
   }, [allMessages, activeChatId]);
 
   const handleCreditsClick = async () => {
+    if (!isAuthenticated) {
+      setIsCreditsVisible(true);
+      creditsTimeoutRef.current = setTimeout(() => setIsCreditsVisible(false), 3000);
+      return;
+    }
     setCreditsLoading(true);
     try {
       const response = await axiosInstance.get(`/credits`);
@@ -116,6 +150,16 @@ const ChatInterface = () => {
     dispatch(createChat(newChatTitle));
     setNewChatTitle("");
     setIsCreatingNewChat(false);
+    setIsCreatingFirstChat(false);
+  };
+
+  const handleFirstChatSubmit = (e) => {
+    e.preventDefault();
+    if (!newChatTitle.trim() || titleError) return;
+    dispatch(createChat(newChatTitle));
+    setNewChatTitle("");
+    setIsCreatingFirstChat(false);
+    setIsCreatingNewChat(false);
   };
 
   const handleTitleChange = (e) => {
@@ -130,6 +174,12 @@ const ChatInterface = () => {
     // No need to fetch messages, they are already loaded. Just set the active chat.
     dispatch(setActiveChatId(id));
     if (window.innerWidth < 768) setSidebarOpen(false);
+  };
+
+  const handleMainContentClick = () => {
+    if (window.innerWidth < 768 && sidebarOpen) {
+      setSidebarOpen(false);
+    }
   };
 
   const handleCopyMessage = (text, messageId) => {
@@ -171,17 +221,17 @@ const ChatInterface = () => {
       {/* --- Sidebar with your full UI --- */}
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
         <div className="sidebar-header"> <div className="logo-container"> <LogoIcon /> </div> <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)} > <Icon path={<path d="M18 6L6 18M6 6l12 12" />} /> </button> </div>
-        <div className="sidebar-top"> <nav className="main-nav"> <button className="new-thread-btn" onClick={handleCreateNewChat}> <Icon path={<path d="M12 5v14m-7-7h14" />} /> <span>New Chat</span> </button> </nav> </div>
+                 <div className="sidebar-top"> <nav className="main-nav"> <button className="new-thread-btn" onClick={handleCreateNewChat} disabled={!isAuthenticated}> <Icon path={<path d="M12 5v14m-7-7h14" />} /> <span>New Chat</span> </button> </nav> </div>
         <div className="library">
           <div className="library-header"> <h3>History</h3> </div>
           {isCreatingNewChat && ( <div className="new-chat-form-container"> <form onSubmit={handleNewChatSubmit} className={`new-chat-form ${titleError ? "error" : ""}`} > <input type="text" placeholder="New chat title..." value={newChatTitle} onChange={handleTitleChange} onBlur={() => !newChatTitle && setIsCreatingNewChat(false)} autoFocus /> <button type="submit" className="submit-new-chat-btn" disabled={!!titleError} > <Icon path={ titleError ? ( <path d="M18 6L6 18M6 6l12 12" /> ) : ( <path d="M20 6L9 17l-5-5" /> ) } /> </button> </form> {titleError && ( <p className="title-error-warning">{titleError}</p> )} </div> )}
-          <ul> {chats.length > 0 ? ( chats.map((item) => ( <li key={item._id} className={item._id === activeChatId ? "active" : ""} > <a href="#" onClick={(e) => { e.preventDefault(); handleHistoryClick(item._id); }}> <span>{item.title}</span> </a> </li> )) ) : ( <li> <a href="#" className="no-chats"> <span>No chats found</span> </a> </li> )} </ul>
+                     <ul> {isAuthenticated ? (chats.length > 0 ? ( chats.map((item) => ( <li key={item._id} className={item._id === activeChatId ? "active" : ""} > <a href="#" onClick={(e) => { e.preventDefault(); handleHistoryClick(item._id); }}> <span>{item.title}</span> </a> </li> )) ) : ( <li> <a href="#" className="no-chats"> <span>No chats found</span> </a> </li> )) : ( <li> <a href="#" className="no-chats"> <span>Login to see history</span> </a> </li> )} </ul>
         </div>
-                 <div className="sidebar-bottom"> <div className="user-profile"> <div className="user-info"> <Icon path={ <> <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /> <circle cx="12" cy="7" r="4" /> </> } /> <span>{user?.fullName?.firstName || "Username"}</span> </div> <div className={`credits-container ${isCreditsVisible ? 'show-text' : ''} ${creditsLoading ? 'loading' : ''} ${credits === 0 ? 'zero-credits' : ''}`} onClick={handleCreditsClick} > <span>{creditsLoading ? <div className="loading-spinner"></div> : (`Credits: ${credits}`)}</span> </div> </div> </div>
+                                   <div className="sidebar-bottom"> <div className="user-profile"> <div className="user-info"> <Icon path={ <> <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /> <circle cx="12" cy="7" r="4" /> </> } /> <span>{user?.fullName?.firstName || "Guest User"}</span> </div> <div className={`credits-container ${isCreditsVisible ? 'show-text' : ''} ${creditsLoading ? 'loading' : ''} ${credits === 0 ? 'zero-credits' : ''}`} onClick={handleCreditsClick} > <span>{creditsLoading ? <div className="loading-spinner"></div> : (isAuthenticated ? `Credits: ${credits}` : (isCreditsVisible ? 'Login First' : 'Credits: 0'))}</span> </div> </div> </div>
       </aside>
 
-      <main className="main-content">
-        <header className="main-header"> <div className="header-left"> <button className="header-hamburger" onClick={() => setSidebarOpen((prev) => !prev)} > <Icon path={ <> <path d="M3 12h18" /> <path d="M3 6h18" /> <path d="M3 18h18" /> </> } /> </button> <div className="header-title-wrapper"> <h2>{activeChat?.title || "Welcome"}</h2> </div> </div> <div className="header-right"> <button className="share-btn logout" onClick={logoutHandler}> Log out </button> </div> </header>
+      <main className="main-content" onClick={handleMainContentClick}>
+                 <header className="main-header"> <div className="header-left"> <button className="header-hamburger" onClick={() => setSidebarOpen((prev) => !prev)} > <Icon path={ <> <path d="M3 12h18" /> <path d="M3 6h18" /> <path d="M3 18h18" /> </> } /> </button> <div className="header-title-wrapper"> <h2>{activeChat?.title || "Welcome"}</h2> </div> </div> <div className="header-right"> <ThemeToggler key={`theme-${isAuthenticated}`} /> {isAuthenticated ? ( <button className="share-btn logout" onClick={logoutHandler}> Log out </button> ) : ( <button className="share-btn login" onClick={() => navigate('/login')}> Login </button> )} </div> </header>
 
         <section className="chat-area" ref={chatAreaRef}>
           <div className="chat-content-wrapper">
@@ -197,20 +247,64 @@ const ChatInterface = () => {
 
             {isModelTyping[activeChatId] && <TypingIndicator character={character} />}
 
-            {/* --- LOGIC CHANGE: Placeholder logic uses the filtered array --- */}
-            {!loading && activeChatMessages.length === 0 && !isModelTyping[activeChatId] && (
-                 <div className="empty-chat-placeholder"> <h2> {activeChatId ? "Start a new conversation" : "Select or create a chat to begin"} </h2> <p> {activeChatId ? "Type your first message below." : "Choose a chat from the sidebar or create a new one."} </p> </div>
-            )}
+                         {/* --- LOGIC CHANGE: Placeholder logic uses the filtered array --- */}
+             {!loading && activeChatMessages.length === 0 && !isModelTyping[activeChatId] && (
+                  <div className="empty-chat-placeholder"> 
+                    {activeChatId ? (
+                      <>
+                        <h2>Start a new conversation</h2>
+                        <p>Type your first message below.</p>
+                      </>
+                    ) : isAuthenticated ? (
+                                             chats.length === 0 ? (
+                         <>
+                           <h2>Start Your First Chat</h2>
+                           <p>Create your first chat to begin your conversation with Atomic.</p>
+                           <div className="first-chat-form-container">
+                             <form onSubmit={handleFirstChatSubmit} className={`first-chat-form ${titleError ? "error" : ""}`}>
+                               <input 
+                                 type="text" 
+                                 placeholder="Untitled Chat" 
+                                 value={newChatTitle} 
+                                 onChange={handleTitleChange} 
+                                 onBlur={() => !newChatTitle && setIsCreatingFirstChat(false)} 
+                                 autoFocus 
+                               />
+                               <button type="submit" className="submit-first-chat-btn" disabled={!!titleError}>
+                                 <Icon path={titleError ? <path d="M18 6L6 18M6 6l12 12" /> : <path d="M20 6L9 17l-5-5" />} />
+                               </button>
+                             </form>
+                             {titleError && <p className="title-error-warning">{titleError}</p>}
+                           </div>
+                         </>
+                       ) : (
+                        <>
+                          <h2>Select or create a chat to begin</h2>
+                          <p>Choose a chat from the sidebar or create a new one.</p>
+                        </>
+                      )
+                    ) : (
+                      <>
+                        <h2>Welcome to Atomic</h2>
+                        <p>Atomic helps you to find out accurate, concise and truthful answers. Login to explore more characters.</p>
+                        <button className="login-to-chat-btn" onClick={() => navigate('/login')}>
+                          <Icon path={<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3" />} />
+                          Login to Start Chatting
+                        </button>
+                      </>
+                    )}
+                  </div>
+             )}
           </div>
         </section>
 
         {/* --- Input area with your full UI --- */}
         <section className="chat-input-area">
           <form className="input-form" onSubmit={handleSendMessage}>
-            <div className="input-wrapper"> <textarea ref={textareaRef} rows="1" placeholder={characterLoading ? "Changing character..." : "Ask anything..."} value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(e); } }} disabled={characterLoading} /> </div>
+                                                   <div className="input-wrapper"> <textarea ref={textareaRef} rows="1" placeholder={!isAuthenticated ? "Login to chat" : (characterLoading ? "Changing character..." : (!activeChatId ? "Make chat first then send message" : "Ask anything..."))} value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(e); } }} disabled={characterLoading || !isAuthenticated || !activeChatId} /> </div>
             <div className="input-footer">
-                             <div className="input-footer-left"> <select name="model" value={character} className={`model-selector ${characterLoading ? 'loading' : ''}`} onChange={handleChangeCharacter} disabled={characterLoading}> <option value="jahnvi">Jahnvi</option> <option value="atomic">Atomic</option> <option value="chandni">Chandni</option> <option value="osho">Osho</option> </select> <div className={`char-counter ${ inputValue.length > MAX_PROMPT_CHARS ? "error" : "" }`} > {MAX_PROMPT_CHARS - inputValue.length} / 1400 </div> </div>
-              <div className="input-footer-right"> <button type="submit" className="send-button" disabled={ !inputValue.trim() || inputValue.length > MAX_PROMPT_CHARS || !activeChatId || characterLoading } > <Icon path={ <> <line x1="12" y1="19" x2="12" y2="5" /> <polyline points="5 12 12 5 19 12" /> </> } /> </button> </div>
+                                                                                                                       <div className="input-footer-left"> <select name="model" value={character} className={`model-selector ${characterLoading ? 'loading' : ''}`} onChange={handleChangeCharacter} disabled={characterLoading || !isAuthenticated || !activeChatId}> <option value="jahnvi">Jahnvi</option> <option value="atomic">Atomic</option> <option value="chandni">Chandni</option> <option value="osho">Osho</option> </select> <div className={`char-counter ${ inputValue.length > MAX_PROMPT_CHARS ? "error" : "" }`} > {MAX_PROMPT_CHARS - inputValue.length} / 1400 </div> </div>
+                             <div className="input-footer-right"> <button type="submit" className="send-button" disabled={ !inputValue.trim() || inputValue.length > MAX_PROMPT_CHARS || !activeChatId || characterLoading || !isAuthenticated } > <Icon path={ <> <line x1="12" y1="19" x2="12" y2="5" /> <polyline points="5 12 12 5 19 12" /> </> } /> </button> </div>
             </div>
           </form>
         </section>
