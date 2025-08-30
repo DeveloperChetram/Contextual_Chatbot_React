@@ -9,7 +9,24 @@ const { createMemory, queryMemory } = require("../services/vector.service");
 const initSocketServer = (httpServer) => {
   const io = new Server(httpServer, {
     cors: {
-      origin: ['https://contextual-chatbot-react.vercel.app', 'http://localhost:5173', 'https://contextual-chatbot-react.onrender.com'],
+      origin: function (origin, callback) {
+        if (!origin) return callback(null, true);
+        
+        const allowedOrigins = [
+          'https://contextual-chatbot-react.vercel.app',
+          'http://localhost:5173',
+          'http://localhost:3000',
+          'http://localhost:3001',
+          'https://contextual-chatbot-react.onrender.com'
+        ];
+        
+        if (allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          console.log('Socket CORS blocked origin:', origin);
+          callback(new Error('Not allowed by CORS'));
+        }
+      },
       credentials: true,
       methods: ['GET', 'POST', 'OPTIONS'],
       allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']

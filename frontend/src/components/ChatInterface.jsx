@@ -60,7 +60,7 @@ const ChatInterface = () => {
 
   useEffect(() => {
     dispatch(getChats()); // This fetches chats and then all messages
-    const newSocket = io("https://contextual-chatbot-react.onrender.com", { withCredentials: true });
+    const newSocket = io("http://localhost:3001", { withCredentials: true });
     setSocket(newSocket);
     return () => newSocket.disconnect();
   }, [dispatch]);
