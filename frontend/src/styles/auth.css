@@ -1,108 +1,83 @@
 @import './theme.css';
 
-/* Keyframe animations for the moving blobs */
-@keyframes moveBlob1 {
-  0% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-40%, -60%) scale(1.2); }
-  100% { transform: translate(-50%, -50%) scale(1); }
-}
-
-@keyframes moveBlob2 {
-  0% { transform: translate(-50%, -50%) scale(1); }
-  50% { transform: translate(-60%, -40%) scale(1.1); }
-  100% { transform: translate(-50%, -50%) scale(1); }
-}
-
-/* --- Main Auth Container (Your Original Background) --- */
+/* --- Main Auth Container --- */
 .auth-container {
   display: flex;
   justify-content: center;
   align-items: center;
-  height: 100vh;
-  background-color: var(--auth-bg-dark);
+  min-height: 100vh;
+  background-color: var(--background-primary);
   color: var(--text-primary);
   position: relative;
   overflow: hidden;
-  /* Grid Overlay */
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  padding: 24px;
+  transition: background-color 0.3s ease;
   background-image:
     linear-gradient(var(--auth-grid-color) 1px, transparent 1px),
     linear-gradient(to right, var(--auth-grid-color) 1px, transparent 1px);
   background-size: 40px 40px;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-  padding: 20px;
 }
 
-/* Blob 1 */
-.auth-container::before {
-  content: '';
-  position: absolute;
-  top: 20%;
-  left: 20%;
-  width: 500px;
-  height: 500px;
-  background: radial-gradient(circle, var(--auth-blob-color-1) 0%, rgba(49, 184, 198, 0) 70%);
-  border-radius: 50%;
-  filter: blur(100px);
-  z-index: 1;
-  animation: moveBlob1 20s infinite alternate;
-}
-
-/* Blob 2 */
-.auth-container::after {
-  content: '';
-  position: absolute;
-  bottom: 20%;
-  right: 20%;
-  width: 400px;
-  height: 400px;
-  background: radial-gradient(circle, var(--auth-blob-color-2) 0%, rgba(30, 90, 120, 0) 70%);
-  border-radius: 50%;
-  filter: blur(120px);
-  z-index: 1;
-  animation: moveBlob2 25s infinite alternate;
-}
-
-/* --- Form Card (Styled like the image) --- */
+/* --- Form Card --- */
 .auth-form {
   position: relative;
-  z-index: 2; /* Ensures form is on top of blobs */
-  background-color: #1C1C1E; /* The dark card background from the image */
-  padding: 40px 48px;
-  border-radius: 18px;
+  z-index: 2;
+  background-color: var(--background-secondary);
+  padding: 32px 40px;
+  border-radius: 12px;
   width: 100%;
-  max-width: 400px; /* Controls the small size */
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  max-width: 420px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  border: 1px solid var(--border-color);
+  transition: background-color 0.3s ease, border-color 0.3s ease;
 }
 
 /* --- Header Section (Logo, Title, Subtitle) --- */
 .auth-header {
   text-align: left;
-  margin-bottom: 32px;
+  margin-bottom: 28px;
 }
 
-/* You would add this class to your logo/title element */
-.auth-header .auth-logo {
-  font-size: 22px;
-  font-weight: 500;
-  margin-bottom: 28px;
+.auth-logo {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 24px;
+}
+
+.auth-logo span {
+  font-size: 24px;
+  font-weight: 600;
   color: var(--text-primary);
+}
+
+.auth-logo svg path {
+  stroke: var(--text-primary);
+  transition: stroke 0.3s ease;
 }
 
 .auth-header h2 {
-  font-size: 28px;
-  font-weight: 600;
-  margin: 0 0 8px 0;
+  font-size: 26px;
+  font-weight: 700;
+  margin: 0 0 6px 0;
   color: var(--text-primary);
-  background: none; /* Override old gradient text */
-  -webkit-background-clip: unset;
-  -webkit-text-fill-color: unset;
 }
 
 .auth-header p {
-  font-size: 16px;
+  font-size: 15px;
   color: var(--text-secondary);
   margin: 0;
+}
+
+.auth-error {
+    color: #e53e3e;
+    background-color: rgba(229, 62, 62, 0.1);
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 14px;
+    margin-bottom: 16px;
+    text-align: center;
 }
 
 /* --- Form Fields --- */
@@ -110,42 +85,51 @@
   margin-bottom: 16px;
 }
 
+.form-row {
+  display: flex;
+  gap: 16px;
+}
+.form-row .form-group {
+  flex: 1; /* Each group takes equal space */
+}
+
 .form-group label {
-  display: none; /* Using placeholders as labels per the design */
+  display: block;
+  font-weight: 500;
+  font-size: 14px;
+  margin-bottom: 6px;
+  color: var(--text-primary);
 }
 
 .form-group input {
   width: 100%;
-  padding: 12px 16px;
+  padding: 10px 14px;
   border-radius: 8px;
-  border: 1px solid #3A3A3C;
-  background-color: #2C2C2E;
+  border: 1px solid var(--border-color);
+  background-color: var(--background-primary);
   color: var(--text-primary);
-  font-size: 16px;
+  font-size: 15px;
   transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .form-group input:focus {
   outline: none;
   border-color: var(--accent-color);
-  box-shadow: 0 0 0 3px rgba(49, 184, 198, 0.2);
+  box-shadow: 0 0 0 3px var(--glow-color);
 }
 
-/* --- Links inside the form --- */
+
 .forgot-password {
   display: block;
   text-align: right;
-  margin-top: 10px;
-  margin-bottom: 24px;
+  margin-top: -10px;
+  margin-bottom: 20px;
   font-size: 14px;
-}
-
-.forgot-password a {
-  color: var(--text-secondary);
+  font-weight: 500;
+  color: var(--accent-color);
   text-decoration: none;
 }
-
-.forgot-password a:hover {
+.forgot-password:hover {
   text-decoration: underline;
 }
 
@@ -155,18 +139,24 @@
   padding: 12px;
   border: none;
   border-radius: 8px;
-  background-color: #F2F2F7;
-  color: #000;
+  background-color: var(--text-primary);
+  color: var(--background-primary);
   font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: opacity 0.2s;
+  transition: opacity 0.2s, background-color 0.3s, color 0.3s;
   margin-bottom: 24px;
 }
 
 .auth-button:hover {
   opacity: 0.9;
 }
+
+.auth-button:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
 
 /* --- Bottom Switch Link --- */
 .auth-switch {
@@ -185,9 +175,77 @@
   text-decoration: underline;
 }
 
-/* --- Responsive adjustments --- */
+
+/* --- Theme Toggler --- */
+.theme-toggle-button {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 10;
+  background-color: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  border-radius: 20px;
+  padding: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.theme-toggle-icon-container {
+  position: relative;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.theme-icon {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  color: var(--text-secondary);
+  transition: transform 0.4s ease, opacity 0.4s ease;
+}
+
+.sun-icon {
+  opacity: 0;
+  transform: translateY(10px) rotate(45deg);
+}
+.sun-icon.active {
+  opacity: 1;
+  transform: translateY(0) rotate(0);
+}
+
+.moon-icon {
+  opacity: 0;
+  transform: translateY(-10px) rotate(-45deg);
+}
+.moon-icon.active {
+  opacity: 1;
+  transform: translateY(0) rotate(0);
+}
+
+.theme-toggle-text {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  padding-right: 8px;
+}
+
+/* Responsive adjustments */
 @media (max-width: 480px) {
   .auth-form {
-    padding: 32px 24px;
+    padding: 24px;
+    height: auto;
+    margin-top: 60px;
+  }
+  /* The rule that stacked the name fields has been removed */
+   .theme-toggle-button {
+    top: 16px;
+    right: 16px;
   }
 }
