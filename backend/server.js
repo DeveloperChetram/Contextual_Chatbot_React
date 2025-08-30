@@ -5,7 +5,8 @@ const initSocketServer = require('./src/sockets/socket.server')
 
 connectDB()
 initSocketServer(httpServer)
-httpServer.listen(3000,()=>{
-    console.log('server is running at http://localhost:3000/')
+const PORT = process.env.PORT || 3001
+httpServer.listen(PORT,()=>{
+    console.log(`server is running at http://localhost:${PORT}/`)
 })
 
