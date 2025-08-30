@@ -8,6 +8,7 @@ import {
   loginFailure,
   logout as logoutAction,
 } from "../reducers/authSlice";
+import { clearChatStore } from "../reducers/chatSlice";
 
 
 export const registerUser = async (dispatch, data) => {
@@ -15,6 +16,7 @@ export const registerUser = async (dispatch, data) => {
   try {
     const response = await axios.post("/auth/register", data);
     dispatch(registerSuccess(response.data.user));
+    dispatch(clearChatStore()); // Clear any existing chat data for new user
     localStorage.setItem('user', JSON.stringify(response.data.user));
     return { success: true };
   } catch (error) {
@@ -30,6 +32,7 @@ export const loginUser = async (dispatch, data) => {
   try {
     const response = await axios.post("/auth/login", data);
     dispatch(loginSuccess(response.data.user));
+    dispatch(clearChatStore()); // Clear any existing chat data for new user
     localStorage.setItem('user', JSON.stringify(response.data.user));
     return { success: true };
   } catch (error) {
@@ -43,11 +46,13 @@ export const logoutUser = ()=>async (dispatch) => {
   try {
     await axios.get('/auth/logout');
     dispatch(logoutAction());
+    dispatch(clearChatStore()); // Clear chat store when user logs out
     localStorage.removeItem('user');
     return { success: true };
   } catch (error) {
     console.error("Logout failed", error);
     dispatch(logoutAction());
+    dispatch(clearChatStore()); // Clear chat store even if logout request fails
     localStorage.removeItem('user');
     return { success: false, error };
   }

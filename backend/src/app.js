@@ -15,19 +15,8 @@ app.use(cors({
     if (!origin) return callback(null, true);
     
     const allowedOrigins = [
-      'https://contextual-chatbot-react.vercel.app',
-      'http://localhost:5173',
-      'http://localhost:3000',
-      'http://localhost:3001',
-      'https://contextual-chatbot-react.onrender.com',
-      // Add your Vercel domain for mobile access
-      'https://contextual-chatbot-react.vercel.app/',
-      'https://contextual-chatbot-react.vercel.app/login',
-      'https://contextual-chatbot-react.vercel.app/register',
-
-      'https://contextual-chatbot-react.vercel.app/chat',
-      'https://vercel.com/chetramyts-projects/contextual-chatbot-react',
-
+      'https://contextual-chatbot-react.vercel.app', // Your Vercel frontend
+      'http://localhost:5173',                      // Your local dev frontend
     ];
     
     if (allowedOrigins.includes(origin)) {
