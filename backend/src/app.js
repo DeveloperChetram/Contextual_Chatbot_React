@@ -8,7 +8,7 @@ const app = express();
 
 const cookieParser = require('cookie-parser')
 
-
+// cors
 app.use(cors({
   origin: process.env.CORS_ORIGIN || "http://localhost:5173",
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', 
@@ -19,6 +19,11 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 app.use(cookieParser())
+
+
+app.get('/', (req, res) => {
+  res.send('Yo Yo Yo Server is running')
+})
 app.use('/api', indexRouter)
 
 app.use('/api/chat', chatRouter)
