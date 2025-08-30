@@ -7,9 +7,9 @@
   --background-sidebar: #fafafa;
   --text-primary: #1a1a1a;
   --text-secondary: #666666;
-  --accent-color: #007bff;
+  --accent-color: #31B8C6;
   --border-color: #e0e0e0;
-  --glow-color: rgba(0, 123, 255, 0.5);
+  --glow-color: rgba(49, 184, 198, 0.5);
   --auth-bg-dark: #0d1a22;
   --auth-grid-color: rgba(49, 184, 198, 0.15);
   --glass-bg-color: rgba(13, 26, 34, 0.5);
@@ -27,8 +27,8 @@
   --text-secondary: #888888;
   --accent-color: #31B8C6;
   --border-color: #2c2c2c;
-  --glow-color: rgba(198, 54, 49, 0.5);
-    --auth-bg-dark: #0d1a22;
+  --glow-color: rgba(49, 184, 198, 0.5);
+  --auth-bg-dark: #0d1a22;
   --auth-grid-color: rgba(49, 184, 198, 0.15);
   --glass-bg-color: rgba(13, 26, 34, 0.5);
   --glass-border-color: rgba(49, 184, 198, 0.3);
@@ -47,7 +47,7 @@
     --accent-color: #31B8C6;
     --border-color: #2c2c2c;
     --glow-color: rgba(49, 184, 198, 0.5);
-        --auth-bg-dark: #0d1a22;
+    --auth-bg-dark: #0d1a22;
     --auth-grid-color: rgba(49, 184, 198, 0.15);
     --glass-bg-color: rgba(13, 26, 34, 0.5);
     --glass-border-color: rgba(49, 184, 198, 0.3);
