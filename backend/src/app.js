@@ -11,6 +11,8 @@ const cookieParser = require('cookie-parser')
 
 app.use(cors({
   origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', 
+  allowedHeaders: 'Content-Type,Authorization',
   credentials: true
 }));
 app.use(express.json())
