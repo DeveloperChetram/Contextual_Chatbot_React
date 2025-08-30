@@ -10,4 +10,5 @@ indexRouter.get('/credits', authMiddleware, creditsController)
 indexRouter.get('/change-character/:character', authMiddleware, changeCharacterController )
 
 
+
 module.exports = indexRouter;
