@@ -9,8 +9,10 @@ const { createMemory, queryMemory } = require("../services/vector.service");
 const initSocketServer = (httpServer) => {
   const io = new Server(httpServer, {
     cors: {
-      origin: process.env.CORS_ORIGIN || "http://localhost:5173",
+      origin: ['https://contextual-chatbot-react.vercel.app', 'http://localhost:5173', 'https://contextual-chatbot-react.onrender.com'],
       credentials: true,
+      methods: ['GET', 'POST', 'OPTIONS'],
+      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
     },
   });
 
