@@ -6,7 +6,8 @@ import { logout } from '../redux/reducers/authSlice';
 // import axios from "axios";
 
 export const axiosInstance = axios.create({
-  baseURL: "http://localhost:3000/api",
+  // baseURL: "http://localhost:3000/api",
+  baseURL: "https://contextual-chatbot-react.onrender.com/api",
   withCredentials: true,
 });
 // intercepters
