@@ -45,6 +45,16 @@ const chatSlice = createSlice({
     setCharacter: (state, action) => {
       state.character = action.payload;
     },
+    // Clean up chat store when user logs out
+    clearChatStore: (state) => {
+      state.chats = [];
+      state.allMessages = [];
+      state.activeChatId = null;
+      state.loading = false;
+      state.error = null;
+      state.isModelTyping = {};
+      state.character = "atomic";
+    },
   },
 });
 
@@ -58,6 +68,7 @@ export const {
   setActiveChatId,
   setModelTyping,
   setCharacter,
+  clearChatStore,
 } = chatSlice.actions;
 
 export default chatSlice.reducer;
