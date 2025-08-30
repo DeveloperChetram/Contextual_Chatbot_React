@@ -1,16 +1,12 @@
-// frontend/src/api/axios.jsx
 import axios from 'axios';
 import store from '../redux/store';
 import { logout } from '../redux/reducers/authSlice';
 
-// import axios from "axios";
-
 export const axiosInstance = axios.create({
   baseURL: import.meta.env.VITE_BACKEND_URL || "http://localhost:3001/api",
-  // baseURL: "https://contextual-chatbot-react.onrender.com/api",
   withCredentials: true,
 });
-// intercepters
+
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {

@@ -6,7 +6,6 @@ const ThemeToggler = () => {
     if (savedTheme) {
       return savedTheme;
     }
-    // Check system preference if no saved theme
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
       return 'dark';
     }
@@ -18,7 +17,6 @@ const ThemeToggler = () => {
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // Listen for system theme changes
   useEffect(() => {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     const handleChange = (e) => {
@@ -36,7 +34,6 @@ const ThemeToggler = () => {
   };
 
   const handleKeyDown = (e) => {
-    // Prevent Enter key from triggering theme toggle when inside a form
     if (e.key === 'Enter') {
       e.preventDefault();
       e.stopPropagation();

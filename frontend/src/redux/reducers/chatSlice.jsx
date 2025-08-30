@@ -2,7 +2,7 @@ import { createSlice } from "@reduxjs/toolkit";
 
 const initialState = {
   chats: [],
-  allMessages: [], // Using a single array for all messages
+  allMessages: [],
   activeChatId: null,
   loading: false,
   error: null,
@@ -30,7 +30,6 @@ const chatSlice = createSlice({
       state.allMessages = action.payload;
     },
     addMessage: (state, action) => {
-        // action.payload is expected to be { chatId, message }
       const exists = state.allMessages.some(msg => msg._id === action.payload.message._id);
       if (!exists) {
         state.allMessages.push(action.payload.message);
@@ -45,7 +44,6 @@ const chatSlice = createSlice({
     setCharacter: (state, action) => {
       state.character = action.payload;
     },
-    // Clean up chat store when user logs out
     clearChatStore: (state) => {
       state.chats = [];
       state.allMessages = [];

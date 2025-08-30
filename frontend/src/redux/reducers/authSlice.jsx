@@ -1,4 +1,3 @@
-// frontend/src/redux/reducers/authSlice.jsx
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {
@@ -44,12 +43,10 @@ const authSlice = createSlice({
       state.loading = false;
       state.error = null;
     },
-    // New reducer to set the user from localStorage
     setUserFromStorage(state, action) {
       state.isAuthenticated = true;
       state.user = action.payload;
     },
-    // Reset loading and error state
     resetAuthState(state) {
       state.loading = false;
       state.error = null;

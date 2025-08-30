@@ -18,7 +18,6 @@ const initSocketServer = (httpServer) => {
           'http://localhost:3000',
           'http://localhost:3001',
           'https://contextual-chatbot-react.onrender.com',
-          // Add your Vercel domain for mobile access
           'https://your-app-name.vercel.app'
         ];
         
@@ -35,7 +34,6 @@ const initSocketServer = (httpServer) => {
     },
   });
 
-  // Middleware 
   io.use(async (socket, next) => {
     try {
       const cookies = cookie.parse(socket.handshake.headers?.cookie || "");
@@ -60,7 +58,6 @@ const initSocketServer = (httpServer) => {
     socket.on("user-message", async (messagePayload) => {
       console.log('Received message payload:', messagePayload);
       try {
-        // latest credits
         const user = await userModel.findById(socket.user._id).select("credits");
         if (!user || typeof user.credits !== "number" || user.credits <= 0) {
           socket.emit("ai-response", {
@@ -71,7 +68,6 @@ const initSocketServer = (httpServer) => {
           return;
         }
 
-        // decrement credits
         const updatedUser = await userModel.findOneAndUpdate(
           { _id: socket.user._id, credits: { $gt: 0 } },
           { $inc: { credits: -1 } },
@@ -79,7 +75,6 @@ const initSocketServer = (httpServer) => {
         ).select("credits");
 
         if (!updatedUser) {
-          // 0 credits
           socket.emit("ai-response", {
             chatId: messagePayload.chatId,
             response:
@@ -88,7 +83,6 @@ const initSocketServer = (httpServer) => {
           return;
         }
 
-        // DB save & vector generation
         const [userMessage, vectors] = await Promise.all([
           messageModel.create({
             user: socket.user._id,
@@ -100,7 +94,6 @@ const initSocketServer = (httpServer) => {
           generateVector(messagePayload.content),
         ]);
 
-        // Query memories and get chat history 
         const [pineconeData, chatHistory] = await Promise.all([
           queryMemory({
             queryVector: vectors,
@@ -115,7 +108,6 @@ const initSocketServer = (httpServer) => {
             .then((messages) => messages.reverse()), 
         ]);
         
-        //  context for the AI
         const stm = chatHistory.map((item) => ({
           role: item.role,
           parts: [{ text: item.content }],
@@ -132,12 +124,10 @@ const initSocketServer = (httpServer) => {
           ],
         }];
 
-        // Generate response with the selected character
         const {response, character: responseCharacter} = await generateResponse([...ltm, ...stm], messagePayload.character);
 
         socket.emit("ai-response", { chatId: messagePayload.chatId, response, character: responseCharacter });
 
-        // save response
         const responseMessage = await messageModel.create({
             user: socket.user._id,
             chatId: messagePayload.chatId,
@@ -147,7 +137,6 @@ const initSocketServer = (httpServer) => {
         });
 
         const responseVectors = await generateVector(response);
-        // pinecone save response
         await Promise.all([
             createMemory({
                 vectors,
@@ -158,7 +147,6 @@ const initSocketServer = (httpServer) => {
                     message: messagePayload.content,
                 },
             }),
-            // pinecone save response message 
             createMemory({
                 vectors: responseVectors,
                 messageId: responseMessage._id,
