@@ -65,7 +65,9 @@ const ChatInterface = () => {
   useEffect(() => {
     if (isAuthenticated) {
       dispatch(getChats()); // This fetches chats and then all messages
-      const newSocket = io("http://localhost:3001", { withCredentials: true });
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
+      const socketUrl = backendUrl.replace('/api', ''); // Remove /api for socket connection
+      const newSocket = io(socketUrl, { withCredentials: true });
       setSocket(newSocket);
       return () => newSocket.disconnect();
     }

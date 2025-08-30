@@ -17,7 +17,9 @@ const initSocketServer = (httpServer) => {
           'http://localhost:5173',
           'http://localhost:3000',
           'http://localhost:3001',
-          'https://contextual-chatbot-react.onrender.com'
+          'https://contextual-chatbot-react.onrender.com',
+          // Add your Vercel domain for mobile access
+          'https://your-app-name.vercel.app'
         ];
         
         if (allowedOrigins.includes(origin)) {
