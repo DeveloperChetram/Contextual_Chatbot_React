@@ -10,16 +10,63 @@ const cookieParser = require('cookie-parser')
 
 // cors
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || "http://localhost:5173",
-  methods: 'GET,HEAD,PUT,PATCH,POST,DELETE', 
-  allowedHeaders: 'Content-Type,Authorization',
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      'https://contextual-chatbot-react.vercel.app',
+      'http://localhost:5173', 
+      'https://contextual-chatbot-react.onrender.com'
+    ];
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      console.log('CORS blocked origin:', origin);
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'], 
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Set-Cookie'],
+  credentials: true,
+  optionsSuccessStatus: 200
 }));
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 app.use(cookieParser())
 
+// Add CORS headers manually for additional safety
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'https://contextual-chatbot-react.vercel.app',
+    'http://localhost:5173', 
+    'https://contextual-chatbot-react.onrender.com'
+  ];
+  
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Allow-Methods', 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type,Authorization,X-Requested-With,Accept,Origin');
+  res.header('Access-Control-Expose-Headers', 'Set-Cookie');
+  
+  // Handle preflight
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+  
+  next();
+});
+
+// Handle preflight requests
+app.options('*', cors());
 
 app.get('/', (req, res) => {
   res.send('Yo Yo Yo Server is running')
@@ -28,5 +75,18 @@ app.use('/api', indexRouter)
 
 app.use('/api/chat', chatRouter)
 app.use('/api/auth', authRouter)
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err.message);
+  if (err.message === 'Not allowed by CORS') {
+    return res.status(403).json({
+      error: 'CORS Error',
+      message: 'Origin not allowed',
+      origin: req.headers.origin
+    });
+  }
+  res.status(500).json({ error: 'Internal Server Error' });
+});
 
 module.exports = app;     
