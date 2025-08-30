@@ -4,7 +4,6 @@ import { useSelector } from 'react-redux';
 import AuthRoute from './AuthRoute';
 import TypingIndicator from '../components/TypingIndicator'; 
 
-// lazy imports 
 const Login = lazy(() => import('../components/Login'));
 const Register = lazy(() => import('../components/Register'));
 const ChatInterface = lazy(() => import('../components/ChatInterface'));

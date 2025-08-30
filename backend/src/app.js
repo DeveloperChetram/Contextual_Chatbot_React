@@ -8,15 +8,13 @@ const app = express();
 
 const cookieParser = require('cookie-parser')
 
-// cors
 app.use(cors({
   origin: function (origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
     const allowedOrigins = [
-      'https://contextual-chatbot-react.vercel.app', // Your Vercel frontend
-      'http://localhost:5173',                      // Your local dev frontend
+      'https://contextual-chatbot-react.vercel.app',
+      'http://localhost:5173',
     ];
     
     if (allowedOrigins.includes(origin)) {
@@ -37,7 +35,6 @@ app.use(express.urlencoded({ extended: true }))
 
 app.use(cookieParser())
 
-// Handle preflight requests
 app.options('*', cors());
 
 app.get('/', (req, res) => {
@@ -48,7 +45,6 @@ app.use('/api', indexRouter)
 app.use('/api/chat', chatRouter)
 app.use('/api/auth', authRouter)
 
-// Error handling middleware
 app.use((err, req, res, next) => {
   console.error('Error:', err.message);
   if (err.message === 'Not allowed by CORS') {

@@ -8,7 +8,6 @@ const App = () => {
   const dispatch = useDispatch();
 
   useEffect(() => {
-    // Clear chat store on app initialization to ensure clean state
     dispatch(clearChatStore());
     
     const user = localStorage.getItem('user');

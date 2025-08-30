@@ -1,5 +1,4 @@
 /* src/styles/NotFound.css */
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap');
 
 .not-found-container {
   min-height: 100vh;
@@ -7,146 +6,49 @@
   align-items: center;
   justify-content: center;
   background-color: var(--background-primary);
-  color: var(--text-primary);
-  font-family: 'Inter', sans-serif;
   padding: 20px;
 }
 
 .not-found-content {
-  background-color: var(--background-secondary);
-  border-radius: 12px;
-  padding: 50px 40px;
-  text-align: center;
-  max-width: 500px;
-  width: 100%;
-  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-  border: 1px solid var(--border-color);
-  transition: all 0.3s ease;
-}
-
-.error-code {
-  font-size: 7rem;
-  font-weight: 700;
-  color: var(--accent-color);
-  line-height: 1;
-  margin-bottom: 20px;
-  transition: color 0.3s ease;
-}
-
-.error-title {
-  font-size: 2.2rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  margin-bottom: 16px;
-}
-
-.error-description {
-  font-size: 1.1rem;
-  color: var(--text-secondary);
-  margin-bottom: 30px;
-  line-height: 1.6;
-}
-
-.error-actions {
   display: flex;
-  gap: 15px;
+  align-items: center;
   justify-content: center;
-  margin-bottom: 30px;
-}
-
-.btn-primary,
-.btn-secondary {
-  padding: 12px 25px;
-  border: none;
-  border-radius: 8px;
-  font-size: 1rem;
-  font-weight: 600;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  text-decoration: none;
-}
-
-.btn-primary {
-  background-color: var(--accent-color);
-  color: var(--background-primary);
-}
-
-.btn-primary:hover {
-  filter: brightness(0.9);
-  transform: translateY(-1px);
-}
-
-.btn-secondary {
-  background-color: transparent;
-  color: var(--accent-color);
-  border: 1px solid var(--accent-color);
-}
-
-.btn-secondary:hover {
-  background-color: var(--accent-color);
-  color: var(--background-primary);
-  transform: translateY(-1px);
-}
-
-.error-help {
-  text-align: center; /* Centered help section */
-  background-color: var(--background-primary); /* Use primary background for subtle contrast */
-  padding: 25px;
-  border-radius: 10px;
-  border: 1px dashed var(--border-color); /* Dashed border for a lighter look */
-  margin-top: 30px; /* Add some space above */
-}
-
-.error-help p {
-  margin: 0 0 15px 0;
-  font-weight: 600;
-  color: var(--text-primary);
-  font-size: 1rem;
-}
-
-.error-help ul {
-  list-style: none; /* Remove bullet points */
-  margin: 0;
+  width: 100%;
+  max-width: 100%;
   padding: 0;
-  color: var(--text-secondary);
-  display: flex; /* Display as flex for horizontal arrangement */
-  justify-content: center; /* Center the items */
-  gap: 20px; /* Space between items */
-  flex-wrap: wrap; /* Allow wrapping on smaller screens */
+  background: none;
+  box-shadow: none;
+  border: none;
 }
 
-.error-help li {
-  margin-bottom: 0; /* Remove bottom margin for list items */
-  line-height: 1.5;
-  font-size: 0.95rem;
+.cat-gif-container {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
 }
 
-/* Responsive design */
+.cat-gif {
+  max-width: 100%;
+  max-height: 100vh;
+  width: auto;
+  height: auto;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .cat-gif {
+    max-width: 90vw;
+    max-height: 80vh;
+  }
+}
+
 @media (max-width: 480px) {
-  .not-found-content {
-    padding: 40px 20px;
-  }
-  
-  .error-code {
-    font-size: 5rem;
-  }
-  
-  .error-title {
-    font-size: 1.8rem;
-  }
-
-  .error-actions {
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .btn-primary,
-  .btn-secondary {
-    width: 100%;
-  }
-
-  .error-help ul {
-    flex-direction: column; /* Stack list items vertically on small screens */
-    gap: 10px;
+  .cat-gif {
+    max-width: 95vw;
+    max-height: 70vh;
   }
 }

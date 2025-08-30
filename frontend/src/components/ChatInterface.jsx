@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from "react";
-import {axiosInstance} from "../api/axios";
+import { axiosInstance } from "../api/axios";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
@@ -9,7 +9,7 @@ import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
 import {
   getChats,
   createChat,
-  sendMessage, // <-- Correct imports
+  sendMessage,
 } from "../redux/actions/chatActions";
 import {
   setActiveChatId,
@@ -23,9 +23,8 @@ import ThemeToggler from "./ThemeToggler";
 import "../styles/ChatInterface.css";
 import { changeCharacter } from "../redux/actions/chatActions";
 
-// --- Helper Components ---
-const Icon = ({ path, className = "" }) => ( <svg className={`icon ${className}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"> {path} </svg> );
-const LogoIcon = () => ( <svg className="logo-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"> <path d="M12.48 3.52a1 1 0 0 0-1 1v2.92a1 1 0 0 0 .52.88l5.44 3.14a1 1 0 0 0 1.5-.87V7.52a1 1 0 0 0-.52-.88l-5.44-3.14a1 1 0 0 0-.5 0zM5.08 7.52a1 1 0 0 0-.52.88v2.92a1 1 0 0 0 .52.88l5.44 3.14a1 1 0 0 0 1.5-.87V11.4a1 1 0 0 0-.52-.88L6.58 7.52a1 1 0 0 0-1.5 0zM12 14.5l-5.44 3.14a1 1 0 0 0-.52.88v2.92a1 1 0 0 0 1.5.87l5.44-3.14a1 1 0 0 0 .52-.88v-2.92a1 1 0 0 0-1.5-.87z" /> </svg> );
+const Icon = ({ path, className = "" }) => (<svg className={`icon ${className}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"> {path} </svg>);
+const LogoIcon = () => (<svg className="logo-icon-svg" width="24" height="24" viewBox="0 0 24 24" fill="currentColor"> <path d="M12.48 3.52a1 1 0 0 0-1 1v2.92a1 1 0 0 0 .52.88l5.44 3.14a1 1 0 0 0 1.5-.87V7.52a1 1 0 0 0-.52-.88l-5.44-3.14a1 1 0 0 0-.5 0zM5.08 7.52a1 1 0 0 0-.52.88v2.92a1 1 0 0 0 .52.88l5.44 3.14a1 1 0 0 0 1.5-.87V11.4a1 1 0 0 0-.52-.88L6.58 7.52a1 1 0 0 0-1.5 0zM12 14.5l-5.44 3.14a1 1 0 0 0-.52.88v2.92a1 1 0 0 0 1.5.87l5.44-3.14a1 1 0 0 0 .52-.88v-2.92a1 1 0 0 0-1.5-.87z" /> </svg>);
 
 const ChatInterface = () => {
   const [isCreditsVisible, setIsCreditsVisible] = useState(false);
@@ -33,8 +32,9 @@ const ChatInterface = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useSelector((state) => state.auth);
-  console.log(user);
-  // --- LOGIC CHANGE: Select 'allMessages' instead of 'messages' ---
+
+
+  // console.log(user);
   const { chats, allMessages, activeChatId, loading, isModelTyping, character } = useSelector(
     (state) => state.chat
   );
@@ -64,9 +64,9 @@ const ChatInterface = () => {
 
   useEffect(() => {
     if (isAuthenticated) {
-      dispatch(getChats()); // This fetches chats and then all messages
+      dispatch(getChats());
       const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
-      const socketUrl = backendUrl.replace('/api', ''); // Remove /api for socket connection
+      const socketUrl = backendUrl.replace('/api', '');
       const newSocket = io(socketUrl, { withCredentials: true });
       setSocket(newSocket);
       return () => newSocket.disconnect();
@@ -86,7 +86,7 @@ const ChatInterface = () => {
 
   useEffect(() => {
     if (chatAreaRef.current) chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
-  }, [allMessages, activeChatId, isModelTyping]); // LOGIC CHANGE: Depends on allMessages
+  }, [allMessages, activeChatId, isModelTyping]);
 
   useEffect(() => {
     if (textareaRef.current) {
@@ -95,7 +95,6 @@ const ChatInterface = () => {
     }
   }, [inputValue]);
 
-  // Handle window resize for sidebar state
   useEffect(() => {
     const handleResize = () => {
       if (window.innerWidth >= 768) {
@@ -109,7 +108,6 @@ const ChatInterface = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Auto-show first chat form for new users
   useEffect(() => {
     if (isAuthenticated && !loading && chats.length === 0) {
       setIsCreatingFirstChat(true);
@@ -117,7 +115,6 @@ const ChatInterface = () => {
     }
   }, [isAuthenticated, loading, chats.length]);
 
-  // --- LOGIC CHANGE: Use useMemo to filter messages on the client-side ---
   const activeChatMessages = useMemo(() => {
     if (!activeChatId) return [];
     return allMessages.filter((msg) => msg.chatId === activeChatId);
@@ -132,13 +129,13 @@ const ChatInterface = () => {
     setCreditsLoading(true);
     try {
       const response = await axiosInstance.get(`/credits`);
-      console.log("credits response", response.data.credits);
+      // console.log("credits response", response.data.credits);
       setCredits(response.data.credits);
       if (creditsTimeoutRef.current) clearTimeout(creditsTimeoutRef.current);
       setIsCreditsVisible(true);
       creditsTimeoutRef.current = setTimeout(() => setIsCreditsVisible(false), 5000);
     } catch (error) {
-      console.error("Error fetching credits:", error);
+      // console.error("Error fetching credits:", error);
     } finally {
       setCreditsLoading(false);
     }
@@ -172,8 +169,6 @@ const ChatInterface = () => {
   };
 
   const handleHistoryClick = (id) => {
-    // --- LOGIC CHANGE: Simplified click handler ---
-    // No need to fetch messages, they are already loaded. Just set the active chat.
     dispatch(setActiveChatId(id));
     if (window.innerWidth < 768) setSidebarOpen(false);
   };
@@ -194,7 +189,7 @@ const ChatInterface = () => {
   const handleSendMessage = (e) => {
     e.preventDefault();
     if (!inputValue.trim() || !activeChatId || inputValue.length > MAX_PROMPT_CHARS) return;
-    console.log('Sending message with character:', character);
+    // console.log('Sending message with character:', character);
     dispatch(sendMessage(socket, activeChatId, inputValue, character));
     setInputValue("");
   };
@@ -210,7 +205,7 @@ const ChatInterface = () => {
     try {
       await dispatch(changeCharacter(character));
     } catch (error) {
-      console.error('Error changing character:', error);
+      // console.error('Error changing character:', error);
     } finally {
       setCharacterLoading(false);
     }
@@ -220,93 +215,120 @@ const ChatInterface = () => {
 
   return (
     <div className="chat-container">
-      {/* --- Sidebar with your full UI --- */}
       <aside className={`sidebar ${sidebarOpen ? "open" : ""}`}>
-        <div className="sidebar-header"> <div className="logo-container"> <LogoIcon /> </div> <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)} > <Icon path={<path d="M18 6L6 18M6 6l12 12" />} /> </button> </div>
-                 <div className="sidebar-top"> <nav className="main-nav"> <button className="new-thread-btn" onClick={handleCreateNewChat} disabled={!isAuthenticated}> <Icon path={<path d="M12 5v14m-7-7h14" />} /> <span>New Chat</span> </button> </nav> </div>
+        <div className="sidebar-header">
+          <div className="logo-container">
+            <LogoIcon />
+            <span className="logo-text">Atomic</span>
+          </div>
+          <button className="sidebar-close-btn" onClick={() => setSidebarOpen(false)} >
+            <Icon path={<path d="M18 6L6 18M6 6l12 12" />} />
+          </button>
+        </div>
+        <div className="sidebar-top"> <nav className="main-nav"> <button className="new-thread-btn" onClick={handleCreateNewChat} disabled={!isAuthenticated}> <Icon path={<path d="M12 5v14m-7-7h14" />} /> <span>New Chat</span> </button> </nav> </div>
         <div className="library">
           <div className="library-header"> <h3>History</h3> </div>
-          {isCreatingNewChat && ( <div className="new-chat-form-container"> <form onSubmit={handleNewChatSubmit} className={`new-chat-form ${titleError ? "error" : ""}`} > <input type="text" placeholder="New chat title..." value={newChatTitle} onChange={handleTitleChange} onBlur={() => !newChatTitle && setIsCreatingNewChat(false)} autoFocus /> <button type="submit" className="submit-new-chat-btn" disabled={!!titleError} > <Icon path={ titleError ? ( <path d="M18 6L6 18M6 6l12 12" /> ) : ( <path d="M20 6L9 17l-5-5" /> ) } /> </button> </form> {titleError && ( <p className="title-error-warning">{titleError}</p> )} </div> )}
-                     <ul> {isAuthenticated ? (chats.length > 0 ? ( chats.map((item) => ( <li key={item._id} className={item._id === activeChatId ? "active" : ""} > <a href="#" onClick={(e) => { e.preventDefault(); handleHistoryClick(item._id); }}> <span>{item.title}</span> </a> </li> )) ) : ( <li> <a href="#" className="no-chats"> <span>No chats found</span> </a> </li> )) : ( <li> <a href="#" className="no-chats"> <span>Login to see history</span> </a> </li> )} </ul>
+          {isCreatingNewChat && (<div className="new-chat-form-container"> <form onSubmit={handleNewChatSubmit} className={`new-chat-form ${titleError ? "error" : ""}`} > <input type="text" placeholder="New chat title..." value={newChatTitle} onChange={handleTitleChange} onBlur={() => !newChatTitle && setIsCreatingNewChat(false)} autoFocus /> <button type="submit" className="submit-new-chat-btn" disabled={!!titleError} > <Icon path={titleError ? (<path d="M18 6L6 18M6 6l12 12" />) : (<path d="M20 6L9 17l-5-5" />)} /> </button> </form> {titleError && (<p className="title-error-warning">{titleError}</p>)} </div>)}
+          <ul> {isAuthenticated ? (chats.length > 0 ? (chats.map((item) => (<li key={item._id} className={item._id === activeChatId ? "active" : ""} > <a href="#" onClick={(e) => { e.preventDefault(); handleHistoryClick(item._id); }}> <span>{item.title}</span> </a> </li>))) : (<li> <a href="#" className="no-chats"> <span>No chats found</span> </a> </li>)) : (<li> <a href="#" className="no-chats"> <span>Login to see history</span> </a> </li>)} </ul>
         </div>
-                                   <div className="sidebar-bottom"> <div className="user-profile"> <div className="user-info"> <Icon path={ <> <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /> <circle cx="12" cy="7" r="4" /> </> } /> <span>{user?.fullName?.firstName || "Guest User"}</span> </div> <div className={`credits-container ${isCreditsVisible ? 'show-text' : ''} ${creditsLoading ? 'loading' : ''} ${credits === 0 ? 'zero-credits' : ''}`} onClick={handleCreditsClick} > <span>{creditsLoading ? <div className="loading-spinner"></div> : (isAuthenticated ? `Credits: ${credits}` : (isCreditsVisible ? 'Login First' : 'Credits: 0'))}</span> </div> </div> </div>
+        <div className="sidebar-bottom"> <div className="user-profile"> <div className="user-info"> <Icon path={<> <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /> <circle cx="12" cy="7" r="4" /> </>} /> <span>{user?.fullName?.firstName || "Guest User"}</span> </div> <div className={`credits-container ${isCreditsVisible ? 'show-text' : ''} ${creditsLoading ? 'loading' : ''} ${credits === 0 ? 'zero-credits' : ''}`} onClick={handleCreditsClick} > <span>{creditsLoading ? <div className="loading-spinner"></div> : (isAuthenticated ? `Credits: ${credits}` : (isCreditsVisible ? 'Login First' : 'Credits: 0'))}</span> </div> </div> </div>
       </aside>
 
       <main className="main-content" onClick={handleMainContentClick}>
-                 <header className="main-header"> <div className="header-left"> <button className="header-hamburger" onClick={() => setSidebarOpen((prev) => !prev)} > <Icon path={ <> <path d="M3 12h18" /> <path d="M3 6h18" /> <path d="M3 18h18" /> </> } /> </button> <div className="header-title-wrapper"> <h2>{activeChat?.title || "Welcome"}</h2> </div> </div> <div className="header-right"> <ThemeToggler key={`theme-${isAuthenticated}`} /> {isAuthenticated ? ( <button className="share-btn logout" onClick={logoutHandler}> Log out </button> ) : ( <button className="share-btn login" onClick={() => navigate('/login')}> Login </button> )} </div> </header>
+        <header className="main-header">
+          <div className="header-left">
+            <button className="header-hamburger" onClick={() => setSidebarOpen((prev) => !prev)} >
+              <Icon path={<> <path d="M3 12h18" /> <path d="M3 6h18" /> <path d="M3 18h18" /> </>} />
+            </button>
+            {/* <div className="header-logo">
+              <LogoIcon />
+              <span className="header-logo-text">Atomic</span>
+            </div> */}
+            <div className="header-title-wrapper">
+              <h2>{activeChat?.title || "Welcome"}</h2>
+            </div>
+          </div>
+          <div className="header-right">
+            <ThemeToggler key={`theme-${isAuthenticated}`} />
+            {isAuthenticated ? (
+              <button className="share-btn logout" onClick={logoutHandler}> Log out </button>
+            ) : (
+              <button className="share-btn login" onClick={() => navigate('/login')}> Login </button>
+            )}
+          </div>
+        </header>
 
         <section className="chat-area" ref={chatAreaRef}>
           <div className="chat-content-wrapper">
             {loading && !activeChatMessages.length && <div className="empty-chat-placeholder"><h2>Loading...</h2></div>}
 
-            {/* --- LOGIC CHANGE: Render the filtered 'activeChatMessages' array --- */}
             {!loading && activeChatMessages.length > 0 && activeChatMessages.map((msg) => (
               <div key={msg._id} className={`chat-turn ${msg.role}`}>
-                                 <div className="message-header"> <h3 className="message-sender">{msg.role === "user" ? "You" : (msg.character || "AI Assistant")}</h3> <button className="copy-btn" onClick={() => handleCopyMessage(msg.content, msg._id)}> <Icon path={copiedMessageId === msg._id ? <path d="M20 6L9 17l-5-5" /> : <><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>} /> </button> </div>
-                <div className="message-text"> {msg.role === "model" ? ( <ReactMarkdown children={msg.content} components={{ code(props) { const {children, className, node, ...rest} = props; const match = /language-(\w+)/.exec(className || ''); return match ? ( <SyntaxHighlighter {...rest} children={String(children).replace(/\n$/, '')} style={vscDarkPlus} language={match[1]} PreTag="div" /> ) : ( <code {...rest} className={className}> {children} </code> ) } }} /> ) : ( msg.content )} </div>
+                <div className="message-header"> <h3 className="message-sender">{msg.role === "user" ? "You" : (msg.character || "AI Assistant")}</h3> <button className="copy-btn" onClick={() => handleCopyMessage(msg.content, msg._id)}> <Icon path={copiedMessageId === msg._id ? <path d="M20 6L9 17l-5-5" /> : <><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>} /> </button> </div>
+                <div className="message-text"> {msg.role === "model" ? (<ReactMarkdown children={msg.content} components={{ code(props) { const { children, className, node, ...rest } = props; const match = /language-(\w+)/.exec(className || ''); return match ? (<SyntaxHighlighter {...rest} children={String(children).replace(/\n$/, '')} style={vscDarkPlus} language={match[1]} PreTag="div" />) : (<code {...rest} className={className}> {children} </code>) } }} />) : (msg.content)} </div>
               </div>
             ))}
 
             {isModelTyping[activeChatId] && <TypingIndicator character={character} />}
 
-                         {/* --- LOGIC CHANGE: Placeholder logic uses the filtered array --- */}
-             {!loading && activeChatMessages.length === 0 && !isModelTyping[activeChatId] && (
-                  <div className="empty-chat-placeholder"> 
-                    {activeChatId ? (
-                      <>
-                        <h2>Start a new conversation</h2>
-                        <p>Type your first message below.</p>
-                      </>
-                    ) : isAuthenticated ? (
-                                             chats.length === 0 ? (
-                         <>
-                           <h2>Start Your First Chat</h2>
-                           <p>Create your first chat to begin your conversation with Atomic.</p>
-                           <div className="first-chat-form-container">
-                             <form onSubmit={handleFirstChatSubmit} className={`first-chat-form ${titleError ? "error" : ""}`}>
-                               <input 
-                                 type="text" 
-                                 placeholder="Untitled Chat" 
-                                 value={newChatTitle} 
-                                 onChange={handleTitleChange} 
-                                 onBlur={() => !newChatTitle && setIsCreatingFirstChat(false)} 
-                                 autoFocus 
-                               />
-                               <button type="submit" className="submit-first-chat-btn" disabled={!!titleError}>
-                                 <Icon path={titleError ? <path d="M18 6L6 18M6 6l12 12" /> : <path d="M20 6L9 17l-5-5" />} />
-                               </button>
-                             </form>
-                             {titleError && <p className="title-error-warning">{titleError}</p>}
-                           </div>
-                         </>
-                       ) : (
-                        <>
-                          <h2>Select or create a chat to begin</h2>
-                          <p>Choose a chat from the sidebar or create a new one.</p>
-                        </>
-                      )
-                    ) : (
-                      <>
-                        <h2>Welcome to Atomic</h2>
-                        <p>Atomic helps you to find out accurate, concise and truthful answers. Login to explore more characters.</p>
-                        <button className="login-to-chat-btn" onClick={() => navigate('/login')}>
-                          <Icon path={<path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4M10 17l5-5-5-5M13.8 12H3" />} />
-                          Login to Start Chatting
-                        </button>
-                      </>
-                    )}
-                  </div>
-             )}
+            {!loading && activeChatMessages.length === 0 && !isModelTyping[activeChatId] && (
+              <div className="empty-chat-placeholder">
+                {activeChatId ? (
+                  <>
+                    <h2>Start a new conversation</h2>
+                    <p>Type your first message below.</p>
+                  </>
+                ) : isAuthenticated ? (
+                  chats.length === 0 ? (
+                    <>
+                      <h2>Start Your First Chat</h2>
+                      <p>Create your first chat to begin your conversation with Atomic.</p>
+                      <div className="first-chat-form-container">
+                        <form onSubmit={handleFirstChatSubmit} className={`first-chat-form ${titleError ? "error" : ""}`}>
+                          <input
+                            type="text"
+                            placeholder="Untitled Chat"
+                            value={newChatTitle}
+                            onChange={handleTitleChange}
+                            onBlur={() => !newChatTitle && setIsCreatingFirstChat(false)}
+                            autoFocus
+                          />
+                          <button type="submit" className="submit-first-chat-btn" disabled={!!titleError}>
+                            <Icon path={titleError ? <path d="M18 6L6 18M6 6l12 12" /> : <path d="M20 6L9 17l-5-5" />} />
+                          </button>
+                        </form>
+                        {titleError && <p className="title-error-warning">{titleError}</p>}
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      <h2>Select or create a chat to begin</h2>
+                      <p>Choose a chat from the sidebar or create a new one.</p>
+                    </>
+                  )
+                ) : (
+                  <>
+                    <h2>Welcome to Atomic</h2>
+                    <p>Atomic helps you to find out accurate, concise and truthful answers. Login to explore more characters.</p>
+                    <button className="login-to-chat-btn" onClick={() => navigate('/login')}>
+
+                      Login to Start Chatting
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </section>
 
-        {/* --- Input area with your full UI --- */}
         <section className="chat-input-area">
           <form className="input-form" onSubmit={handleSendMessage}>
-                                                   <div className="input-wrapper"> <textarea ref={textareaRef} rows="1" placeholder={!isAuthenticated ? "Login to chat" : (characterLoading ? "Changing character..." : (!activeChatId ? "Make chat first then send message" : "Ask anything..."))} value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(e); } }} disabled={characterLoading || !isAuthenticated || !activeChatId} /> </div>
+            <div className="input-wrapper"> <textarea ref={textareaRef} rows="1" placeholder={!isAuthenticated ? "Login to chat" : (characterLoading ? "Changing character..." : (!activeChatId ? "Make chat first then send message" : "Ask anything..."))} value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(e); } }} disabled={characterLoading || !isAuthenticated || !activeChatId} /> </div>
             <div className="input-footer">
-                                                                                                                       <div className="input-footer-left"> <select name="model" value={character} className={`model-selector ${characterLoading ? 'loading' : ''}`} onChange={handleChangeCharacter} disabled={characterLoading || !isAuthenticated || !activeChatId}> <option value="jahnvi">Jahnvi</option> <option value="atomic">Atomic</option> <option value="chandni">Chandni</option> <option value="osho">Osho</option> </select> <div className={`char-counter ${ inputValue.length > MAX_PROMPT_CHARS ? "error" : "" }`} > {MAX_PROMPT_CHARS - inputValue.length} / 1400 </div> </div>
-                             <div className="input-footer-right"> <button type="submit" className="send-button" disabled={ !inputValue.trim() || inputValue.length > MAX_PROMPT_CHARS || !activeChatId || characterLoading || !isAuthenticated } > <Icon path={ <> <line x1="12" y1="19" x2="12" y2="5" /> <polyline points="5 12 12 5 19 12" /> </> } /> </button> </div>
+              <div className="input-footer-left"> <select name="model" value={character} className={`model-selector ${characterLoading ? 'loading' : ''}`} onChange={handleChangeCharacter} disabled={characterLoading || !isAuthenticated || !activeChatId}> <option value="jahnvi">Jahnvi</option> <option value="atomic">Atomic</option> <option value="chandni">Chandni</option>
+                <option value="bhaiya"> Harsh Bhaiya</option>
+              </select> <div className={`char-counter ${inputValue.length > MAX_PROMPT_CHARS ? "error" : ""}`} > {MAX_PROMPT_CHARS - inputValue.length} / 1400 </div> </div>
+              <div className="input-footer-right"> <button type="submit" className="send-button" disabled={!inputValue.trim() || inputValue.length > MAX_PROMPT_CHARS || !activeChatId || characterLoading || !isAuthenticated} > <Icon path={<> <line x1="12" y1="19" x2="12" y2="5" /> <polyline points="5 12 12 5 19 12" /> </>} /> </button> </div>
             </div>
           </form>
         </section>

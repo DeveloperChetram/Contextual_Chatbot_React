@@ -49,7 +49,6 @@ const Register = () => {
         </div>
         {error && <p className="auth-error">{error}</p>}
         
-        {/* UPDATED PART: Wrap name fields in a form-row div */}
         <div className="form-row">
           <div className="form-group">
             <label htmlFor="firstName">First Name</label>

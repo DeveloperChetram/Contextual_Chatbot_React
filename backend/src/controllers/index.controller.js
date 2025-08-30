@@ -9,7 +9,6 @@ const indexController = (req, res)=>{
 
 const creditsController =  async (req, res)=> {
   try {
-    // req.user is already the user object set by auth middleware
     const userId = req.user && req.user._id ? req.user._id : null;
     if (!userId) {
       return res.status(400).json({ message: "User not found in request" });
@@ -30,6 +29,5 @@ const changeCharacterController = async (req, res)=>{
     const systemInstruction = await changeCharacter(character);
     res.json({message: "Character changed successfully"});
 }
-
 
 module.exports = { indexController, creditsController, changeCharacterController }

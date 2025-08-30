@@ -2,7 +2,6 @@ const userModel = require("../models/user.model");
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 
-// Define cookie options once
 const cookieOptions = {
     httpOnly: true,
     secure: true, 
@@ -30,7 +29,6 @@ const registerController = async (req, res)=>{
     })
 
     const token = jwt.sign({id:user._id}, process.env.JWT_SECRET)
-    // cookie options
     res.cookie('token', token, cookieOptions);
     res.status(201).json({
         message:"user successfully registered",
@@ -59,7 +57,6 @@ const loginController = async (req, res)=>{
     }
     try {
         const token= jwt.sign({id:user._id}, process.env.JWT_SECRET)
-        // Use defined cookie options
         res.cookie('token', token, cookieOptions);
         res.status(201).json({
             message:'user loged in',
@@ -71,7 +68,6 @@ const loginController = async (req, res)=>{
 }
 
 const logoutController = async (req, res)=>{
-    // Use the same options when clearing the cookie
     res.clearCookie("token", cookieOptions);
     res.status(201).json({
         message:"user logged out"

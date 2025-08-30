@@ -5,7 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../redux/actions/authActions';
 import { useEffect, useState } from 'react';
 import { resetAuthState } from '../redux/reducers/authSlice';
-import ThemeToggler from './ThemeToggler'; // Import the new component
+import ThemeToggler from './ThemeToggler';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -64,7 +64,6 @@ const Login = () => {
             required
           />
         </div>
-        {/* <a href="#" className="forgot-password">Forgot password</a> */}
         <button type="submit" className="auth-button" disabled={loading}>
           {loading ? 'Logging in...' : 'Login'}
         </button>
