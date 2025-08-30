@@ -19,7 +19,15 @@ app.use(cors({
       'http://localhost:5173',
       'http://localhost:3000',
       'http://localhost:3001',
-      'https://contextual-chatbot-react.onrender.com'
+      'https://contextual-chatbot-react.onrender.com',
+      // Add your Vercel domain for mobile access
+      'https://contextual-chatbot-react.vercel.app/',
+      'https://contextual-chatbot-react.vercel.app/login',
+      'https://contextual-chatbot-react.vercel.app/register',
+
+      'https://contextual-chatbot-react.vercel.app/chat',
+      'https://vercel.com/chetramyts-projects/contextual-chatbot-react',
+
     ];
     
     if (allowedOrigins.includes(origin)) {
