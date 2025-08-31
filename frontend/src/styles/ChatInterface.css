@@ -852,15 +852,7 @@ a:hover .icon {
     box-shadow: 4px 0 15px rgba(0,0,0,0.2); 
   }
   
-  /* Prevent main content clicks when sidebar is open */
-  .sidebar.open ~ .main-content {
-    pointer-events: none;
-  }
-  
-  /* Re-enable pointer events for header elements */
-  .sidebar.open ~ .main-content .main-header {
-    pointer-events: auto;
-  }
+  /* No pointer-events manipulation needed */
   .header-hamburger { display: flex; }
   .sidebar-close-btn { display: flex; }
   .main-header { padding: 0 16px; }
