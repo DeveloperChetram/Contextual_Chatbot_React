@@ -38,6 +38,7 @@
   left: 0;
   top: 0;
   z-index: 1000;
+  pointer-events: auto;
 }
 
 .sidebar a {
@@ -650,6 +651,7 @@ a:hover .icon {
   padding: 8px 12px;
   max-width: 800px;
   width: 100%;
+  min-width: 280px;
   transition: border-color 0.3s, box-shadow 0.3s;
 }
 .input-form:focus-within {
@@ -727,8 +729,17 @@ a:hover .icon {
 }
 
 
-.new-chat-form-container { margin-bottom: 8px; }
-.new-chat-form { position: relative; }
+.new-chat-form-container { 
+  margin-bottom: 8px; 
+  width: 100%;
+  position: relative;
+  z-index: 1001;
+}
+.new-chat-form { 
+  position: relative; 
+  width: 100%;
+  z-index: 1002;
+}
 .new-chat-form input {
   width: 100%;
   padding: 10px 40px 10px 10px;
@@ -738,6 +749,7 @@ a:hover .icon {
   color: var(--text-primary);
   font-size: 14px;
   box-sizing: border-box;
+  min-width: 200px;
 }
 .new-chat-form.error input { border-color: var(--error-color); }
 .new-chat-form input:focus { outline: none; border-color: var(--accent-color); }
@@ -857,6 +869,75 @@ a:hover .icon {
   .header-right .theme-icon {
     width: 14px;
     height: 14px;
+  }
+  
+  /* Mobile first chat form adjustments */
+  .first-chat-form-container {
+    padding: 0 8px;
+    margin-top: 20px;
+  }
+  
+  .first-chat-form {
+    min-width: 250px;
+    max-width: calc(100vw - 32px);
+    padding: 12px 45px 12px 12px;
+  }
+  
+  .first-chat-form input {
+    font-size: 16px; /* Prevents zoom on iOS */
+    min-height: 20px;
+  }
+  
+  .submit-first-chat-btn {
+    width: 32px;
+    height: 32px;
+    right: 6px;
+  }
+  
+  .submit-first-chat-btn .icon {
+    width: 16px;
+    height: 16px;
+  }
+  
+  /* Mobile sidebar new chat form adjustments */
+  .new-chat-form input {
+    font-size: 16px; /* Prevents zoom on iOS */
+    min-width: 180px;
+  }
+  
+  .submit-new-chat-btn {
+    width: 30px;
+    height: 30px;
+  }
+  
+  .submit-new-chat-btn .icon {
+    width: 16px;
+    height: 16px;
+  }
+  
+  /* Mobile chat input area adjustments */
+  .chat-input-area {
+    padding: 20px 16px 16px 16px;
+  }
+  
+  .input-form {
+    min-width: 250px;
+    max-width: calc(100vw - 32px);
+    padding: 10px 14px;
+  }
+  
+  .input-wrapper textarea {
+    font-size: 16px; /* Prevents zoom on iOS */
+    min-height: 24px;
+  }
+  
+  .model-selector {
+    font-size: 14px;
+    padding: 8px 10px;
+  }
+  
+  .char-counter {
+    font-size: 11px;
   }
 }
 
@@ -1037,6 +1118,9 @@ a:hover .icon {
   margin-top: 24px;
   display: flex;
   justify-content: center;
+  width: 100%;
+  padding: 0 16px;
+  box-sizing: border-box;
 }
 
 .first-chat-form {
@@ -1049,6 +1133,7 @@ a:hover .icon {
   padding: 10px 40px 10px 10px;
   max-width: 500px;
   width: 100%;
+  min-width: 280px;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
 }
 
