@@ -39,6 +39,7 @@
   top: 0;
   z-index: 1000;
   pointer-events: auto;
+  isolation: isolate;
 }
 
 .sidebar a {
@@ -850,6 +851,16 @@ a:hover .icon {
     transform: translateX(0); 
     box-shadow: 4px 0 15px rgba(0,0,0,0.2); 
   }
+  
+  /* Prevent main content clicks when sidebar is open */
+  .sidebar.open ~ .main-content {
+    pointer-events: none;
+  }
+  
+  /* Re-enable pointer events for header elements */
+  .sidebar.open ~ .main-content .main-header {
+    pointer-events: auto;
+  }
   .header-hamburger { display: flex; }
   .sidebar-close-btn { display: flex; }
   .main-header { padding: 0 16px; }
@@ -875,17 +886,22 @@ a:hover .icon {
   .first-chat-form-container {
     padding: 0 8px;
     margin-top: 20px;
+    overflow: hidden;
   }
   
   .first-chat-form {
     min-width: 250px;
     max-width: calc(100vw - 32px);
     padding: 12px 45px 12px 12px;
+    overflow: hidden;
   }
   
   .first-chat-form input {
     font-size: 16px; /* Prevents zoom on iOS */
     min-height: 20px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
   
   .submit-first-chat-btn {
@@ -1121,6 +1137,7 @@ a:hover .icon {
   width: 100%;
   padding: 0 16px;
   box-sizing: border-box;
+  overflow: hidden;
 }
 
 .first-chat-form {
@@ -1135,6 +1152,7 @@ a:hover .icon {
   width: 100%;
   min-width: 280px;
   transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  overflow: hidden;
 }
 
 .first-chat-form:focus-within {
@@ -1156,6 +1174,9 @@ a:hover .icon {
   outline: none;
   padding: 0;
   margin-right: 0;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .first-chat-form input::placeholder {
