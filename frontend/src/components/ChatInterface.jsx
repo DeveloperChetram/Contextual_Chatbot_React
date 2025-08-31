@@ -176,12 +176,17 @@ const ChatInterface = () => {
   const handleMainContentClick = (e) => {
     // Don't close sidebar if clicking on sidebar elements
     if (e.target.closest('.sidebar')) {
+      e.stopPropagation();
       return;
     }
     
     if (window.innerWidth < 768 && sidebarOpen) {
       setSidebarOpen(false);
     }
+  };
+
+  const handleSidebarClick = (e) => {
+    e.stopPropagation();
   };
 
   const handleCopyMessage = (text, messageId) => {
@@ -220,7 +225,7 @@ const ChatInterface = () => {
 
   return (
     <div className="chat-container">
-      <aside className={`sidebar ${sidebarOpen ? "open" : ""}`} onClick={(e) => e.stopPropagation()}>
+      <aside className={`sidebar ${sidebarOpen ? "open" : ""}`} onClick={handleSidebarClick}>
         <div className="sidebar-header">
           <div className="logo-container">
             <LogoIcon />
@@ -230,13 +235,13 @@ const ChatInterface = () => {
             <Icon path={<path d="M18 6L6 18M6 6l12 12" />} />
           </button>
         </div>
-        <div className="sidebar-top"> <nav className="main-nav"> <button className="new-thread-btn" onClick={(e) => { e.stopPropagation(); handleCreateNewChat(); }} disabled={!isAuthenticated}> <Icon path={<path d="M12 5v14m-7-7h14" />} /> <span>New Chat</span> </button> </nav> </div>
-        <div className="library">
+        <div className="sidebar-top" onClick={(e) => e.stopPropagation()}> <nav className="main-nav"> <button className="new-thread-btn" onClick={(e) => { e.stopPropagation(); handleCreateNewChat(); }} disabled={!isAuthenticated}> <Icon path={<path d="M12 5v14m-7-7h14" />} /> <span>New Chat</span> </button> </nav> </div>
+        <div className="library" onClick={(e) => e.stopPropagation()}>
           <div className="library-header"> <h3>History</h3> </div>
-          {isCreatingNewChat && (<div className="new-chat-form-container" onClick={(e) => e.stopPropagation()}> <form onSubmit={handleNewChatSubmit} className={`new-chat-form ${titleError ? "error" : ""}`} > <input type="text" placeholder="New chat title..." value={newChatTitle} onChange={handleTitleChange} onBlur={() => !newChatTitle && setIsCreatingNewChat(false)} autoFocus /> <button type="submit" className="submit-new-chat-btn" disabled={!!titleError} > <Icon path={titleError ? (<path d="M18 6L6 18M6 6l12 12" />) : (<path d="M20 6L9 17l-5-5" />)} /> </button> </form> {titleError && (<p className="title-error-warning">{titleError}</p>)} </div>)}
-          <ul> {isAuthenticated ? (chats.length > 0 ? (chats.map((item) => (<li key={item._id} className={item._id === activeChatId ? "active" : ""} > <a href="#" onClick={(e) => { e.preventDefault(); handleHistoryClick(item._id); }}> <span>{item.title}</span> </a> </li>))) : (<li> <a href="#" className="no-chats"> <span>No chats found</span> </a> </li>)) : (<li> <a href="#" className="no-chats"> <span>Login to see history</span> </a> </li>)} </ul>
+          {isCreatingNewChat && (<div className="new-chat-form-container" onClick={(e) => e.stopPropagation()}> <form onSubmit={handleNewChatSubmit} className={`new-chat-form ${titleError ? "error" : ""}`} onClick={(e) => e.stopPropagation()}> <input type="text" placeholder="New chat title..." value={newChatTitle} onChange={handleTitleChange} onBlur={() => !newChatTitle && setIsCreatingNewChat(false)} autoFocus onClick={(e) => e.stopPropagation()} /> <button type="submit" className="submit-new-chat-btn" disabled={!!titleError} onClick={(e) => e.stopPropagation()}> <Icon path={titleError ? (<path d="M18 6L6 18M6 6l12 12" />) : (<path d="M20 6L9 17l-5-5" />)} /> </button> </form> {titleError && (<p className="title-error-warning">{titleError}</p>)} </div>)}
+          <ul> {isAuthenticated ? (chats.length > 0 ? (chats.map((item) => (<li key={item._id} className={item._id === activeChatId ? "active" : ""} > <a href="#" onClick={(e) => { e.preventDefault(); e.stopPropagation(); handleHistoryClick(item._id); }}> <span>{item.title}</span> </a> </li>))) : (<li> <a href="#" className="no-chats"> <span>No chats found</span> </a> </li>)) : (<li> <a href="#" className="no-chats"> <span>Login to see history</span> </a> </li>)} </ul>
         </div>
-        <div className="sidebar-bottom"> <div className="user-profile"> <div className="user-info"> <Icon path={<> <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /> <circle cx="12" cy="7" r="4" /> </>} /> <span>{user?.fullName?.firstName || "Guest User"}</span> </div> <div className={`credits-container ${isCreditsVisible ? 'show-text' : ''} ${creditsLoading ? 'loading' : ''} ${credits === 0 ? 'zero-credits' : ''}`} onClick={handleCreditsClick} > <span>{creditsLoading ? <div className="loading-spinner"></div> : (isAuthenticated ? `Credits: ${credits}` : (isCreditsVisible ? 'Login First' : 'Credits: 0'))}</span> </div> </div> </div>
+        <div className="sidebar-bottom" onClick={(e) => e.stopPropagation()}> <div className="user-profile"> <div className="user-info"> <Icon path={<> <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /> <circle cx="12" cy="7" r="4" /> </>} /> <span>{user?.fullName?.firstName || "Guest User"}</span> </div> <div className={`credits-container ${isCreditsVisible ? 'show-text' : ''} ${creditsLoading ? 'loading' : ''} ${credits === 0 ? 'zero-credits' : ''}`} onClick={(e) => { e.stopPropagation(); handleCreditsClick(); }} > <span>{creditsLoading ? <div className="loading-spinner"></div> : (isAuthenticated ? `Credits: ${credits}` : (isCreditsVisible ? 'Login First' : 'Credits: 0'))}</span> </div> </div> </div>
       </aside>
 
       <main className="main-content" onClick={handleMainContentClick}>
