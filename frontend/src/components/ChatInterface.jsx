@@ -174,9 +174,8 @@ const ChatInterface = () => {
   };
 
   const handleMainContentClick = (e) => {
-    // Don't close sidebar if clicking on sidebar elements
-    if (e.target.closest('.sidebar')) {
-      e.stopPropagation();
+    // Don't close sidebar if clicking on sidebar elements or form inputs
+    if (e.target.closest('.sidebar') || e.target.closest('input') || e.target.closest('textarea') || e.target.closest('select') || e.target.closest('button')) {
       return;
     }
     
@@ -293,17 +292,18 @@ const ChatInterface = () => {
                     <>
                       <h2>Start Your First Chat</h2>
                       <p>Create your first chat to begin your conversation with Atomic.</p>
-                      <div className="first-chat-form-container">
-                        <form onSubmit={handleFirstChatSubmit} className={`first-chat-form ${titleError ? "error" : ""}`}>
+                      <div className="first-chat-form-container" onClick={(e) => e.stopPropagation()}>
+                        <form onSubmit={handleFirstChatSubmit} className={`first-chat-form ${titleError ? "error" : ""}`} onClick={(e) => e.stopPropagation()}>
                           <input
                             type="text"
                             placeholder="Untitled Chat"
                             value={newChatTitle}
                             onChange={handleTitleChange}
                             onBlur={() => !newChatTitle && setIsCreatingFirstChat(false)}
+                            onClick={(e) => e.stopPropagation()}
                             autoFocus
                           />
-                          <button type="submit" className="submit-first-chat-btn" disabled={!!titleError}>
+                          <button type="submit" className="submit-first-chat-btn" disabled={!!titleError} onClick={(e) => e.stopPropagation()}>
                             <Icon path={titleError ? <path d="M18 6L6 18M6 6l12 12" /> : <path d="M20 6L9 17l-5-5" />} />
                           </button>
                         </form>
@@ -331,14 +331,14 @@ const ChatInterface = () => {
           </div>
         </section>
 
-        <section className="chat-input-area">
-          <form className="input-form" onSubmit={handleSendMessage}>
-            <div className="input-wrapper"> <textarea ref={textareaRef} rows="1" placeholder={!isAuthenticated ? "Login to chat" : (characterLoading ? "Changing character..." : (!activeChatId ? "Make chat first then send message" : "Ask anything..."))} value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(e); } }} disabled={characterLoading || !isAuthenticated || !activeChatId} /> </div>
+        <section className="chat-input-area" onClick={(e) => e.stopPropagation()}>
+          <form className="input-form" onSubmit={handleSendMessage} onClick={(e) => e.stopPropagation()}>
+            <div className="input-wrapper"> <textarea ref={textareaRef} rows="1" placeholder={!isAuthenticated ? "Login to chat" : (characterLoading ? "Changing character..." : (!activeChatId ? "Make chat first then send message" : "Ask anything..."))} value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(e); } }} onClick={(e) => e.stopPropagation()} disabled={characterLoading || !isAuthenticated || !activeChatId} /> </div>
             <div className="input-footer">
-              <div className="input-footer-left"> <select name="model" value={character} className={`model-selector ${characterLoading ? 'loading' : ''}`} onChange={handleChangeCharacter} disabled={characterLoading || !isAuthenticated || !activeChatId}> <option value="jahnvi">Jahnvi</option> <option value="atomic">Atomic</option> <option value="chandni">Chandni</option>
+              <div className="input-footer-left"> <select name="model" value={character} className={`model-selector ${characterLoading ? 'loading' : ''}`} onChange={handleChangeCharacter} onClick={(e) => e.stopPropagation()} disabled={characterLoading || !isAuthenticated || !activeChatId}> <option value="jahnvi">Jahnvi</option> <option value="atomic">Atomic</option> <option value="chandni">Chandni</option>
                 <option value="bhaiya"> Harsh Bhaiya</option>
               </select> <div className={`char-counter ${inputValue.length > MAX_PROMPT_CHARS ? "error" : ""}`} > {MAX_PROMPT_CHARS - inputValue.length} / 1400 </div> </div>
-              <div className="input-footer-right"> <button type="submit" className="send-button" disabled={!inputValue.trim() || inputValue.length > MAX_PROMPT_CHARS || !activeChatId || characterLoading || !isAuthenticated} > <Icon path={<> <line x1="12" y1="19" x2="12" y2="5" /> <polyline points="5 12 12 5 19 12" /> </>} /> </button> </div>
+              <div className="input-footer-right"> <button type="submit" className="send-button" disabled={!inputValue.trim() || inputValue.length > MAX_PROMPT_CHARS || !activeChatId || characterLoading || !isAuthenticated} onClick={(e) => e.stopPropagation()}> <Icon path={<> <line x1="12" y1="19" x2="12" y2="5" /> <polyline points="5 12 12 5 19 12" /> </>} /> </button> </div>
             </div>
           </form>
         </section>
