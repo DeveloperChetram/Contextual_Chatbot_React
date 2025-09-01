@@ -97,10 +97,17 @@
     border: none;
     padding: 8px;
     cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .sidebar-close-btn .icon {
     margin: 0;
     stroke: var(--text-secondary);
+    width: 20px;
+    height: 20px;
 }
 .sidebar-close-btn:hover .icon {
     stroke: var(--text-primary);
@@ -487,12 +494,19 @@ a:hover .icon {
     display: none; /* Hidden on desktop */
     background: none;
     border: none;
-    padding: 4px;
+    padding: 8px;
     cursor: pointer;
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
 }
 .header-hamburger .icon {
     margin: 0;
     stroke: var(--text-primary);
+    width: 20px;
+    height: 20px;
 }
 
 .header-title-wrapper {
@@ -861,12 +875,18 @@ a:hover .icon {
   
   /* Mobile theme toggle adjustments */
   .header-right .theme-toggle-button {
-    padding: 4px 8px;
-    gap: 4px;
+    padding: 8px;
+    gap: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50% !important;
+    justify-content: center;
+    min-width: 40px;
+    min-height: 40px;
   }
   
   .header-right .theme-toggle-text {
-    font-size: 11px;
+    display: none;
   }
   
   .header-right .theme-icon {
@@ -1068,6 +1088,8 @@ a:hover .icon {
   color: var(--text-primary);
   z-index: auto;
   box-shadow: none;
+  width: auto;
+  height: auto;
 }
 
 .header-right .theme-toggle-button:hover {

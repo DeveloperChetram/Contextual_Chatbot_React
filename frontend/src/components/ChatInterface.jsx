@@ -99,9 +99,8 @@ const ChatInterface = () => {
     const handleResize = () => {
       if (window.innerWidth >= 768) {
         setSidebarOpen(true);
-      } else {
-        setSidebarOpen(false);
       }
+      // Don't auto-close sidebar on mobile resize (keyboard opening)
     };
 
     window.addEventListener('resize', handleResize);
@@ -150,6 +149,9 @@ const ChatInterface = () => {
     setNewChatTitle("");
     setIsCreatingNewChat(false);
     setIsCreatingFirstChat(false);
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
   };
 
   const handleFirstChatSubmit = (e) => {
@@ -159,6 +161,9 @@ const ChatInterface = () => {
     setNewChatTitle("");
     setIsCreatingFirstChat(false);
     setIsCreatingNewChat(false);
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
   };
 
   const handleTitleChange = (e) => {
@@ -170,11 +175,34 @@ const ChatInterface = () => {
 
   const handleHistoryClick = (id) => {
     dispatch(setActiveChatId(id));
+    if (window.innerWidth < 768) {
+      setSidebarOpen(false);
+    }
   };
 
   const handleCreateNewChat = () => {
     setIsCreatingNewChat(true);
   };
+
+  // Add click outside handler back
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      // Don't close sidebar if clicking on form elements or sidebar itself
+      if (event.target.closest('.sidebar') || event.target.closest('input') || event.target.closest('textarea') || event.target.closest('select')) {
+        return;
+      }
+      
+      // Close sidebar when clicking outside
+      if (window.innerWidth < 768 && sidebarOpen) {
+        setSidebarOpen(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [sidebarOpen]);
 
   const handleCopyMessage = (text, messageId) => {
     navigator.clipboard.writeText(text).then(() => {
