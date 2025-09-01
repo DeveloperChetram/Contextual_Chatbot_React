@@ -14,11 +14,12 @@ const initSocketServer = (httpServer) => {
         
         const allowedOrigins = [
           'https://contextual-chatbot-react.vercel.app',
+          'https://atomic-llm.vercel.app',
           'http://localhost:5173',
           'http://localhost:3000',
           'http://localhost:3001',
           'https://contextual-chatbot-react.onrender.com',
-          'https://your-app-name.vercel.app'
+          'https://atomic-llm.vercel.app'
         ];
         
         if (allowedOrigins.includes(origin)) {

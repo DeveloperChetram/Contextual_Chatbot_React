@@ -14,6 +14,7 @@ app.use(cors({
     
     const allowedOrigins = [
       'https://contextual-chatbot-react.vercel.app',
+      'https://atomic-llm.vercel.app',
       'http://localhost:5173',
     ];
     
