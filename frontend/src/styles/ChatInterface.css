@@ -102,6 +102,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 .sidebar-close-btn .icon {
     margin: 0;
@@ -127,6 +130,9 @@
     cursor: pointer;
     font-size: 14px;
     transition: box-shadow 0.3s;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 .new-thread-btn:hover {
     /* background-color: #03172200; */
@@ -501,6 +507,9 @@ a:hover .icon {
     display: flex;
     align-items: center;
     justify-content: center;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 .header-hamburger .icon {
     margin: 0;
@@ -542,6 +551,9 @@ a:hover .icon {
   font-weight: 500;
   font-size: 14px;
   transition: box-shadow 0.3s;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .share-btn:hover {
@@ -628,6 +640,9 @@ a:hover .icon {
   justify-content: center;
   opacity: 0;
   transition: opacity 0.2s ease-in-out;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 .chat-turn:hover .copy-btn { opacity: 1; }
 .copy-btn .icon { margin: 0; width: 18px; height: 18px; stroke: var(--text-secondary); }
@@ -644,6 +659,9 @@ a:hover .icon {
   align-items: center;
   justify-content: center;
   border-radius: 6px;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 .icon-button:hover { background-color: var(--background-secondary); }
 .icon-button .icon { margin: 0; }
@@ -729,6 +747,9 @@ a:hover .icon {
   cursor: pointer;
   border: none;
   transition: box-shadow 0.3s;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 .input-form .send-button:hover { box-shadow: 0 0 8px var(--glow-color); }
 .input-form .send-button .icon { stroke: white; margin: 0; }
@@ -790,6 +811,9 @@ a:hover .icon {
     align-items: center;
     justify-content: center;
     cursor: pointer;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 .new-chat-form.error .submit-new-chat-btn { background-color: var(--error-color); }
 .submit-new-chat-btn:disabled { opacity: 0.6; cursor: not-allowed; }
@@ -805,6 +829,9 @@ a:hover .icon {
     font-size: 13px;
     cursor: pointer;
     transition: all 0.3s ease;
+    -webkit-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
 }
 .model-selector:focus { outline: none; border-color: var(--accent-color); }
 
@@ -1026,6 +1053,9 @@ a:hover .icon {
   gap: 8px;
   transition: color 0.3s ease;
   margin-top: 16px;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 /* .login-to-chat-btn::after {
@@ -1090,6 +1120,9 @@ a:hover .icon {
   box-shadow: none;
   width: auto;
   height: auto;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .header-right .theme-toggle-button:hover {
@@ -1213,6 +1246,9 @@ a:hover .icon {
   justify-content: center;
   cursor: pointer;
   transition: opacity 0.3s ease;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .submit-first-chat-btn:hover {
@@ -1245,6 +1281,9 @@ a:hover .icon {
   gap: 8px;
   transition: all 0.3s ease;
   margin-top: 16px;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
 }
 
 .create-first-chat-btn:hover {
