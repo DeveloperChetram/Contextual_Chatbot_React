@@ -234,7 +234,7 @@ const ChatInterface = () => {
       <main className="main-content">
         <header className="main-header">
           <div className="header-left">
-            <button className="header-hamburger" onClick={() => setSidebarOpen((prev) => !prev)} >
+                         <button className="header-hamburger" onClick={() => setSidebarOpen(true)} >
               <Icon path={<> <path d="M3 12h18" /> <path d="M3 6h18" /> <path d="M3 18h18" /> </>} />
             </button>
             {/* <div className="header-logo">
