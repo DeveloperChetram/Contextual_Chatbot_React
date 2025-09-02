@@ -4,8 +4,9 @@ const jwt = require('jsonwebtoken')
 
 const cookieOptions = {
     httpOnly: true,
-    secure: true, 
-    sameSite: 'None' 
+    secure: process.env.NODE_ENV === 'production', 
+    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+    maxAge: 5 * 24 * 60 * 60 * 1000 // 5 days in milliseconds
 };
 
 const registerController = async (req, res)=>{
@@ -28,7 +29,7 @@ const registerController = async (req, res)=>{
         passwordHash: await bcrypt.hash(password, 10)
     })
 
-    const token = jwt.sign({id:user._id}, process.env.JWT_SECRET)
+    const token = jwt.sign({id:user._id}, process.env.JWT_SECRET, { expiresIn: '5d' })
     res.cookie('token', token, cookieOptions);
     res.status(201).json({
         message:"user successfully registered",
@@ -36,6 +37,9 @@ const registerController = async (req, res)=>{
     })
 } catch (error) {
     console.log(error)
+    res.status(500).json({
+        message: "Internal server error"
+    })
 }
 }
 
@@ -56,7 +60,7 @@ const loginController = async (req, res)=>{
         })
     }
     try {
-        const token= jwt.sign({id:user._id}, process.env.JWT_SECRET)
+        const token= jwt.sign({id:user._id}, process.env.JWT_SECRET, { expiresIn: '5d' })
         res.cookie('token', token, cookieOptions);
         res.status(201).json({
             message:'user loged in',
@@ -64,6 +68,9 @@ const loginController = async (req, res)=>{
         })
     } catch (error) {
         console.log(error)
+        res.status(500).json({
+            message: "Internal server error"
+        })
     }
 }
 
@@ -72,7 +79,7 @@ const logoutController = async (req, res)=>{
     res.status(201).json({
         message:"user logged out"
     })
-} 
+}
 
 module.exports= {
     registerController,

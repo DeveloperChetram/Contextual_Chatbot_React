@@ -5,6 +5,7 @@ import {
   setAllMessages,
   addMessage,
   setLoading,
+  setCreatingChat,
   setError,
   setActiveChatId,
   setModelTyping,
@@ -41,7 +42,7 @@ export const getChats = () => async (dispatch) => {
 };
 
 export const createChat = (title) => async (dispatch) => {
-  dispatch(setLoading(true));
+  dispatch(setCreatingChat(true));
   try {
     const response = await axios.post("/chat", { title });
     dispatch(addChat(response.data.chat));
@@ -49,7 +50,7 @@ export const createChat = (title) => async (dispatch) => {
   } catch (error) {
     dispatch(setError(error.message));
   } finally {
-    dispatch(setLoading(false));
+    dispatch(setCreatingChat(false));
   }
 };
 

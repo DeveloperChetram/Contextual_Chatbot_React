@@ -5,6 +5,7 @@ const initialState = {
   allMessages: [],
   activeChatId: null,
   loading: false,
+  creatingChat: false,
   error: null,
   isModelTyping: {},
   character: "atomic",
@@ -16,6 +17,9 @@ const chatSlice = createSlice({
   reducers: {
     setLoading: (state, action) => {
       state.loading = action.payload;
+    },
+    setCreatingChat: (state, action) => {
+      state.creatingChat = action.payload;
     },
     setError: (state, action) => {
       state.error = action.payload;
@@ -49,6 +53,7 @@ const chatSlice = createSlice({
       state.allMessages = [];
       state.activeChatId = null;
       state.loading = false;
+      state.creatingChat = false;
       state.error = null;
       state.isModelTyping = {};
       state.character = "atomic";
@@ -58,6 +63,7 @@ const chatSlice = createSlice({
 
 export const {
   setLoading,
+  setCreatingChat,
   setError,
   setChats,
   addChat,

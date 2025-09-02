@@ -3,6 +3,7 @@ import MainRoutes from './routes/MainRoutes';
 import { useDispatch } from 'react-redux';
 import { setUserFromStorage } from '../src/redux/reducers/authSlice';
 import { clearChatStore } from '../src/redux/reducers/chatSlice';
+import { getCurrentUser } from '../src/redux/actions/authActions';
 
 const App = () => {
   const dispatch = useDispatch();
@@ -10,9 +11,11 @@ const App = () => {
   useEffect(() => {
     dispatch(clearChatStore());
     
+    // Check if user exists in localStorage
     const user = localStorage.getItem('user');
     if (user) {
-      dispatch(setUserFromStorage(JSON.parse(user)));
+      // Validate the token with the backend
+              getCurrentUser(dispatch);
     }
   }, [dispatch]);
 
