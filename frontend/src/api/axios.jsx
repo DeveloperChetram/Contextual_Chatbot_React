@@ -11,8 +11,11 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && (error.response.status === 401 || error.response.status === 404)) {
-      store.dispatch(logout());
-      localStorage.removeItem('user');
+      // Don't logout for credits endpoint as it's used for token validation
+      if (!error.config.url.includes('/credits')) {
+        store.dispatch(logout());
+        localStorage.removeItem('user');
+      }
     }
     return Promise.reject(error);
   }

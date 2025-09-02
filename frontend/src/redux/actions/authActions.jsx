@@ -55,3 +55,25 @@ export const logoutUser = ()=>async (dispatch) => {
     return { success: false, error };
   }
 };
+
+export const getCurrentUser = async (dispatch) => {
+  try {
+    // Use any protected endpoint to validate token
+    const response = await axios.get('/credits');
+    // If we get here, token is valid, get user from localStorage
+    const user = JSON.parse(localStorage.getItem('user'));
+    if (user) {
+      dispatch(loginSuccess(user));
+      return { success: true };
+    } else {
+      dispatch(logoutAction());
+      localStorage.removeItem('user');
+      return { success: false };
+    }
+  } catch (error) {
+    // Token is invalid or expired
+    dispatch(logoutAction());
+    localStorage.removeItem('user');
+    return { success: false, error };
+  }
+};

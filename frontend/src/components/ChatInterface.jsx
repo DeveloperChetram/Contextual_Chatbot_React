@@ -19,6 +19,7 @@ import {
 import { logoutUser } from "../redux/actions/authActions";
 import TypingIndicator from "./TypingIndicator";
 import ThemeToggler from "./ThemeToggler";
+import ChatLoadingAnimation from "./ChatLoadingAnimation";
 
 import "../styles/ChatInterface.css";
 import { changeCharacter } from "../redux/actions/chatActions";
@@ -35,7 +36,7 @@ const ChatInterface = () => {
 
 
   // console.log(user);
-  const { chats, allMessages, activeChatId, loading, isModelTyping, character } = useSelector(
+  const { chats, allMessages, activeChatId, loading, creatingChat, isModelTyping, character } = useSelector(
     (state) => state.chat
   );
 
@@ -250,10 +251,10 @@ const ChatInterface = () => {
             <Icon path={<path d="M18 6L6 18M6 6l12 12" />} />
           </button>
         </div>
-        <div className="sidebar-top"> <nav className="main-nav"> <button className="new-thread-btn" onClick={handleCreateNewChat} disabled={!isAuthenticated}> <Icon path={<path d="M12 5v14m-7-7h14" />} /> <span>New Chat</span> </button> </nav> </div>
+        <div className="sidebar-top"> <nav className="main-nav"> <button className="new-thread-btn" onClick={handleCreateNewChat} disabled={!isAuthenticated || creatingChat}> <Icon path={<path d="M12 5v14m-7-7h14" />} /> <span>{creatingChat ? "Creating..." : "New Chat"}</span> </button> </nav> </div>
         <div className="library">
           <div className="library-header"> <h3>History</h3> </div>
-                     {isCreatingNewChat && (<div className="new-chat-form-container"> <form onSubmit={handleNewChatSubmit} className={`new-chat-form ${titleError ? "error" : ""}`}> <input type="text" placeholder="New chat title..." value={newChatTitle} onChange={handleTitleChange} onBlur={() => !newChatTitle && setIsCreatingNewChat(false)} autoFocus/> <button type="submit" className="submit-new-chat-btn" disabled={!!titleError}> <Icon path={titleError ? (<path d="M18 6L6 18M6 6l12 12" />) : (<path d="M20 6L9 17l-5-5" />)} /> </button> </form> {titleError && (<p className="title-error-warning">{titleError}</p>)} </div>)}
+                     {isCreatingNewChat && (<div className="new-chat-form-container"> <form onSubmit={handleNewChatSubmit} className={`new-chat-form ${titleError ? "error" : ""}`}> <input type="text" placeholder="New chat title..." value={newChatTitle} onChange={handleTitleChange} onBlur={() => !newChatTitle && setIsCreatingNewChat(false)} autoFocus/> <button type="submit" className="submit-new-chat-btn" disabled={!!titleError || creatingChat}> <Icon path={titleError ? (<path d="M18 6L6 18M6 6l12 12" />) : (creatingChat ? <path d="M12 2v4m0 4v4" /> : <path d="M20 6L9 17l-5-5" />)} /> </button> </form> {titleError && (<p className="title-error-warning">{titleError}</p>)} </div>)}
           <ul> {isAuthenticated ? (chats.length > 0 ? (chats.map((item) => (<li key={item._id} className={item._id === activeChatId ? "active" : ""} > <a href="#" onClick={(e) => { e.preventDefault(); handleHistoryClick(item._id); }}> <span>{item.title}</span> </a> </li>))) : (<li> <a href="#" className="no-chats"> <span>No chats found</span> </a> </li>)) : (<li> <a href="#" className="no-chats"> <span>Login to see history</span> </a> </li>)} </ul>
         </div>
         <div className="sidebar-bottom"> <div className="user-profile"> <div className="user-info"> <Icon path={<> <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /> <circle cx="12" cy="7" r="4" /> </>} /> <span>{user?.fullName?.firstName || "Guest User"}</span> </div> <div className={`credits-container ${isCreditsVisible ? 'show-text' : ''} ${creditsLoading ? 'loading' : ''} ${credits === 0 ? 'zero-credits' : ''}`} onClick={handleCreditsClick} > <span>{creditsLoading ? <div className="loading-spinner"></div> : (isAuthenticated ? `Credits: ${credits}` : (isCreditsVisible ? 'Login First' : 'Credits: 0'))}</span> </div> </div> </div>
@@ -287,7 +288,9 @@ const ChatInterface = () => {
           <div className="chat-content-wrapper">
             {loading && !activeChatMessages.length && <div className="empty-chat-placeholder"><h2>Loading...</h2></div>}
 
-            {!loading && activeChatMessages.length > 0 && activeChatMessages.map((msg) => (
+            {creatingChat && <ChatLoadingAnimation />}
+
+            {!loading && !creatingChat && activeChatMessages.length > 0 && activeChatMessages.map((msg) => (
               <div key={msg._id} className={`chat-turn ${msg.role}`}>
                 <div className="message-header"> <h3 className="message-sender">{msg.role === "user" ? "You" : (msg.character || "AI Assistant")}</h3> <button className="copy-btn" onClick={() => handleCopyMessage(msg.content, msg._id)}> <Icon path={copiedMessageId === msg._id ? <path d="M20 6L9 17l-5-5" /> : <><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>} /> </button> </div>
                 <div className="message-text"> {msg.role === "model" ? (<ReactMarkdown children={msg.content} components={{ code(props) { const { children, className, node, ...rest } = props; const match = /language-(\w+)/.exec(className || ''); return match ? (<SyntaxHighlighter {...rest} children={String(children).replace(/\n$/, '')} style={vscDarkPlus} language={match[1]} PreTag="div" />) : (<code {...rest} className={className}> {children} </code>) } }} />) : (msg.content)} </div>
@@ -296,7 +299,7 @@ const ChatInterface = () => {
 
             {isModelTyping[activeChatId] && <TypingIndicator character={character} />}
 
-            {!loading && activeChatMessages.length === 0 && !isModelTyping[activeChatId] && (
+            {!loading && !creatingChat && activeChatMessages.length === 0 && !isModelTyping[activeChatId] && (
               <div className="empty-chat-placeholder">
                 {activeChatId ? (
                   <>
@@ -318,8 +321,8 @@ const ChatInterface = () => {
                              onBlur={() => !newChatTitle && setIsCreatingFirstChat(false)}
                              autoFocus
                            />
-                           <button type="submit" className="submit-first-chat-btn" disabled={!!titleError}>
-                             <Icon path={titleError ? <path d="M18 6L6 18M6 6l12 12" /> : <path d="M20 6L9 17l-5-5" />} />
+                           <button type="submit" className="submit-first-chat-btn" disabled={!!titleError || creatingChat}>
+                             <Icon path={titleError ? <path d="M18 6L6 18M6 6l12 12" /> : (creatingChat ? <path d="M12 2v4m0 4v4" /> : <path d="M20 6L9 17l-5-5" />)} />
                            </button>
                          </form>
                          {titleError && <p className="title-error-warning">{titleError}</p>}

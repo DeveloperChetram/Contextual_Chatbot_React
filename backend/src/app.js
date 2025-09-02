@@ -16,6 +16,9 @@ app.use(cors({
       'https://contextual-chatbot-react.vercel.app',
       'https://atomic-llm.vercel.app',
       'http://localhost:5173',
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'https://contextual-chatbot-react.onrender.com'
     ];
     
     if (allowedOrigins.includes(origin)) {
@@ -26,11 +29,42 @@ app.use(cors({
     }
   },
   methods: ['GET', 'HEAD', 'PUT', 'PATCH', 'POST', 'DELETE', 'OPTIONS'], 
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin', 'Cookie'],
   exposedHeaders: ['Set-Cookie'],
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  preflightContinue: false
 }));
+
+// Additional CORS headers middleware
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  const allowedOrigins = [
+    'https://contextual-chatbot-react.vercel.app',
+    'https://atomic-llm.vercel.app',
+    'http://localhost:5173',
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'https://contextual-chatbot-react.onrender.com'
+  ];
+  
+  if (origin && allowedOrigins.includes(origin)) {
+    res.header('Access-Control-Allow-Origin', origin);
+  }
+  
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With, Accept, Origin, Cookie');
+  res.header('Access-Control-Allow-Credentials', 'true');
+  res.header('Access-Control-Expose-Headers', 'Set-Cookie');
+  
+  if (req.method === 'OPTIONS') {
+    res.status(200).end();
+    return;
+  }
+  
+  next();
+});
+
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
@@ -40,6 +74,16 @@ app.options('*', cors());
 
 app.get('/', (req, res) => {
   res.send('Yo Yo Yo Server is running')
+})
+
+// Health check endpoint for CORS testing
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    message: 'Server is running',
+    cors: 'enabled',
+    origin: req.headers.origin 
+  })
 })
 app.use('/api', indexRouter)
 
