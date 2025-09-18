@@ -49,10 +49,28 @@ A full-stack AI-powered contextual chatbot application built with React, Node.js
 
 Watch a quick demo of the Atomic personality in action:
 
-<video src="atomic video.mp4" controls width="600">
+### 🎥 Interactive Demo Video
+[![Watch Demo Video](https://img.shields.io/badge/📹-Watch%20Demo%20Video-red?style=for-the-badge)](https://ik.imagekit.io/chetram/Atomic%20/output_progressive_503ca82d-3653-4cc0-b9e2-88582f331a09.mp4?tr=orig)
+
+### 🎬 Direct Video Player
+<video controls width="100%">
+  <source src="https://ik.imagekit.io/chetram/Atomic%20/output_progressive_503ca82d-3653-4cc0-b9e2-88582f331a09.mp4?tr=orig" type="video/mp4">
   Your browser does not support the video tag.
 </video>
 
+### 📱 Live Application
+🌐 **Try it yourself**: [https://atomic-llm.vercel.app](https://atomic-llm.vercel.app)
+
+### 📸 Screenshots
+
+#### Chat Interface Overview
+![Chat Interface Demo](scrst1.png)
+
+#### Light/Dark Theme Support
+![Light Mode Support](scrnst2.png)
+
+#### Responsive in many screens
+![Responsive Chat](scrnst3.png)
 
 ## 🌟 Features
 
