@@ -6,7 +6,8 @@ const cookieOptions = {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production', 
     sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
-    maxAge: 5 * 24 * 60 * 60 * 1000 // 5 days in milliseconds
+    maxAge: 5 * 24 * 60 * 60 * 1000, // 5 days in milliseconds
+    domain: process.env.NODE_ENV === 'production' ? undefined : undefined // Let browser handle domain
 };
 
 const registerController = async (req, res)=>{
