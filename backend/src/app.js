@@ -4,6 +4,7 @@ const indexRouter = require('./routes/index.routes');
 const authRouter = require('./routes/auth.routes');
 const chatRouter = require('./routes/chat.routes');
 const cors  = require('cors')
+const responseSanitizer = require('./middlewares/responseSanitizer.middleware');
 const app = express();
 
 const cookieParser = require('cookie-parser')
@@ -43,6 +44,9 @@ app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
 app.use(cookieParser())
+
+// Apply response sanitization middleware to all routes
+app.use(responseSanitizer)
 
 // Handle preflight requests
 app.options('*', (req, res) => {

@@ -1,17 +1,17 @@
-import React from 'react';
+import React, { memo, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import '../styles/NotFound.css';
 
-const NotFound = () => {
+const NotFound = memo(() => {
   const navigate = useNavigate();
 
-  const handleGoHome = () => {
+  const handleGoHome = useCallback(() => {
     navigate('/');
-  };
+  }, [navigate]);
 
-  const handleGoBack = () => {
+  const handleGoBack = useCallback(() => {
     navigate(-1);
-  };
+  }, [navigate]);
 
   return (
     <div className="not-found-container">
@@ -26,6 +26,8 @@ const NotFound = () => {
       </div>
     </div>
   );
-};
+});
+
+NotFound.displayName = 'NotFound';
 
 export default NotFound;

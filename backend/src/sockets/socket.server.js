@@ -99,7 +99,7 @@ const initSocketServer = (httpServer) => {
           queryMemory({
             queryVector: vectors,
             limit: 5,
-            metadata: { user: socket.user._id.toString() },
+            metadata: { user: socket.user._id.toString(), character: messagePayload.character },
           }),
           messageModel
             .find({ chatId: messagePayload.chatId })
@@ -108,11 +108,13 @@ const initSocketServer = (httpServer) => {
             .lean()
             .then((messages) => messages.reverse()), 
         ]);
-        
-        const stm = chatHistory.map((item) => ({
+        console.log('pineconeData', pineconeData);
+        // console.log('chatHistory', chatHistory);
+        const stm = chatHistory.filter((item)=>   item.character === messagePayload.character).map((item) => ({
           role: item.role,
           parts: [{ text: item.content }],
         }));
+        // console.log('stm', stm.map((item) => item.parts));
 
         const ltm = [{
           role: "user",
@@ -146,6 +148,7 @@ const initSocketServer = (httpServer) => {
                     user: socket.user._id.toString(),
                     chatId: messagePayload.chatId,
                     message: messagePayload.content,
+                    character: messagePayload.character,
                 },
             }),
             createMemory({
@@ -155,6 +158,7 @@ const initSocketServer = (httpServer) => {
                     chatId: messagePayload.chatId,
                     user: socket.user._id.toString(),
                     message: response,
+                    character: responseCharacter,
                 },
             })
         ]);

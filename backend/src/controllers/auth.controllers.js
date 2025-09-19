@@ -32,9 +32,19 @@ const registerController = async (req, res)=>{
 
     const token = jwt.sign({id:user._id}, process.env.JWT_SECRET, { expiresIn: '5d' })
     res.cookie('token', token, cookieOptions);
+    // Remove sensitive data before sending response
+    const userResponse = {
+        _id: user._id,
+        fullName: user.fullName,
+        email: user.email,
+        credits: user.credits,
+        createdAt: user.createdAt,
+        updatedAt: user.updatedAt
+    };
+    
     res.status(201).json({
         message:"user successfully registered",
-        user
+        user: userResponse
     })
 } catch (error) {
     console.log(error)
@@ -48,7 +58,7 @@ const loginController = async (req, res)=>{
     const {email, password} = req.body;
     const user = await userModel.findOne({
         email
-    })
+    }).select('+passwordHash') // Explicitly include passwordHash for authentication
     if(!user){
         return res.status(404).json({
             message:"user not found"
@@ -63,9 +73,20 @@ const loginController = async (req, res)=>{
     try {
         const token= jwt.sign({id:user._id}, process.env.JWT_SECRET, { expiresIn: '5d' })
         res.cookie('token', token, cookieOptions);
+        
+        // Remove sensitive data before sending response
+        const userResponse = {
+            _id: user._id,
+            fullName: user.fullName,
+            email: user.email,
+            credits: user.credits,
+            createdAt: user.createdAt,
+            updatedAt: user.updatedAt
+        };
+        
         res.status(201).json({
             message:'user loged in',
-            user
+            user: userResponse
         })
     } catch (error) {
         console.log(error)

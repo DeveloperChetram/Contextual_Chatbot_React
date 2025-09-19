@@ -7,5 +7,6 @@ const chatRouter = express.Router();
 chatRouter.post('/',authMiddleware, chatControllers.createChatController )
 chatRouter.get('/',authMiddleware, chatControllers.getChatController )
 chatRouter.get('/messages',authMiddleware, chatControllers.getMessagesController )
+chatRouter.put('/:id',authMiddleware, chatControllers.updateChatController )
 
 module.exports = chatRouter;

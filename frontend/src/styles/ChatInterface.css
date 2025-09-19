@@ -24,7 +24,7 @@
 }
 
 .sidebar {
-  background-color: var(--background-sidebar);
+  background-color: var(--background-primary);
   width: var(--sidebar-width);
   height: 100%;
   display: flex;
@@ -627,8 +627,50 @@ a:hover .icon {
   color: var(--text-secondary);
   text-transform: capitalize;
 }
-.chat-turn.user .message-sender { color: var(--accent-color); }
-.chat-turn.model .message-sender { color: var(--accent-color); }
+
+/* User message sender color - dynamic based on character being talked to */
+.chat-turn.user .message-sender { 
+  color: var(--accent-color); /* Will use the character color being talked to */
+}
+
+/* Character-specific colors for AI responses - Cool & Soft Palette */
+.chat-turn.model .message-sender[data-character="atomic"] { 
+  color: #06b6d4; /* Soft Cyan for Atomic */
+}
+
+.chat-turn.model .message-sender[data-character="chandni"] { 
+  color: #14b8a6; /* Soft Teal for Chandni - closer to Atomic's cyan */
+}
+
+.chat-turn.model .message-sender[data-character="jahnvi"] { 
+  color: #0ea5e9; /* Soft Sky Blue for Jahnvi */
+}
+
+.chat-turn.model .message-sender[data-character="bhaiya"] { 
+  color: #10b981; /* Soft Emerald Green for Bhaiya */
+}
+
+/* Fallback for any other character */
+.chat-turn.model .message-sender:not([data-character]) { 
+  color: var(--accent-color); 
+}
+
+/* Character-specific colors for "You" messages based on who they were talking to - Cool & Soft Palette */
+.chat-turn.user .message-sender[data-character="atomic"] { 
+  color: #06b6d4; /* Soft Cyan for Atomic */
+}
+
+.chat-turn.user .message-sender[data-character="chandni"] { 
+  color: #14b8a6; /* Soft Teal for Chandni - closer to Atomic's cyan */
+}
+
+.chat-turn.user .message-sender[data-character="jahnvi"] { 
+  color: #0ea5e9; /* Soft Sky Blue for Jahnvi */
+}
+
+.chat-turn.user .message-sender[data-character="bhaiya"] { 
+  color: #10b981; /* Soft Emerald Green for Bhaiya */
+}
 .message-text {
   line-height: 1.7;
   font-size: 16px;
@@ -1316,4 +1358,221 @@ a:hover .icon {
   margin: 0;
   width: 18px;
   height: 18px;
+}
+
+/* --- Consistent Height Override --- */
+.new-chat-form input,
+.edit-chat-input,
+.library ul li a {
+  height: 40px;
+  box-sizing: border-box;
+}
+
+/* --- Chat Edit Styles --- */
+
+.library ul li {
+  position: relative;
+  margin-top: 4px; /* Add vertical spacing between items */
+}
+
+.library ul li a {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 40px 10px 10px; /* Match input padding */
+  border-radius: 6px;
+  border: 1px solid transparent;
+  width: 100%;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
+  position: relative; /* New: for positioning the child button */
+}
+
+.library ul li a:hover {
+  background-color: var(--background-secondary);
+}
+
+.library ul li.active a {
+  background-color: var(--background-secondary);
+}
+
+.edit-chat-btn {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  width: 28px;
+  height: 28px;
+  border-radius: 5px;
+  cursor: pointer;
+  opacity: 0;
+  transition: all 0.2s ease;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.library ul li a:hover .edit-chat-btn {
+  opacity: 0.7;
+}
+
+.edit-chat-btn:hover {
+  opacity: 1 !important;
+  color: var(--text-primary);
+}
+
+.edit-chat-btn .icon {
+  margin: 0;
+  width: 18px;
+  height: 18px;
+}
+
+.edit-chat-container {
+  position: relative;
+  width: 100%;
+}
+
+.edit-chat-form {
+  position: relative;
+}
+
+.edit-chat-input {
+  width: 100%;
+  padding: 10px 40px 10px 10px;
+  border-radius: 6px;
+  border: 1px solid var(--accent-color);
+  background-color: var(--background-secondary);
+  color: var(--text-primary);
+  font-size: 14px;
+}
+
+.edit-chat-input:focus {
+  outline: none;
+}
+
+.save-edit-btn {
+  position: absolute;
+  right: 5px;
+  top: 50%;
+  transform: translateY(-50%);
+  background-color: var(--accent-color);
+  border: none;
+  border-radius: 5px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.save-edit-btn .icon {
+  margin: 0;
+  stroke: white;
+  width: 18px;
+  height: 18px;
+}
+
+.save-edit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.save-edit-btn:hover:not(:disabled) {
+  opacity: 0.9;
+}
+
+.saving-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top: 2px solid white;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Code Block Styles */
+.code-block-wrapper {
+  position: relative;
+  margin: 1rem 0;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #1e1e1e;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.code-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: transparent;
+}
+
+.code-language {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--accent-color);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.code-copy-btn {
+  background-color: transparent !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: 0 !important;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 0.2s ease-in-out;
+  -webkit-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+  width: 28px;
+  height: 28px;
+  margin: 0;
+}
+
+.code-copy-btn .icon { 
+  margin: 0; 
+  width: 18px; 
+  height: 18px; 
+  stroke: var(--text-secondary); 
+}
+
+.code-copy-btn:hover .icon { 
+  stroke: var(--text-primary); 
+}
+
+/* Override syntax highlighter styles for better integration */
+.code-block-wrapper .token {
+  background: transparent !important;
+}
+
+.code-block-wrapper pre {
+  margin: 0 !important;
+  padding: 1rem !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+/* now  */
+
+.chat-input-area {
+  background-color: transparent;
 }

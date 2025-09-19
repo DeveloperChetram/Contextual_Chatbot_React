@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, memo, useCallback } from 'react';
 
-const ThemeToggler = () => {
+const ThemeToggler = memo(() => {
   const [theme, setTheme] = useState(() => {
     const savedTheme = localStorage.getItem('theme');
     if (savedTheme) {
@@ -29,16 +29,16 @@ const ThemeToggler = () => {
     return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
 
-  const toggleTheme = () => {
+  const toggleTheme = useCallback(() => {
     setTheme(prevTheme => (prevTheme === 'light' ? 'dark' : 'light'));
-  };
+  }, []);
 
-  const handleKeyDown = (e) => {
+  const handleKeyDown = useCallback((e) => {
     if (e.key === 'Enter') {
       e.preventDefault();
       e.stopPropagation();
     }
-  };
+  }, []);
 
   return (
     <button 
@@ -67,6 +67,8 @@ const ThemeToggler = () => {
       <span className="theme-toggle-text">{theme === 'light' ? 'Light Theme' : 'Dark Theme'}</span>
     </button>
   );
-};
+});
+
+ThemeToggler.displayName = 'ThemeToggler';
 
 export default ThemeToggler;
