@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { memo } from 'react';
 import '../styles/ChatLoadingAnimation.css';
 
-const ChatLoadingAnimation = () => {
+const ChatLoadingAnimation = memo(() => {
   return (
     <div className="chat-loading-container">
       <div className="chat-loading-content">
@@ -19,6 +19,8 @@ const ChatLoadingAnimation = () => {
       </div>
     </div>
   );
-};
+});
+
+ChatLoadingAnimation.displayName = 'ChatLoadingAnimation';
 
 export default ChatLoadingAnimation;

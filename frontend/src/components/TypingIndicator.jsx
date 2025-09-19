@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { memo } from 'react';
 import '../styles/TypingIndicator.css';
 
-const TypingIndicator = ({ character = "AI Assistant" }) => {
+const TypingIndicator = memo(({ character = "AI Assistant" }) => {
   return (
     <div className="chat-turn model">
       <div className="message-header">
@@ -17,6 +17,8 @@ const TypingIndicator = ({ character = "AI Assistant" }) => {
       </div>
     </div>
   );
-};
+});
+
+TypingIndicator.displayName = 'TypingIndicator';
 
 export default TypingIndicator;

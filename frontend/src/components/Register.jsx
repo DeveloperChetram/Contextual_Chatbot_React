@@ -1,19 +1,20 @@
 import { Link, useNavigate } from "react-router-dom";
 import "../styles/auth.css";
 import { useForm } from "react-hook-form";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
 import { registerUser } from "../redux/actions/authActions";
-import { useEffect } from "react";
+import { useEffect, memo, useCallback } from "react";
 import { resetAuthState } from "../redux/reducers/authSlice";
 import ThemeToggler from './ThemeToggler';
+import { useAuthState } from '../hooks/useOptimizedSelectors';
 
-const Register = () => {
+const Register = memo(() => {
   const navigate = useNavigate();
-  const { isAuthenticated, loading, error } = useSelector((state) => state.auth);
+  const { isAuthenticated, loading, error } = useAuthState();
   const { register, handleSubmit, reset } = useForm();
   const dispatch = useDispatch();
 
-  const submitHandler = async (data) => {
+  const submitHandler = useCallback(async (data) => {
     const result = await registerUser(dispatch, {
       fullName: { firstName: data.firstName, lastName: data.lastName },
       email: data.email,
@@ -23,7 +24,7 @@ const Register = () => {
     if (result.success) {
       reset();
     }
-  };
+  }, [dispatch, reset]);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -101,6 +102,8 @@ const Register = () => {
       </form>
     </div>
   );
-};
+});
+
+Register.displayName = 'Register';
 
 export default Register;

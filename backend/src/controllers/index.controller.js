@@ -17,9 +17,14 @@ const creditsController =  async (req, res)=> {
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
-    console.log("credits", user.credits);
-    res.json({ credits: user.credits });
+    
+    // Only return credits, no other sensitive information
+    res.json({ 
+      credits: user.credits,
+      message: "Credits retrieved successfully"
+    });
   } catch (error) {
+    console.error("Error in credits controller:", error);
     res.status(500).json({ message: "Error in getting credits" });
   }
 }

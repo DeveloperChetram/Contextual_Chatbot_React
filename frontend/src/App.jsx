@@ -1,28 +1,47 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo, useCallback } from 'react';
 import MainRoutes from './routes/MainRoutes';
 import { useDispatch } from 'react-redux';
 import { setUserFromStorage } from '../src/redux/reducers/authSlice';
 import { clearChatStore } from '../src/redux/reducers/chatSlice';
 import { getCurrentUser } from '../src/redux/actions/authActions';
+import { GoogleOAuthProvider } from "@react-oauth/google";
+import { useAuthState, useChatState } from './hooks/useOptimizedSelectors';
+// import { useGoogleLogin } from "@react-oauth/google";
+// import { useGoogleLogout } from "@react-oauth/google";
+// import PrivateRoute from "./components/PrivateRoute";
 
-const App = () => {
+function App() {
   const dispatch = useDispatch();
+  const { isAuthenticated } = useAuthState();
+  const { character } = useChatState();
 
-  useEffect(() => {
+  // Memoize the Google OAuth client ID to prevent unnecessary re-renders
+  const googleClientId = useMemo(() => import.meta.env.VITE_GOOGLE_CLIENT_ID, []);
+
+  // Memoize the initialization function to prevent unnecessary re-runs
+  const initializeApp = useCallback(() => {
     dispatch(clearChatStore());
     
     // Check if user exists in localStorage
     const user = localStorage.getItem('user');
     if (user) {
       // Validate the token with the backend
-              getCurrentUser(dispatch);
+      getCurrentUser(dispatch);
     }
   }, [dispatch]);
 
+  useEffect(() => {
+    initializeApp();
+  }, [initializeApp]);
+
+  useEffect(() => {
+    document.body.dataset.character = character;
+  }, [character]);
+
   return (
-    <div>
+    <GoogleOAuthProvider clientId={googleClientId}>
       <MainRoutes />
-    </div>
+    </GoogleOAuthProvider>
   );
 };
 
