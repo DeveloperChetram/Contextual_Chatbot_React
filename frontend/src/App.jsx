@@ -5,8 +5,9 @@ import { setUserFromStorage } from '../src/redux/reducers/authSlice';
 import { clearChatStore } from '../src/redux/reducers/chatSlice';
 import { getCurrentUser } from '../src/redux/actions/authActions';
 import { GoogleOAuthProvider } from "@react-oauth/google";
-  import { GoogleLogin } from '@react-oauth/google';
+  // import { useGoogleLogin } from '@react-oauth/google';
 import { useAuthState, useChatState } from './hooks/useOptimizedSelectors';
+import GLogin from './components/GoogleLogin';
 // import { useGoogleLogin } from "@react-oauth/google";
 // import { useGoogleLogout } from "@react-oauth/google";
 // import PrivateRoute from "./components/PrivateRoute";
@@ -41,17 +42,8 @@ function App() {
 
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
+     
       <MainRoutes />
-    
-
-<GoogleLogin
-  onSuccess={credentialResponse => {
-    console.log(credentialResponse);
-  }}
-  onError={() => {
-    console.log('Login Failed');
-  }}
-/>;
     </GoogleOAuthProvider>
   );
 };

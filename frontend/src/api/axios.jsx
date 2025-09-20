@@ -3,7 +3,7 @@ import store from '../redux/store';
 import { logout } from '../redux/reducers/authSlice';
 
 export const axiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_BACKEND_URL || "http://localhost:3001/api",
+  baseURL: import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api",
   withCredentials: true,
 });
 

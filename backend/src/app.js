@@ -3,6 +3,7 @@ const express = require('express');
 const indexRouter = require('./routes/index.routes');
 const authRouter = require('./routes/auth.routes');
 const chatRouter = require('./routes/chat.routes');
+const googleAuthRouter = require('./routes/authRouter.google');
 const cors  = require('cors')
 const responseSanitizer = require('./middlewares/responseSanitizer.middleware');
 const app = express();
@@ -82,6 +83,7 @@ app.use('/api', indexRouter)
 
 app.use('/api/chat', chatRouter)
 app.use('/api/auth', authRouter)
+app.use('/api/auth', googleAuthRouter)
 
 // Error handling middleware
 app.use((err, req, res, next) => {

@@ -25,11 +25,15 @@ const userSchema = new mongoose.Schema({
         default:50,
         min: 0
     },
-
+    picture:{
+        type:String,
+        required:true,
+        trim: true
+    },
     passwordHash:{
         type:String,
         required:true,
-        select: false // This prevents passwordHash from being returned by default queries
+        select: false
     }
 }, {timestamps:true})
 

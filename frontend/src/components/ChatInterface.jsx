@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
 import { axiosInstance } from "../api/axios";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import ReactMarkdown from "react-markdown";
@@ -26,6 +26,7 @@ import usePerformanceMonitor from "../hooks/usePerformanceMonitor";
 
 import "../styles/ChatInterface.css";
 import { changeCharacter } from "../redux/actions/chatActions";
+import GLogin from "./GoogleLogin";
 
 const Icon = memo(({ path, className = "" }) => (
   <svg className={`icon ${className}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"> 
@@ -69,13 +70,14 @@ const ChatInterface = memo(() => {
   const [savingChatId, setSavingChatId] = useState(null);
   const chatAreaRef = useRef(null);
   const textareaRef = useRef(null);
+  const userofRedux = useSelector((state) => state.auth);
   
   // Memoize constants to prevent unnecessary re-renders
   const MAX_TITLE_WORDS = useMemo(() => 35, []);
   const MAX_PROMPT_CHARS = useMemo(() => 1400, []);
   
   const [credits, setCredits] = useState(0);
-
+  console.log("user in chat interface",userofRedux);
   // Memoize the credits click handler to prevent unnecessary re-renders
   const handleCreditsClick = useCallback(async () => {
     if (!isAuthenticated) {
@@ -108,7 +110,7 @@ const ChatInterface = memo(() => {
   const initializeSocket = useCallback(() => {
     if (isAuthenticated) {
       dispatch(getChats());
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
       const socketUrl = backendUrl.replace('/api', '');
       const newSocket = io(socketUrl, { withCredentials: true });
       setSocket(newSocket);
@@ -547,6 +549,7 @@ const ChatInterface = memo(() => {
              </div>
            </form>
          </section>
+         {/* <GLogin  /> */}
       </main>
     </div>
   );

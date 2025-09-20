@@ -34,7 +34,15 @@ const chatSlice = createSlice({
       const { chatId, updates } = action.payload;
       const chatIndex = state.chats.findIndex(chat => chat._id === chatId);
       if (chatIndex !== -1) {
-        state.chats[chatIndex] = { ...state.chats[chatIndex], ...updates };
+        // Only update if there are actual changes
+        const currentChat = state.chats[chatIndex];
+        const hasChanges = Object.keys(updates).some(key => 
+          currentChat[key] !== updates[key]
+        );
+        
+        if (hasChanges) {
+          state.chats[chatIndex] = { ...currentChat, ...updates };
+        }
       }
     },
     setAllMessages: (state, action) => {
@@ -47,13 +55,23 @@ const chatSlice = createSlice({
       }
     },
     setActiveChatId: (state, action) => {
-      state.activeChatId = action.payload;
+      // Only update if the active chat ID actually changed
+      if (state.activeChatId !== action.payload) {
+        state.activeChatId = action.payload;
+      }
     },
     setModelTyping: (state, action) => {
-      state.isModelTyping[action.payload.chatId] = action.payload.isTyping;
+      const { chatId, isTyping } = action.payload;
+      // Only update if the typing state actually changed
+      if (state.isModelTyping[chatId] !== isTyping) {
+        state.isModelTyping[chatId] = isTyping;
+      }
     },
     setCharacter: (state, action) => {
-      state.character = action.payload;
+      // Only update if the character actually changed
+      if (state.character !== action.payload) {
+        state.character = action.payload;
+      }
     },
     clearChatStore: (state) => {
       state.chats = [];

@@ -5,7 +5,7 @@ import { Navigate } from 'react-router-dom'
 const AuthRoute = (props) => {
     const userData = useSelector((state)=>state.auth)
   return (
-   userData.isAuthenticated ?props.children: <Navigate to='/login' />
+   userData.isAuthenticated ? props.children: <Navigate to='/login' />
   ) 
 }
 
