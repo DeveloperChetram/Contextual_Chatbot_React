@@ -23,8 +23,8 @@ const MainRoutes = memo(() => {
         <Routes>
           <Route path="/login" element={isAuthenticated ? <Navigate to="/" replace /> : <Login />} />
           <Route path="/register" element={isAuthenticated ? <Navigate to="/" replace /> : <Register />} />
-          <Route path="/" element={<ChatInterface />} />
-          <Route path="/home" element={<ChatInterface />} />
+          <Route path="/" element={ isAuthenticated ? <ChatInterface /> : <Navigate to="/login" replace />} />
+          <Route path="/home" element={ isAuthenticated ? <ChatInterface /> : <Navigate to="/login" replace />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>

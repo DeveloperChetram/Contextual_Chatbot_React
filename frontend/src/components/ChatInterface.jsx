@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
 import { axiosInstance } from "../api/axios";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import { io } from "socket.io-client";
 import ReactMarkdown from "react-markdown";
@@ -15,6 +15,7 @@ import {
   setActiveChatId,
   addMessage,
   setModelTyping,
+  updateChat,
 } from "../redux/reducers/chatSlice";
 import { logoutUser } from "../redux/actions/authActions";
 import TypingIndicator from "./TypingIndicator";
@@ -25,6 +26,7 @@ import usePerformanceMonitor from "../hooks/usePerformanceMonitor";
 
 import "../styles/ChatInterface.css";
 import { changeCharacter } from "../redux/actions/chatActions";
+import GLogin from "./GoogleLogin";
 
 const Icon = memo(({ path, className = "" }) => (
   <svg className={`icon ${className}`} width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"> 
@@ -53,6 +55,7 @@ const ChatInterface = memo(() => {
 
   const [socket, setSocket] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isCreatingNewChat, setIsCreatingNewChat] = useState(false);
   const [isCreatingFirstChat, setIsCreatingFirstChat] = useState(false);
   const [newChatTitle, setNewChatTitle] = useState("");
@@ -67,13 +70,14 @@ const ChatInterface = memo(() => {
   const [savingChatId, setSavingChatId] = useState(null);
   const chatAreaRef = useRef(null);
   const textareaRef = useRef(null);
+  const userofRedux = useSelector((state) => state.auth);
   
   // Memoize constants to prevent unnecessary re-renders
   const MAX_TITLE_WORDS = useMemo(() => 35, []);
   const MAX_PROMPT_CHARS = useMemo(() => 1400, []);
   
   const [credits, setCredits] = useState(0);
-
+  console.log("user in chat interface",userofRedux);
   // Memoize the credits click handler to prevent unnecessary re-renders
   const handleCreditsClick = useCallback(async () => {
     if (!isAuthenticated) {
@@ -106,7 +110,7 @@ const ChatInterface = memo(() => {
   const initializeSocket = useCallback(() => {
     if (isAuthenticated) {
       dispatch(getChats());
-      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3001";
+      const backendUrl = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000";
       const socketUrl = backendUrl.replace('/api', '');
       const newSocket = io(socketUrl, { withCredentials: true });
       setSocket(newSocket);
@@ -151,6 +155,8 @@ const ChatInterface = memo(() => {
 
   // Memoize resize handler
   const handleResize = useCallback(() => {
+    const isMobileDevice = window.innerWidth < 768;
+    setIsMobile(isMobileDevice);
     if (window.innerWidth >= 768) {
       setSidebarOpen(true);
     }
@@ -291,7 +297,10 @@ const ChatInterface = memo(() => {
     setSavingChatId(chatId);
     try {
       await axiosInstance.put(`/chat/${chatId}`, { title: newTitle });
-      await dispatch(getChats()); // Wait for the state to update
+      // Update the chat locally instead of refetching all chats
+      dispatch(updateChat({ chatId, updates: { title: newTitle } }));
+      // Ensure the edited chat remains selected after update
+      dispatch(setActiveChatId(chatId));
     } catch (error) {
       console.error("Error updating chat title:", error);
     } finally {
@@ -365,16 +374,18 @@ const ChatInterface = memo(() => {
                     ) : (
                       <a href="#" onClick={(e) => { e.preventDefault(); handleHistoryClick(item._id); }}>
                         <span>{item.title}</span>
-                        <button
-                          className="edit-chat-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            handleEditChat(item._id, item.title);
-                          }}
-                        >
-                          <Icon path={<><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></>} />
-                        </button>
+                        {item._id === activeChatId && (
+                          <button
+                            className="edit-chat-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              handleEditChat(item._id, item.title);
+                            }}
+                          >
+                            <Icon path={<><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></>} />
+                          </button>
+                        )}
                       </a>
                     )}
                   </li>
@@ -538,6 +549,7 @@ const ChatInterface = memo(() => {
              </div>
            </form>
          </section>
+         {/* <GLogin  /> */}
       </main>
     </div>
   );
