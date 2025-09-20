@@ -30,6 +30,13 @@ const chatSlice = createSlice({
     addChat: (state, action) => {
       state.chats.unshift(action.payload);
     },
+    updateChat: (state, action) => {
+      const { chatId, updates } = action.payload;
+      const chatIndex = state.chats.findIndex(chat => chat._id === chatId);
+      if (chatIndex !== -1) {
+        state.chats[chatIndex] = { ...state.chats[chatIndex], ...updates };
+      }
+    },
     setAllMessages: (state, action) => {
       state.allMessages = action.payload;
     },
@@ -67,6 +74,7 @@ export const {
   setError,
   setChats,
   addChat,
+  updateChat,
   setAllMessages,
   addMessage,
   setActiveChatId,

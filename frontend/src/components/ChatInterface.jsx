@@ -15,6 +15,7 @@ import {
   setActiveChatId,
   addMessage,
   setModelTyping,
+  updateChat,
 } from "../redux/reducers/chatSlice";
 import { logoutUser } from "../redux/actions/authActions";
 import TypingIndicator from "./TypingIndicator";
@@ -53,6 +54,7 @@ const ChatInterface = memo(() => {
 
   const [socket, setSocket] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [isCreatingNewChat, setIsCreatingNewChat] = useState(false);
   const [isCreatingFirstChat, setIsCreatingFirstChat] = useState(false);
   const [newChatTitle, setNewChatTitle] = useState("");
@@ -151,6 +153,8 @@ const ChatInterface = memo(() => {
 
   // Memoize resize handler
   const handleResize = useCallback(() => {
+    const isMobileDevice = window.innerWidth < 768;
+    setIsMobile(isMobileDevice);
     if (window.innerWidth >= 768) {
       setSidebarOpen(true);
     }
@@ -291,7 +295,10 @@ const ChatInterface = memo(() => {
     setSavingChatId(chatId);
     try {
       await axiosInstance.put(`/chat/${chatId}`, { title: newTitle });
-      await dispatch(getChats()); // Wait for the state to update
+      // Update the chat locally instead of refetching all chats
+      dispatch(updateChat({ chatId, updates: { title: newTitle } }));
+      // Ensure the edited chat remains selected after update
+      dispatch(setActiveChatId(chatId));
     } catch (error) {
       console.error("Error updating chat title:", error);
     } finally {
@@ -365,16 +372,18 @@ const ChatInterface = memo(() => {
                     ) : (
                       <a href="#" onClick={(e) => { e.preventDefault(); handleHistoryClick(item._id); }}>
                         <span>{item.title}</span>
-                        <button
-                          className="edit-chat-btn"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            e.preventDefault();
-                            handleEditChat(item._id, item.title);
-                          }}
-                        >
-                          <Icon path={<><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></>} />
-                        </button>
+                        {item._id === activeChatId && (
+                          <button
+                            className="edit-chat-btn"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              e.preventDefault();
+                              handleEditChat(item._id, item.title);
+                            }}
+                          >
+                            <Icon path={<><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7" /><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z" /></>} />
+                          </button>
+                        )}
                       </a>
                     )}
                   </li>
