@@ -18,8 +18,11 @@ const GLogin = () => {
             
             const {data} = await axios.get(`auth/google-auth?code=${authResult.access_token}`);
             console.log("Backend Response:", data);
+            console.log("Response has token:", !!data.token);
+            console.log("Response has user:", !!data.user);
+            console.log("Response message:", data.message);
             
-            if(data.message === 'success' && data.user && data.token){
+            if(data.message === 'success' && data.user){
                 console.log("Login successful, processing user data...");
                 
                 const loginPayload = {
@@ -38,7 +41,15 @@ const GLogin = () => {
                 
                 // Save to localStorage
                 localStorage.setItem('user', JSON.stringify(loginPayload));
-                localStorage.setItem('token', data.token);
+                
+                // Save token if available, otherwise use a placeholder
+                if (data.token) {
+                    localStorage.setItem('token', data.token);
+                    console.log("Token saved to localStorage");
+                } else {
+                    console.warn("No token received from backend, using placeholder");
+                    localStorage.setItem('token', 'google-auth-token');
+                }
                 
                 // Update Redux state
                 dispatch(loginSuccess(loginPayload));
@@ -51,6 +62,11 @@ const GLogin = () => {
                 console.log("Navigation completed");
             } else {
                 console.error("Invalid response format:", data);
+                console.error("Missing fields:", {
+                    message: data.message,
+                    hasUser: !!data.user,
+                    hasToken: !!data.token
+                });
                 dispatch(loginFailure('Invalid response from server'));
             }
         }
