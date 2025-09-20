@@ -52,10 +52,25 @@ const googleAuth = async (req, res) => {
             return res.status(500).json({ message: 'Error', error: 'Server configuration error' });
         }
 
-        const token = await jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "5d" });
+        console.log("Generating JWT token...");
+        console.log("JWT_SECRET length:", process.env.JWT_SECRET ? process.env.JWT_SECRET.length : 0);
+        console.log("User ID:", user._id);
+        
+        let token;
+        try {
+            token = await jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "5d" });
+            console.log("JWT token generated successfully, length:", token ? token.length : 0);
+            console.log("JWT token preview:", token ? token.substring(0, 20) + "..." : "null");
+        } catch (jwtError) {
+            console.error("JWT generation failed:", jwtError.message);
+            throw jwtError;
+        }
+        
         res.cookie("token", token);
         
-        console.log("Login successful, sending response");
+        console.log("Login successful, sending response with token:", !!token);
+        console.log("Response data:", { message: 'success', user, token });
+        
         res.status(200).json({ message:'success', user, token });
 
     } catch (error) {
