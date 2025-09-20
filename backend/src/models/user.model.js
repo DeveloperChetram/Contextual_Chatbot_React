@@ -27,13 +27,15 @@ const userSchema = new mongoose.Schema({
     },
     picture:{
         type:String,
-        required:true,
-        trim: true
+        required:false,
+        trim: true,
+        default: 'https://via.placeholder.com/150'
     },
     passwordHash:{
         type:String,
-        required:true,
-        select: false
+        required:false,
+        select: false,
+        default: null
     }
 }, {timestamps:true})
 

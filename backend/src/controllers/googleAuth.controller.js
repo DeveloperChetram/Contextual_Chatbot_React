@@ -2,6 +2,7 @@ const { oauth2Client } = require("../services/google.service");
 const axios = require("axios");
 const User = require("../models/user.model");
 const jwt = require("jsonwebtoken");
+const cookieOptions = require("../utils/cookieOptions");
 
 const googleAuth = async (req, res) => {
     try {
@@ -35,14 +36,37 @@ const googleAuth = async (req, res) => {
         
         if (!user) {
             console.log("Creating new user for email:", userFromGoogle.data.email);
+            console.log("Google user data:", userFromGoogle.data);
+            
+            // Handle missing lastName - use firstName if lastName is not provided
+            const lastName = userFromGoogle.data.family_name || userFromGoogle.data.given_name || 'User';
+            const firstName = userFromGoogle.data.given_name || 'Google';
+            const picture = userFromGoogle.data.picture || 'https://via.placeholder.com/150';
+            
+            // Ensure we have valid names
+            if (!firstName || !lastName) {
+                console.error("Missing required name fields:", { firstName, lastName });
+                return res.status(400).json({ message: 'Error', error: 'Missing required name information from Google' });
+            }
+            
+            console.log("Creating user with:", {
+                email: userFromGoogle.data.email,
+                firstName,
+                lastName,
+                picture
+            });
+            
             user = await User.create({ 
                 email: userFromGoogle.data.email, 
                 fullName: { 
-                    firstName: userFromGoogle.data.given_name, 
-                    lastName: userFromGoogle.data.family_name 
+                    firstName: firstName, 
+                    lastName: lastName 
                 }, 
-                picture: userFromGoogle.data.picture 
+                picture: picture
+                // passwordHash is optional for Google OAuth users
             });
+            
+            console.log("User created successfully:", user.email);
         } else {
             console.log("Found existing user:", user.email);
         }
@@ -66,7 +90,7 @@ const googleAuth = async (req, res) => {
             throw jwtError;
         }
         
-        res.cookie("token", token);
+        res.cookie("token", token, cookieOptions);
         
         console.log("Login successful, sending response with token:", !!token);
         console.log("Response data:", { message: 'success', user, token });
