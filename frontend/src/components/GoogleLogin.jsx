@@ -11,31 +11,59 @@ const GLogin = () => {
 
     const handleGoogleLogin = async(authResult) => {
         try {
-            console.log("authResult",authResult);    
-            const {data} = await axios.get(`auth/google-auth?code=${authResult.access_token}`);
-            console.log( "response from backend",data);
-            const loginPayload = {
-            createdAt: data.user.createdAt,
-            credits:data.user.credits,
-            email: data.user.email,
-            fullName: {
-                firstName: data.user.fullName.firstName,
-                lastName: data.user.fullName.lastName
-            },
-            updatedAt: data.user.updatedAt,
-            _id: data.user._id,
-            }
-            if(data.message === 'success'){
-                dispatch(loginSuccess(loginPayload));
-                // dispatch(isAuthenticated(true));
-                navigate('/home');
-            }
+            console.log("=== Google Login Debug ===");
+            console.log("Environment:", import.meta.env.MODE);
+            console.log("Backend URL:", axios.defaults.baseURL);
+            console.log("Auth Result:", authResult);
             
-    
+            const {data} = await axios.get(`auth/google-auth?code=${authResult.access_token}`);
+            console.log("Backend Response:", data);
+            
+            if(data.message === 'success' && data.user && data.token){
+                console.log("Login successful, processing user data...");
+                
+                const loginPayload = {
+                    createdAt: data.user.createdAt,
+                    credits: data.user.credits,
+                    email: data.user.email,
+                    fullName: {
+                        firstName: data.user.fullName.firstName,
+                        lastName: data.user.fullName.lastName
+                    },
+                    updatedAt: data.user.updatedAt,
+                    _id: data.user._id,
+                }
+                
+                console.log("Login payload:", loginPayload);
+                
+                // Save to localStorage
+                localStorage.setItem('user', JSON.stringify(loginPayload));
+                localStorage.setItem('token', data.token);
+                
+                // Update Redux state
+                dispatch(loginSuccess(loginPayload));
+                
+                console.log("Redux state updated, navigating to /home");
+                
+                // Navigate to home
+                navigate('/home');
+                
+                console.log("Navigation completed");
+            } else {
+                console.error("Invalid response format:", data);
+                dispatch(loginFailure('Invalid response from server'));
+            }
         }
         catch (error) {
-            console.error('Login failed', error);
-            dispatch(loginFailure(error?.data?.error || 'Google login failed'));
+            console.error('=== Google Login Error ===');
+            console.error('Error details:', error);
+            console.error('Error response:', error.response);
+            console.error('Error message:', error.message);
+            console.error('Error status:', error.response?.status);
+            console.error('Error data:', error.response?.data);
+            
+            const errorMessage = error.response?.data?.error || error.message || 'Google login failed';
+            dispatch(loginFailure(errorMessage));
         }
     }
 
