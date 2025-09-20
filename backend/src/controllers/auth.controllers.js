@@ -1,14 +1,7 @@
 const userModel = require("../models/user.model");
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
-
-const cookieOptions = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === 'production', 
-    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
-    maxAge: 5 * 24 * 60 * 60 * 1000, // 5 days in milliseconds
-    domain: process.env.NODE_ENV === 'production' ? undefined : undefined // Let browser handle domain
-};
+const cookieOptions = require('../utils/cookieOptions');
 
 const registerController = async (req, res)=>{
     const {fullName:{firstName, lastName}, email, password } = req.body;
