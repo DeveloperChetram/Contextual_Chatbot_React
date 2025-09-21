@@ -11,16 +11,16 @@ const GLogin = () => {
 
     const handleGoogleLogin = async(authResult) => {
         try {
-            console.log("=== Google Login Debug ===");
-            console.log("Environment:", import.meta.env.MODE);
-            console.log("Backend URL:", axios.defaults.baseURL);
-            console.log("Auth Result:", authResult);
+            // console.log("=== Google Login Debug ===");
+            // console.log("Environment:", import.meta.env.MODE);
+            // console.log("Backend URL:", axios.defaults.baseURL);
+            // console.log("Auth Result:", authResult);
             
             const {data} = await axios.get(`auth/google-auth?code=${authResult.access_token}`);
-            console.log("Backend Response:", data);
-            console.log("Response has token:", !!data.token);
-            console.log("Response has user:", !!data.user);
-            console.log("Response message:", data.message);
+            // console.log("Backend Response:", data);
+            // console.log("Response has token:", !!data.token);
+            // console.log("Response has user:", !!data.user);
+            // console.log("Response message:", data.message);
             
             if(data.message === 'success' && data.user){
                 console.log("Login successful, processing user data...");

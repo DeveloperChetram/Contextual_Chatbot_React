@@ -77,7 +77,7 @@ const ChatInterface = memo(() => {
   const MAX_PROMPT_CHARS = useMemo(() => 1400, []);
   
   const [credits, setCredits] = useState(0);
-  console.log("user in chat interface",userofRedux);
+  // console.log("user in chat interface",userofRedux);
   // Memoize the credits click handler to prevent unnecessary re-renders
   const handleCreditsClick = useCallback(async () => {
     if (!isAuthenticated) {

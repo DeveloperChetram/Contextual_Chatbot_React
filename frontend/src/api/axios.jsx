@@ -4,14 +4,14 @@ import { logout } from '../redux/reducers/authSlice';
 
 // Debug environment variables in production
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api";
-console.log('Environment:', import.meta.env.MODE);
-console.log('Backend URL:', BACKEND_URL);
-console.log('All env vars:', import.meta.env);
+// console.log('Environment:', import.meta.env.MODE);
+// console.log('Backend URL:', BACKEND_URL);
+// console.log('All env vars:', import.meta.env);
 
 export const axiosInstance = axios.create({
   baseURL: BACKEND_URL,
   withCredentials: true,
-  timeout: 10000, // 10 second timeout
+  // timeout: 10000, // 10 second timeout
 });
 
 axiosInstance.interceptors.response.use(
