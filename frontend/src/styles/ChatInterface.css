@@ -66,6 +66,42 @@
   margin: 0;
 }
 
+.sidebar-close-btn {
+  display: none; /* Hidden by default */
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0;
+  color: var(--text-secondary);
+}
+
+.sidebar.open .sidebar-close-btn {
+  display: block; /* Show when sidebar is open */
+}
+
+.sidebar-close-icon rect {
+  fill: none;
+  stroke: currentColor;
+}
+
+.sidebar-close-icon line {
+  stroke: currentColor;
+}
+
+.sidebar.open .sidebar-close-icon rect {
+  fill: currentColor;
+}
+
+.sidebar.open .sidebar-close-icon line {
+  stroke: var(--background-sidebar);
+}
+
+@media (min-width: 768px) {
+  .sidebar-close-btn {
+    display: none !important;
+  }
+}
+
 .sidebar-header {
     display: flex;
     justify-content: space-between;
@@ -91,20 +127,6 @@
   color: var(--text-primary);
 }
 
-.sidebar-close-btn {
-    display: none;
-    background: none;
-    border: none;
-    padding: 8px;
-    cursor: pointer;
-    width: 40px;
-    height: 40px;
-    align-items: center;
-    justify-content: center;
-    -webkit-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-}
 .sidebar-close-btn .icon {
     margin: 0;
     stroke: var(--text-secondary);
@@ -346,15 +368,15 @@ a:hover .icon {
 @keyframes pulse {
   0% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(49, 184, 198, 0.7);
+    box-shadow: 0 0 0 0 var(--glow-color);
   }
   50% {
     transform: scale(1.05);
-    box-shadow: 0 0 0 10px rgba(49, 184, 198, 0);
+    box-shadow: 0 0 0 10px transparent;
   }
   100% {
     transform: scale(1);
-    box-shadow: 0 0 0 0 rgba(49, 184, 198, 0);
+    box-shadow: 0 0 0 0 transparent;
   }
 }
 
@@ -650,6 +672,10 @@ a:hover .icon {
   color: #10b981; /* Soft Emerald Green for Bhaiya */
 }
 
+.chat-turn.model .message-sender[data-character="osho"] { 
+  color: #f97316; /* Saffron Orange for Osho */
+}
+
 /* Fallback for any other character */
 .chat-turn.model .message-sender:not([data-character]) { 
   color: var(--accent-color); 
@@ -670,6 +696,10 @@ a:hover .icon {
 
 .chat-turn.user .message-sender[data-character="bhaiya"] { 
   color: #10b981; /* Soft Emerald Green for Bhaiya */
+}
+
+.chat-turn.user .message-sender[data-character="osho"] { 
+  color: #f97316; /* Saffron Orange for Osho */
 }
 .message-text {
   line-height: 1.7;
@@ -783,9 +813,197 @@ a:hover .icon {
   display: flex;
   align-items: center;
   gap: 8px;
+  position: relative;
 }
 .input-footer-right {
   display: flex;
+}
+
+/* Character Info Button */
+.character-info-btn {
+  background: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  min-width: 32px;
+  height: 32px;
+}
+
+.character-info-btn.active {
+  background-color: var(--background-primary);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.character-info-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.retry-btn {
+  background: var(--background-secondary);
+  border: 1px solid var(--border-color);
+  cursor: pointer;
+  padding: 8px 12px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-primary);
+  font-size: 14px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  min-width: 32px;
+  height: 32px;
+  /* margin-left: 3px; */
+}
+
+.retry-btn.active {
+  background-color: var(--background-primary);
+  border-color: var(--accent-color);
+  color: var(--accent-color);
+}
+
+.retry-btn.active svg {
+  animation: retrySpin 0.3s ease-in-out;
+}
+
+.retry-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.retry-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+@keyframes retrySpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Diamond Icon */
+.diamond-icon {
+  width: 10px;
+  height: 10px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.diamond-inner {
+  width: 10px;
+  height: 10px;
+  background: currentColor;
+  transform: rotate(45deg);
+  border-radius: 1px;
+}
+
+/* Character Info Card */
+.character-info-card {
+  position: absolute;
+  bottom: 100%;
+  left: 0;
+  margin-bottom: 8px;
+  background: var(--background-primary);
+  border: 1px solid var(--border-color);
+  border-radius: 12px;
+  padding: 16px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(10px);
+  z-index: 1000;
+  min-width: 280px;
+  max-width: 320px;
+  animation: fadeInUp 0.2s ease-out;
+}
+
+.character-info-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-bottom: 12px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.character-info-item:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.character-name {
+  font-weight: 600;
+  font-size: 14px;
+  margin-bottom: 2px;
+}
+
+.character-name.atomic {
+  color: #06b6d4;
+}
+
+.character-name.jahnvi {
+  color: #0ea5e9;
+}
+
+.character-name.chandni {
+  color: #14b8a6;
+}
+
+.character-name.bhaiya {
+  color: #10b981;
+}
+
+.character-name.osho {
+  color: #f97316;
+}
+
+.character-name-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 2px;
+}
+
+.unavailable-badge {
+  font-size: 10px;
+  font-weight: 500;
+  color: #ef4444;
+  background: rgba(239, 68, 68, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.character-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.4;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .input-form .send-button {
@@ -1602,4 +1820,16 @@ a:hover .icon {
 
 .chat-input-area {
   background-color: transparent;
+}
+
+.message-text.error-message {
+  color: var(--error-color);
+  background: var(--error-bg-color);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  border: 1px solid var(--error-border-color);
+  padding: 0.75rem 1.25rem;
+  border-radius: 12px;
+  font-weight: 500;
+  line-height: 1.6;
 }

@@ -16,6 +16,10 @@
   --glass-border-color: rgba(49, 184, 198, 0.3);
   --auth-blob-color-1: #31B8C6; /* Teal */
   --auth-blob-color-2: #1e5a78;
+
+  --error-color: #ef4444;
+  --error-bg-color: rgba(239, 68, 68, 0.1);
+  --error-border-color: rgba(239, 68, 68, 0.2);
 }
 
 /* Dark theme variables */
@@ -33,6 +37,10 @@
   --glass-border-color: rgba(49, 184, 198, 0.3);
   --auth-blob-color-1: #1ab7c9;
   --auth-blob-color-2: #1e5a78;
+
+  --error-color: #f87171;
+  --error-bg-color: rgba(248, 113, 113, 0.15);
+  --error-border-color: rgba(248, 113, 113, 0.3);
 }
 
 /* Applies dark theme automatically based on system preference */
@@ -60,6 +68,14 @@
 }
 
 /* --- Character Themes --- */
+
+/* System messages (e.g., errors) */
+[data-character="system"] {
+  --accent-color: var(--error-color);
+  --accent-color-rgb: 239, 68, 68;
+  --glow-color: rgba(239, 68, 68, 0.4);
+  --background-primary-accented: rgba(239, 68, 68, 0.05);
+}
 
 /* Default / Atomic (Cyan) */
 [data-character="atomic"] {
@@ -91,6 +107,14 @@
   --accent-color-rgb: 16, 185, 129;
   --glow-color: rgba(16, 185, 129, 0.4);
   --background-primary-accented: rgba(16, 185, 129, 0.05);
+}
+
+/* Osho (Saffron Orange) */
+[data-character="osho"] {
+  --accent-color: #f97316;
+  --accent-color-rgb: 249, 115, 22;
+  --glow-color: rgba(249, 115, 22, 0.4);
+  --background-primary-accented: rgba(249, 115, 22, 0.05);
 }
 
 /* --- Feed Card --- */
