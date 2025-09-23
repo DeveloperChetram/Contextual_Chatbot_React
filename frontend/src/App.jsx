@@ -8,6 +8,9 @@ import { GoogleOAuthProvider } from "@react-oauth/google";
   // import { useGoogleLogin } from '@react-oauth/google';
 import { useAuthState, useChatState } from './hooks/useOptimizedSelectors';
 import GLogin from './components/GoogleLogin';
+import PWAInstallPrompt from './components/PWAInstallPrompt';
+import './styles/PWAInstallPrompt.css';
+import { updatePWAThemeColor } from './utils/pwaThemeUpdater';
 // import { useGoogleLogin } from "@react-oauth/google";
 // import { useGoogleLogout } from "@react-oauth/google";
 // import PrivateRoute from "./components/PrivateRoute";
@@ -38,12 +41,15 @@ function App() {
 
   useEffect(() => {
     document.body.dataset.character = character;
+    
+    // Update PWA theme color based on character
+    updatePWAThemeColor(character);
   }, [character]);
 
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-     
       <MainRoutes />
+      <PWAInstallPrompt />
     </GoogleOAuthProvider>
   );
 };

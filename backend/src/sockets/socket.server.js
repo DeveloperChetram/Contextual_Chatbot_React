@@ -165,9 +165,20 @@ const initSocketServer = (httpServer) => {
 
       } catch (error) {
         console.error("Error in user-message handler:", error.message);
-        socket.emit("error", { 
-              message: "Sorry, an error occurred while processing your request." 
+
+        // Check for Gemini API quota error
+        if (error.message && error.message.includes("429") && error.message.includes("RESOURCE_EXHAUSTED")) {
+          socket.emit("ai-response", {
+            chatId: messagePayload.chatId,
+            response: "The service is temporarily unavailable due to high demand (commercial limitations). Please try again later.",
+            error: "quota-exceeded",
+            character: messagePayload.character || "atomic",
           });
+        } else {
+          socket.emit("error", { 
+                message: "Sorry, an error occurred while processing your request." 
+            });
+        }
       }
     });
 

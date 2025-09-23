@@ -68,6 +68,9 @@ const ChatInterface = memo(() => {
   const [editingChatId, setEditingChatId] = useState(null);
   const [editingTitle, setEditingTitle] = useState("");
   const [savingChatId, setSavingChatId] = useState(null);
+  const [showCharacterInfo, setShowCharacterInfo] = useState(false);
+  const [lastPrompt, setLastPrompt] = useState('');
+  const [isRetryActive, setIsRetryActive] = useState(false);
   const chatAreaRef = useRef(null);
   const textareaRef = useRef(null);
   const userofRedux = useSelector((state) => state.auth);
@@ -123,19 +126,39 @@ const ChatInterface = memo(() => {
   }, [initializeSocket]);
 
   // Memoize socket event handler
-  const handleSocketResponse = useCallback(({ chatId, response, character }) => {
+  const handleSocketResponse = useCallback(({ chatId, response, character, error }) => {
     dispatch(setModelTyping({ chatId, isTyping: false }));
-    const modelMessage = { _id: `model-${Date.now()}`, chatId, content: response, role: "model", character: character };
+    const modelMessage = { 
+      _id: `model-${Date.now()}`, 
+      chatId, 
+      content: response, 
+      role: "model", 
+      character: character,
+      error: error === "quota-exceeded" 
+    };
     dispatch(addMessage({ chatId, message: modelMessage }));
+    if (error !== "quota-exceeded") {
     handleCreditsClick();
+    }
   }, [dispatch, handleCreditsClick]);
+
+  const handleSocketError = useCallback((error) => {
+    console.error("Socket error:", error.message);
+    // Here you could dispatch an action to show a notification to the user
+    // For example: dispatch(showNotification({ message: error.message, type: 'error' }));
+  }, []);
+
 
   useEffect(() => {
     if (socket) {
       socket.on("ai-response", handleSocketResponse);
-      return () => socket.off("ai-response", handleSocketResponse);
+      socket.on("error", handleSocketError);
+      return () => {
+        socket.off("ai-response", handleSocketResponse);
+        socket.off("error", handleSocketError);
+      }
     }
-  }, [socket, handleSocketResponse]);
+  }, [socket, handleSocketResponse, handleSocketError]);
 
   useEffect(() => {
     if (chatAreaRef.current) chatAreaRef.current.scrollTop = chatAreaRef.current.scrollHeight;
@@ -157,9 +180,6 @@ const ChatInterface = memo(() => {
   const handleResize = useCallback(() => {
     const isMobileDevice = window.innerWidth < 768;
     setIsMobile(isMobileDevice);
-    if (window.innerWidth >= 768) {
-      setSidebarOpen(true);
-    }
     // Don't auto-close sidebar on mobile resize (keyboard opening)
   }, []);
 
@@ -262,6 +282,7 @@ const ChatInterface = memo(() => {
   const handleSendMessage = useCallback((e) => {
     e.preventDefault();
     if (!inputValue.trim() || !activeChatId || inputValue.length > MAX_PROMPT_CHARS) return;
+    setLastPrompt(inputValue); // Store the last prompt
     dispatch(sendMessage(socket, activeChatId, inputValue, character));
     setInputValue("");
   }, [inputValue, activeChatId, MAX_PROMPT_CHARS, dispatch, socket, character]);
@@ -319,6 +340,43 @@ const ChatInterface = memo(() => {
     handleChatUpdate(editingChatId, editingTitle.trim());
   }, [editingTitle, MAX_TITLE_WORDS, handleCancelEdit, handleChatUpdate, editingChatId]);
 
+  const handleCharacterInfoClick = useCallback(() => {
+    setShowCharacterInfo(!showCharacterInfo);
+  }, [showCharacterInfo]);
+
+  const handleRetryClick = useCallback(() => {
+    if (lastPrompt) {
+      setIsRetryActive(true);
+      setInputValue(lastPrompt);
+      setTimeout(() => {
+        if (textareaRef.current) {
+          textareaRef.current.focus();
+          // Move cursor to the end of the text
+          const length = lastPrompt.length;
+          textareaRef.current.setSelectionRange(length, length);
+        }
+        // Reset active state after animation
+        setTimeout(() => setIsRetryActive(false), 300);
+      }, 0);
+    }
+  }, [lastPrompt]);
+
+  const handleClickOutsideInfo = useCallback((event) => {
+    if (event.target.closest('.character-info-container')) {
+      return;
+    }
+    setShowCharacterInfo(false);
+  }, []);
+
+  useEffect(() => {
+    if (showCharacterInfo) {
+      document.addEventListener('mousedown', handleClickOutsideInfo);
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutsideInfo);
+      };
+    }
+  }, [showCharacterInfo, handleClickOutsideInfo]);
+
   // Memoize active chat calculation
   const activeChat = useMemo(() => {
     return chats.find((chat) => chat._id === activeChatId);
@@ -333,7 +391,7 @@ const ChatInterface = memo(() => {
             <span className="logo-text">Atomic</span>
           </div>
           <button className="sidebar-close-btn" onClick={(e) => { e.stopPropagation(); setSidebarOpen(false); }} >
-            <Icon path={<path d="M18 6L6 18M6 6l12 12" />} />
+            <Icon path={<><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></>} className="sidebar-close-icon" />
           </button>
         </div>
         <div className="sidebar-top"> <nav className="main-nav"> <button className="new-thread-btn" onClick={handleCreateNewChat} disabled={!isAuthenticated || creatingChat}> <Icon path={<path d="M12 5v14m-7-7h14" />} /> <span>{creatingChat ? "Creating..." : "New Chat"}</span> </button> </nav> </div>
@@ -405,7 +463,7 @@ const ChatInterface = memo(() => {
         <header className="main-header">
           <div className="header-left">
                          <button className="header-hamburger" onClick={() => setSidebarOpen(true)} >
-              <Icon path={<> <path d="M3 12h18" /> <path d="M3 6h18" /> <path d="M3 18h18" /> </>} />
+              <Icon path={<><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="9" y1="3" x2="9" y2="21"></line></>} />
             </button>
             {/* <div className="header-logo">
               <LogoIcon />
@@ -445,14 +503,14 @@ const ChatInterface = memo(() => {
               return (
               <div key={msg._id} className={`chat-turn ${msg.role}`}>
                   <div className="message-header"> 
-                    <h3 className="message-sender" data-character={msg.role === "user" ? userCharacter : msg.character}>
-                      {msg.role === "user" ? "You" : (msg.character || "AI Assistant")}
+                    <h3 className="message-sender" data-character={msg.error ? 'system' : (msg.role === "user" ? userCharacter : msg.character)}>
+                      {msg.role === "user" ? "You" : (msg.error ? "AI Assistant" : (msg.character.charAt(0).toUpperCase() + msg.character.slice(1) || "AI Assistant"))}
                     </h3> 
                     <button className="copy-btn" onClick={() => handleCopyMessage(msg.content, msg._id)}> 
                       <Icon path={copiedMessageId === msg._id ? <path d="M20 6L9 17l-5-5" /> : <><rect x="9" y="9" width="13" height="13" rx="2" ry="2" /><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1" /></>} /> 
                     </button> 
                   </div>
-                  <div className="message-text"> 
+                  <div className={`message-text ${msg.error ? 'error-message' : ''}`}> 
                     {msg.role === "model" ? (
                       <ReactMarkdown children={msg.content} components={{ 
                         code(props) { 
@@ -542,9 +600,55 @@ const ChatInterface = memo(() => {
            <form className="input-form" onSubmit={handleSendMessage}>
              <div className="input-wrapper"> <textarea ref={textareaRef} rows="1" placeholder={!isAuthenticated ? "Login to chat" : (characterLoading ? "Changing character..." : (!activeChatId ? "Make chat first then send message" : "Ask anything..."))} value={inputValue} onChange={(e) => setInputValue(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendMessage(e); } }} disabled={characterLoading || !isAuthenticated || !activeChatId} /> </div>
              <div className="input-footer">
-               <div className="input-footer-left"> <select name="model" value={character} className={`model-selector ${characterLoading ? 'loading' : ''}`} onChange={handleChangeCharacter} disabled={characterLoading || !isAuthenticated || !activeChatId}> <option value="jahnvi">Jahnvi</option> <option value="atomic">Atomic</option> <option value="chandni">Chandni</option>
+               <div className="input-footer-left"> 
+                 <select name="model" value={character} className={`model-selector ${characterLoading ? 'loading' : ''}`} onChange={handleChangeCharacter} disabled={characterLoading || !isAuthenticated || !activeChatId}>
+                   {/* <option value="jahnvi">Jahnvi</option> */}
+                    <option value="atomic">Atomic</option> <option value="chandni">Chandni</option>
                  <option value="bhaiya"> Harsh Bhaiya</option>
-               </select> <div className={`char-counter ${inputValue.length > MAX_PROMPT_CHARS ? "error" : ""}`} > {MAX_PROMPT_CHARS - inputValue.length} / 1400 </div> </div>
+                   <option value="osho">Osho</option>
+                 </select> 
+                 <button type="button" className={`character-info-btn ${showCharacterInfo ? 'active' : ''}`} onClick={handleCharacterInfoClick} disabled={!isAuthenticated}>
+                   <div className="diamond-icon">
+                     <div className="diamond-inner"></div>
+                   </div>
+                 </button>
+                 <button type="button" className={`retry-btn ${isRetryActive ? 'active' : ''}`} onClick={handleRetryClick} disabled={!isAuthenticated || !lastPrompt} title="Re-enter last prompt">
+                   <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                     <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/>
+                     <path d="M21 3v5h-5"/>
+                     <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/>
+                     <path d="M3 21v-5h5"/>
+                   </svg>
+                 </button>
+                 {showCharacterInfo && (
+                   <div className="character-info-card">
+                     <div className="character-info-item">
+                       <span className="character-name atomic">Atomic</span>
+                       <span className="character-desc">Accurate, concise, and truthful answers. Precise and reliable like a scientist.</span>
+                     </div>
+                     <div className="character-info-item">
+                       <div className="character-name-wrapper">
+                         <span className="character-name jahnvi">Jahnvi</span>
+                         <span className="unavailable-badge">Currently Unavailable</span>
+                       </div>
+                       <span className="character-desc">A knowledgeable girl. Makes complex topics easy to understand.</span>
+                     </div>
+                     <div className="character-info-item">
+                       <span className="character-name chandni">Chandni</span>
+                       <span className="character-desc">Calm, reserved, and to-the-point. She has some anger issues.</span>
+                     </div>
+                     <div className="character-info-item">
+                       <span className="character-name bhaiya">Harsh Bhaiya</span>
+                       <span className="character-desc">Founder of Sheryians Coding School. Direct, motivational mentor who cares for student success.</span>
+                     </div>
+                     <div className="character-info-item">
+                       <span className="character-name osho">Osho</span>
+                       <span className="character-desc">Indian mystic and spiritual master. Spontaneous, paradoxical, and meditative wisdom.</span>
+                     </div>
+                   </div>
+                 )}
+                 <div className={`char-counter ${inputValue.length > MAX_PROMPT_CHARS ? "error" : ""}`} > {MAX_PROMPT_CHARS - inputValue.length} / 1400 </div> 
+               </div>
                <div className="input-footer-right"> <button type="submit" className="send-button" disabled={!inputValue.trim() || inputValue.length > MAX_PROMPT_CHARS || !activeChatId || characterLoading || !isAuthenticated}> <Icon path={<> <line x1="12" y1="19" x2="12" y2="5" /> <polyline points="5 12 12 5 19 12" /> </>} /> </button> </div>
              </div>
            </form>
