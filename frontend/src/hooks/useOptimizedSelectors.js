@@ -11,6 +11,7 @@ const selectUser = createSelector(
   (auth) => auth.user
 );
 
+
 const selectIsAuthenticated = createSelector(
   [selectAuthState],
   (auth) => auth.isAuthenticated

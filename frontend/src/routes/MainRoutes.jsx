@@ -14,6 +14,8 @@ const NotFound = lazy(() => import('../components/NotFound'));
 // Memoize the loading component
 const LoadingFallback = memo(() => <TypingIndicator />);
 
+
+
 const MainRoutes = memo(() => {
   const { isAuthenticated } = useAuthState();
 
