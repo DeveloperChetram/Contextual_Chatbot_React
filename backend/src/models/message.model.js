@@ -1,37 +1,38 @@
-const mongoose = require('mongoose')
+const mongoose = require('mongoose');
 
 const messageSchema = new mongoose.Schema({
-    user:{
-        type:mongoose.Schema.Types.ObjectId,
-        ref:"users",
-        required:true
-    },
-    chatId:{
+    user: {
         type: mongoose.Schema.Types.ObjectId,
-        ref:"chats",
-        required:true
+        ref: 'users',
+        required: true,
     },
-    content:{
-        type:String,
-        required:true
+    chatId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'chats',
+        required: true,
     },
-    role:{
-        type:String,
-        enum:['user', 'model'],
-        default:"user"
+    content: {
+        type: String,
+        required: true,
     },
-    character:{
-        type:String,
-        default:"default"
+    role: {
+        type: String,
+        enum: ['user', 'model'],
+        default: 'user',
     },
-    lastActivity:{
-        type:Date,
-        default:Date.now
-    }
+    character: {
+        type: String,
+        default: 'atomic',
+    },
+    lastActivity: {
+        type: Date,
+        default: Date.now,
+    },
+}, { timestamps: true });
 
-},{timestamps:true})
-
-
+// PERF-02: Indexes for fast per-chat message queries (was missing — caused full collection scans)
+messageSchema.index({ user: 1, chatId: 1 });
+messageSchema.index({ chatId: 1, createdAt: 1 });
 
 const messageModel = mongoose.model('messages', messageSchema);
 

@@ -6,105 +6,60 @@ const cookieOptions = require("../utils/cookieOptions");
 
 const googleAuth = async (req, res) => {
     try {
-        console.log("=== Google Auth Controller Debug ===");
-        console.log("Environment:", process.env.NODE_ENV);
-        console.log("JWT_SECRET exists:", !!process.env.JWT_SECRET);
-        console.log("Request origin:", req.headers.origin);
-        console.log("Request headers:", req.headers);
-        
         const { code } = req.query;
-        console.log("Received code parameter:", code ? "Present" : "Missing");
-        
-        if (!code) {
-            console.error("No access token provided");
-            return res.status(400).json({ message: 'Error', error: 'No access token provided' });
-        }
-        
-        // The 'code' parameter is actually the access_token from @react-oauth/google
-        const accessToken = code;
-        
-        console.log("Making request to Google API...");
-        
-        // Use the access token directly to get user info from Google
-        const userFromGoogle = await axios.get(
-            `https://www.googleapis.com/oauth2/v3/userinfo?alt=json&access_token=${accessToken}`
-        );
-        
-        console.log("Google API response:", userFromGoogle.data);
 
-        let user = await User.findOne({ email: userFromGoogle.data.email });
-        
+        if (!code) {
+            return res.status(400).json({ message: "No access token provided" });
+        }
+
+        // Use access token to get user info from Google
+        const googleResponse = await axios.get(
+            `https://www.googleapis.com/oauth2/v3/userinfo?alt=json&access_token=${code}`
+        );
+
+        const googleUser = googleResponse.data;
+
+        if (!googleUser.email) {
+            return res.status(400).json({ message: "Could not retrieve email from Google" });
+        }
+
+        let user = await User.findOne({ email: googleUser.email });
+
         if (!user) {
-            console.log("Creating new user for email:", userFromGoogle.data.email);
-            console.log("Google user data:", userFromGoogle.data);
-            
-            // Handle missing lastName - use firstName if lastName is not provided
-            const lastName = userFromGoogle.data.family_name || userFromGoogle.data.given_name || 'User';
-            const firstName = userFromGoogle.data.given_name || 'Google';
-            const picture = userFromGoogle.data.picture || 'https://via.placeholder.com/150';
-            
-            // Ensure we have valid names
-            if (!firstName || !lastName) {
-                console.error("Missing required name fields:", { firstName, lastName });
-                return res.status(400).json({ message: 'Error', error: 'Missing required name information from Google' });
-            }
-            
-            console.log("Creating user with:", {
-                email: userFromGoogle.data.email,
-                firstName,
-                lastName,
-                picture
-            });
-            
-            user = await User.create({ 
-                email: userFromGoogle.data.email, 
-                fullName: { 
-                    firstName: firstName, 
-                    lastName: lastName 
-                }, 
-                picture: picture
+            const firstName = googleUser.given_name || "Google";
+            const lastName = googleUser.family_name || firstName;
+
+            user = await User.create({
+                email: googleUser.email,
+                fullName: { firstName, lastName },
+                picture: googleUser.picture || "https://via.placeholder.com/150",
                 // passwordHash is optional for Google OAuth users
             });
-            
-            console.log("User created successfully:", user.email);
-        } else {
-            console.log("Found existing user:", user.email);
         }
 
         if (!process.env.JWT_SECRET) {
-            console.error("JWT_SECRET is not defined");
-            return res.status(500).json({ message: 'Error', error: 'Server configuration error' });
+            return res.status(500).json({ message: "Server configuration error" });
         }
 
-        console.log("Generating JWT token...");
-        console.log("JWT_SECRET length:", process.env.JWT_SECRET ? process.env.JWT_SECRET.length : 0);
-        console.log("User ID:", user._id);
-        
-        let token;
-        try {
-            token = await jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "5d" });
-            console.log("JWT token generated successfully, length:", token ? token.length : 0);
-            console.log("JWT token preview:", token ? token.substring(0, 20) + "..." : "null");
-        } catch (jwtError) {
-            console.error("JWT generation failed:", jwtError.message);
-            throw jwtError;
-        }
-        
+        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "5d" });
+
+        // FIX: Set JWT as httpOnly cookie only — DO NOT expose token in response body
         res.cookie("token", token, cookieOptions);
-        
-        console.log("Login successful, sending response with token:", !!token);
-        console.log("Response data:", { message: 'success', user, token });
-        
-        res.status(200).json({ message:'success', user, token });
 
+        res.status(200).json({
+            message: "success",
+            user: {
+                _id: user._id,
+                fullName: user.fullName,
+                email: user.email,
+                credits: user.credits,
+                picture: user.picture,
+            },
+        });
     } catch (error) {
-        console.log("=== Google Auth Error ===");
-        console.log("Error message:", error.message);
-        console.log("Error response:", error.response?.data);
-        console.log("Error status:", error.response?.status);
-        
-        res.status(500).json({ message: 'Error', error: error.message });
+        console.error("Google auth error:", error.message);
+        res.status(500).json({ message: "Authentication failed" });
     }
-}
+};
 
 module.exports = { googleAuth };

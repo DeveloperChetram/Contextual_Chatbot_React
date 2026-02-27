@@ -6,32 +6,23 @@ const messageModel = require("../models/message.model");
 const { generateResponse, generateVector } = require("../services/ai.service");
 const { createMemory, queryMemory } = require("../services/vector.service");
 
+// MINOR-02: Use shared CORS config
+const allowedOrigins = require("../config/cors");
+
 const initSocketServer = (httpServer) => {
   const io = new Server(httpServer, {
     cors: {
       origin: function (origin, callback) {
         if (!origin) return callback(null, true);
-        
-        const allowedOrigins = [
-          'https://contextual-chatbot-react.vercel.app',
-          'https://atomic-llm.vercel.app',
-          'http://localhost:5173',
-          'http://localhost:3000',
-          'http://localhost:3001',
-          'https://contextual-chatbot-react.onrender.com',
-          'https://atomic-llm.vercel.app'
-        ];
-        
         if (allowedOrigins.includes(origin)) {
           callback(null, true);
         } else {
-          console.log('Socket CORS blocked origin:', origin);
-          callback(new Error('Not allowed by CORS'));
+          callback(new Error("Not allowed by CORS"));
         }
       },
       credentials: true,
-      methods: ['GET', 'POST', 'OPTIONS'],
-      allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
+      methods: ["GET", "POST", "OPTIONS"],
+      allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
     },
   });
 
@@ -42,7 +33,7 @@ const initSocketServer = (httpServer) => {
         return next(new Error("Unauthorized: Token not found"));
       }
       const decoded = jwt.verify(cookies.token, process.env.JWT_SECRET);
-      const user = await userModel.findById(decoded.id).select("credits"); 
+      const user = await userModel.findById(decoded.id).select("credits");
       if (!user) {
         return next(new Error("Unauthorized: User not found"));
       }
@@ -57,18 +48,8 @@ const initSocketServer = (httpServer) => {
     console.log(`User connected: ${socket.user._id}`);
 
     socket.on("user-message", async (messagePayload) => {
-      console.log('Received message payload:', messagePayload);
       try {
-        const user = await userModel.findById(socket.user._id).select("credits");
-        if (!user || typeof user.credits !== "number" || user.credits <= 0) {
-          socket.emit("ai-response", {
-            chatId: messagePayload.chatId,
-            response:
-              "You are out of credits. For more credits, please contact @developerchetram on Instagram or email me at patelchetram49@gmail.com.",
-          });
-          return;
-        }
-
+        // PERF-01: Single atomic credit check + decrement (was 2 separate queries)
         const updatedUser = await userModel.findOneAndUpdate(
           { _id: socket.user._id, credits: { $gt: 0 } },
           { $inc: { credits: -1 } },
@@ -79,10 +60,14 @@ const initSocketServer = (httpServer) => {
           socket.emit("ai-response", {
             chatId: messagePayload.chatId,
             response:
-              "You are out of credits. For more credits, please contact @developerchetram on Instagram or email me at patelchetram49@gmail.com. NOTE: your messages wont be saved after and with this response. NOTE: your messages wont be saved after and with this response.",
+              "You are out of credits. For more credits, please contact @developerchetram on Instagram or email me at patelchetram49@gmail.com.",
+            character: messagePayload.character || "atomic",
           });
           return;
         }
+
+        // FLAW-03: character comes from message payload — no server-side global needed
+        const character = messagePayload.character || "atomic";
 
         const [userMessage, vectors] = await Promise.all([
           messageModel.create({
@@ -90,7 +75,7 @@ const initSocketServer = (httpServer) => {
             chatId: messagePayload.chatId,
             content: messagePayload.content,
             role: "user",
-            character: messagePayload.character || "atomic",
+            character,
           }),
           generateVector(messagePayload.content),
         ]);
@@ -99,91 +84,99 @@ const initSocketServer = (httpServer) => {
           queryMemory({
             queryVector: vectors,
             limit: 5,
-            metadata: { user: socket.user._id.toString(), character: messagePayload.character },
+            metadata: { user: socket.user._id.toString(), character },
           }),
           messageModel
             .find({ chatId: messagePayload.chatId })
             .sort({ createdAt: -1 })
             .limit(8)
             .lean()
-            .then((messages) => messages.reverse()), 
+            .then((messages) => messages.reverse()),
         ]);
-        console.log('pineconeData', pineconeData);
-        // console.log('chatHistory', chatHistory);
-        const stm = chatHistory.filter((item)=>   item.character === messagePayload.character).map((item) => ({
-          role: item.role,
-          parts: [{ text: item.content }],
-        }));
-        // console.log('stm', stm.map((item) => item.parts));
 
-        const ltm = [{
-          role: "user",
-          parts: [
-            {
-              text: `You are an assistant with long-term memory. Here are relevant memories about the user: ${pineconeData
-                .map((item) => `- ${item.metadata.message}`)
-                .join("\n")}`,
-            },
-          ],
-        }];
+        const stm = chatHistory
+          .filter((item) => item.character === character)
+          .map((item) => ({
+            role: item.role,
+            parts: [{ text: item.content }],
+          }));
 
-        const {response, character: responseCharacter} = await generateResponse([...ltm, ...stm], messagePayload.character);
+        const ltm = [
+          {
+            role: "user",
+            parts: [
+              {
+                text: `You are an assistant with long-term memory. Here are relevant memories about the user: ${pineconeData
+                  .map((item) => `- ${item.metadata.message}`)
+                  .join("\n")}`,
+              },
+            ],
+          },
+        ];
 
-        socket.emit("ai-response", { chatId: messagePayload.chatId, response, character: responseCharacter });
+        const { response, character: responseCharacter } = await generateResponse(
+          [...ltm, ...stm],
+          character
+        );
+
+        socket.emit("ai-response", {
+          chatId: messagePayload.chatId,
+          response,
+          character: responseCharacter,
+        });
 
         const responseMessage = await messageModel.create({
-            user: socket.user._id,
-            chatId: messagePayload.chatId,
-            content: response,
-            character: responseCharacter,
-            role: "model",
+          user: socket.user._id,
+          chatId: messagePayload.chatId,
+          content: response,
+          character: responseCharacter,
+          role: "model",
         });
 
         const responseVectors = await generateVector(response);
         await Promise.all([
-            createMemory({
-                vectors,
-                messageId: userMessage._id,
-                metadata: {
-                    user: socket.user._id.toString(),
-                    chatId: messagePayload.chatId,
-                    message: messagePayload.content,
-                    character: messagePayload.character,
-                },
-            }),
-            createMemory({
-                vectors: responseVectors,
-                messageId: responseMessage._id,
-                metadata: {
-                    chatId: messagePayload.chatId,
-                    user: socket.user._id.toString(),
-                    message: response,
-                    character: responseCharacter,
-                },
-            })
+          createMemory({
+            vectors,
+            messageId: userMessage._id,
+            metadata: {
+              user: socket.user._id.toString(),
+              chatId: messagePayload.chatId,
+              message: messagePayload.content,
+              character,
+            },
+          }),
+          createMemory({
+            vectors: responseVectors,
+            messageId: responseMessage._id,
+            metadata: {
+              chatId: messagePayload.chatId,
+              user: socket.user._id.toString(),
+              message: response,
+              character: responseCharacter,
+            },
+          }),
         ]);
-
       } catch (error) {
-        console.error("Error in user-message handler:", error.message);
+        console.error("Socket user-message error:", error.message);
 
-        // Check for Gemini API quota error
-        if (error.message && error.message.includes("429") && error.message.includes("RESOURCE_EXHAUSTED")) {
+        if (error.message?.includes("429") && error.message?.includes("RESOURCE_EXHAUSTED")) {
           socket.emit("ai-response", {
             chatId: messagePayload.chatId,
-            response: "The service is temporarily unavailable due to high demand (commercial limitations). Please try again later.",
+            response:
+              "The service is temporarily unavailable due to high demand. Please try again later.",
             error: "quota-exceeded",
             character: messagePayload.character || "atomic",
           });
         } else {
-          socket.emit("error", { 
-                message: "Sorry, an error occurred while processing your request." 
-            });
+          socket.emit("error", {
+            message: "Sorry, an error occurred while processing your request.",
+          });
         }
       }
     });
 
-    socket.on('disconnect', () => {
-        console.log(`User disconnected: ${socket.user._id}`);
+    socket.on("disconnect", () => {
+      console.log(`User disconnected: ${socket.user._id}`);
     });
   });
 };
