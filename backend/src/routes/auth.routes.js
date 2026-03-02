@@ -1,16 +1,18 @@
-const express = require("express");
-const authController = require("../controllers/auth.controllers");
-const authMiddleware = require("../middlewares/auth.middleware");
+const express = require('express');
+const authController = require('../controllers/auth.controllers');
+const authMiddleware = require('../middlewares/auth.middleware');
 
 const authRouter = express.Router();
 
-authRouter.post("/register", authController.registerController);
-authRouter.post("/login", authController.loginController);
+authRouter.post('/register', authController.registerController);
+authRouter.post('/login', authController.loginController);
+authRouter.post('/logout', authController.logoutController);
+authRouter.get('/me', authMiddleware, authController.getMeController);
 
-// FIX: logout changed from GET to POST (state mutation must not use GET)
-authRouter.post("/logout", authController.logoutController);
-
-// NEW: /auth/me — proper session validation endpoint
-authRouter.get("/me", authMiddleware, authController.getMeController);
+// Profile management
+authRouter.put('/profile', authMiddleware, authController.updateProfileController);
+authRouter.put('/change-password', authMiddleware, authController.changePasswordController);
+authRouter.get('/stats', authMiddleware, authController.getStatsController);
+authRouter.delete('/account', authMiddleware, authController.deleteAccountController);
 
 module.exports = authRouter;

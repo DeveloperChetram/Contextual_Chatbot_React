@@ -3,10 +3,9 @@ const cookie = require("cookie");
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/user.model");
 const messageModel = require("../models/message.model");
+const CustomCharacter = require("../models/customCharacter.model");
 const { generateResponse, generateVector } = require("../services/ai.service");
 const { createMemory, queryMemory } = require("../services/vector.service");
-
-// MINOR-02: Use shared CORS config
 const allowedOrigins = require("../config/cors");
 
 const initSocketServer = (httpServer) => {
@@ -14,29 +13,21 @@ const initSocketServer = (httpServer) => {
     cors: {
       origin: function (origin, callback) {
         if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) {
-          callback(null, true);
-        } else {
-          callback(new Error("Not allowed by CORS"));
-        }
+        if (allowedOrigins.includes(origin)) callback(null, true);
+        else callback(new Error("Not allowed by CORS"));
       },
       credentials: true,
       methods: ["GET", "POST", "OPTIONS"],
-      allowedHeaders: ["Content-Type", "Authorization", "X-Requested-With", "Accept", "Origin"],
     },
   });
 
   io.use(async (socket, next) => {
     try {
       const cookies = cookie.parse(socket.handshake.headers?.cookie || "");
-      if (!cookies.token) {
-        return next(new Error("Unauthorized: Token not found"));
-      }
+      if (!cookies.token) return next(new Error("Unauthorized: Token not found"));
       const decoded = jwt.verify(cookies.token, process.env.JWT_SECRET);
       const user = await userModel.findById(decoded.id).select("credits");
-      if (!user) {
-        return next(new Error("Unauthorized: User not found"));
-      }
+      if (!user) return next(new Error("Unauthorized: User not found"));
       socket.user = user;
       next();
     } catch (error) {
@@ -49,7 +40,7 @@ const initSocketServer = (httpServer) => {
 
     socket.on("user-message", async (messagePayload) => {
       try {
-        // PERF-01: Single atomic credit check + decrement (was 2 separate queries)
+        // Single atomic credit check + decrement
         const updatedUser = await userModel.findOneAndUpdate(
           { _id: socket.user._id, credits: { $gt: 0 } },
           { $inc: { credits: -1 } },
@@ -59,15 +50,27 @@ const initSocketServer = (httpServer) => {
         if (!updatedUser) {
           socket.emit("ai-response", {
             chatId: messagePayload.chatId,
-            response:
-              "You are out of credits. For more credits, please contact @developerchetram on Instagram or email me at patelchetram49@gmail.com.",
+            response: "You are out of credits. For more credits, please contact @developerchetram on Instagram.",
             character: messagePayload.character || "atomic",
           });
           return;
         }
 
-        // FLAW-03: character comes from message payload — no server-side global needed
-        const character = messagePayload.character || "atomic";
+        const characterKey = messagePayload.character || "atomic";
+        let customSystemPrompt = null;
+
+        // Handle custom characters (prefixed with "custom:<mongoId>")
+        if (characterKey.startsWith("custom:")) {
+          const customId = characterKey.replace("custom:", "");
+          const customChar = await CustomCharacter.findOne({
+            _id: customId,
+            user: socket.user._id,
+          }).select("systemPrompt");
+          if (customChar) {
+            customSystemPrompt = customChar.systemPrompt;
+          }
+          // If not found, will fall back to built-in 'atomic' prompt
+        }
 
         const [userMessage, vectors] = await Promise.all([
           messageModel.create({
@@ -75,7 +78,7 @@ const initSocketServer = (httpServer) => {
             chatId: messagePayload.chatId,
             content: messagePayload.content,
             role: "user",
-            character,
+            character: characterKey,
           }),
           generateVector(messagePayload.content),
         ]);
@@ -84,39 +87,34 @@ const initSocketServer = (httpServer) => {
           queryMemory({
             queryVector: vectors,
             limit: 5,
-            metadata: { user: socket.user._id.toString(), character },
+            metadata: { user: socket.user._id.toString(), character: characterKey },
           }),
           messageModel
             .find({ chatId: messagePayload.chatId })
             .sort({ createdAt: -1 })
             .limit(8)
             .lean()
-            .then((messages) => messages.reverse()),
+            .then((msgs) => msgs.reverse()),
         ]);
 
         const stm = chatHistory
-          .filter((item) => item.character === character)
-          .map((item) => ({
-            role: item.role,
-            parts: [{ text: item.content }],
-          }));
+          .filter((item) => item.character === characterKey)
+          .map((item) => ({ role: item.role, parts: [{ text: item.content }] }));
 
         const ltm = [
           {
             role: "user",
-            parts: [
-              {
-                text: `You are an assistant with long-term memory. Here are relevant memories about the user: ${pineconeData
-                  .map((item) => `- ${item.metadata.message}`)
-                  .join("\n")}`,
-              },
-            ],
+            parts: [{
+              text: `Here are relevant memories about the user: ${pineconeData.map((item) => `- ${item.metadata.message}`).join("\n")
+                }`,
+            }],
           },
         ];
 
         const { response, character: responseCharacter } = await generateResponse(
           [...ltm, ...stm],
-          character
+          characterKey,
+          customSystemPrompt  // passed to ai.service — overrides built-in when set
         );
 
         socket.emit("ai-response", {
@@ -142,7 +140,7 @@ const initSocketServer = (httpServer) => {
               user: socket.user._id.toString(),
               chatId: messagePayload.chatId,
               message: messagePayload.content,
-              character,
+              character: characterKey,
             },
           }),
           createMemory({
@@ -158,19 +156,15 @@ const initSocketServer = (httpServer) => {
         ]);
       } catch (error) {
         console.error("Socket user-message error:", error.message);
-
-        if (error.message?.includes("429") && error.message?.includes("RESOURCE_EXHAUSTED")) {
+        if (error.message?.includes("429") || error.message?.includes("RESOURCE_EXHAUSTED")) {
           socket.emit("ai-response", {
             chatId: messagePayload.chatId,
-            response:
-              "The service is temporarily unavailable due to high demand. Please try again later.",
+            response: "The service is temporarily unavailable due to high demand. Please try again later.",
             error: "quota-exceeded",
             character: messagePayload.character || "atomic",
           });
         } else {
-          socket.emit("error", {
-            message: "Sorry, an error occurred while processing your request.",
-          });
+          socket.emit("error", { message: "Sorry, an error occurred while processing your request." });
         }
       }
     });
