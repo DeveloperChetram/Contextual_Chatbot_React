@@ -1,4 +1,4 @@
-name: Vite React CI Pipeline
+name: Frontend CI Pipeline
 
 on:
   push:
@@ -10,11 +10,15 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    defaults:
+      run:
+        working-directory: frontend   # 👈 THIS IS THE FIX
+
     steps:
       - name: 1. Checkout code
         uses: actions/checkout@v3
 
-      - name: 2. Setup Node.js
+      - name: 2. Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 18
@@ -32,4 +36,4 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: dist-files
-          path: dist/
+          path: frontend/dist   # 👈 important
