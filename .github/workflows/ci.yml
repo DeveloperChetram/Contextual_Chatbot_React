@@ -37,3 +37,7 @@ jobs:
         with:
           name: dist-files
           path: frontend/dist   # 👈 important
+      - name: 7. Simulate deployment
+        run: |
+          mkdir server
+          cp -r dist/* server/
