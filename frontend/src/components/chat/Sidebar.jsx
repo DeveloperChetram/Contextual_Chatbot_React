@@ -2,6 +2,7 @@ import React, { memo, useCallback, useState } from 'react';
 import ChatHistory from './ChatHistory';
 import { axiosInstance } from '../../api/axios.jsx';
 import { useDispatch } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { updateChat, setActiveChatId } from '../../redux/reducers/chatSlice';
 
 // Module-level constant
@@ -35,6 +36,7 @@ const Sidebar = memo(({
     onCreditsClick,
 }) => {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
 
     const [isCreatingNewChat, setIsCreatingNewChat] = useState(false);
     const [newChatTitle, setNewChatTitle] = useState('');
@@ -168,6 +170,19 @@ const Sidebar = memo(({
             </div>
 
             <div className="sidebar-bottom">
+                {isAuthenticated && (
+                    <button
+                        className="new-thread-btn"
+                        style={{ marginBottom: '8px' }}
+                        onClick={() => navigate('/profile')}
+                    >
+                        <Icon path={<>
+                            <circle cx="12" cy="8" r="4" />
+                            <path d="M4 20c0-4 3.6-7 8-7s8 3 8 7" />
+                        </>} />
+                        <span>Profile &amp; Settings</span>
+                    </button>
+                )}
                 <div className="user-profile">
                     <div className="user-info">
                         <Icon path={<><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" /></>} />

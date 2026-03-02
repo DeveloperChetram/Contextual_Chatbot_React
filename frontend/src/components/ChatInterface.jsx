@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { io } from 'socket.io-client';
 import { getChats, createChat, sendMessage, switchChat } from '../redux/actions/chatActions';
 import { setActiveChatId, addMessage, setModelTyping, setCharacter } from '../redux/reducers/chatSlice';
+import { setCustomCharacters } from '../redux/reducers/customCharacterSlice';
 import { logoutUser } from '../redux/actions/authActions';
 import { useAuthState, useChatState } from '../hooks/useOptimizedSelectors.js';
 
@@ -66,6 +67,14 @@ const ChatInterface = memo(() => {
     if (isAuthenticated) handleCreditsClick();
     return () => { if (creditsTimeoutRef.current) clearTimeout(creditsTimeoutRef.current); };
   }, [isAuthenticated, handleCreditsClick]);
+
+  // Load custom characters into Redux when user logs in
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    axiosInstance.get('/characters')
+      .then(r => dispatch(setCustomCharacters(r.data.characters)))
+      .catch(() => { });
+  }, [isAuthenticated, dispatch]);
 
   // Socket init
   useEffect(() => {

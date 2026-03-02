@@ -1,4 +1,5 @@
 import React, { memo, useRef, useCallback, useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import CharacterInfoCard from './CharacterInfoCard';
 
 // Module-level constants — no useMemo needed for primitives (PERF-04 fix)
@@ -24,8 +25,9 @@ const ChatInputForm = memo(({
 }) => {
     const textareaRef = useRef(null);
     const [isRetryActive, setIsRetryActive] = useState(false);
-    // MINOR-05 fix: showCharacterInfo uses functional setter to avoid stale closure
     const [showCharacterInfo, setShowCharacterInfo] = useState(false);
+    // Read custom characters from Redux for the selector
+    const customCharacters = useSelector(s => s.customCharacters.items);
 
     // Auto-resize textarea
     useEffect(() => {
@@ -103,10 +105,21 @@ const ChatInputForm = memo(({
                             onChange={onChangeCharacter}
                             disabled={characterLoading || !isAuthenticated || !activeChatId}
                         >
-                            <option value="atomic">Atomic</option>
-                            <option value="chandni">Chandni</option>
-                            <option value="bhaiya">Harsh Bhaiya</option>
-                            <option value="osho">Osho</option>
+                            <optgroup label="Built-in">
+                                <option value="atomic">Atomic</option>
+                                <option value="chandni">Chandni</option>
+                                <option value="bhaiya">Harsh Bhaiya</option>
+                                <option value="osho">Osho</option>
+                            </optgroup>
+                            {(customCharacters || []).length > 0 && (
+                                <optgroup label="My Characters">
+                                    {(customCharacters || []).map(c => (
+                                        <option key={c._id} value={`custom:${c._id}`}>
+                                            {c.name}
+                                        </option>
+                                    ))}
+                                </optgroup>
+                            )}
                         </select>
 
                         <div className="character-info-container">

@@ -1,0 +1,35 @@
+name: Vite React CI Pipeline
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 1. Checkout code
+        uses: actions/checkout@v3
+
+      - name: 2. Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: 3. Install dependencies
+        run: npm install
+
+      - name: 4. Run lint
+        run: npm run lint
+
+      - name: 5. Build project
+        run: npm run build
+
+      - name: 6. Upload build files
+        uses: actions/upload-artifact@v3
+        with:
+          name: dist-files
+          path: dist/
