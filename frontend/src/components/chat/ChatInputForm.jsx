@@ -18,7 +18,6 @@ const ChatInputForm = memo(({
     isAuthenticated,
     character,
     characterLoading,
-    isModelTyping,
     lastPrompt,
     onSendMessage,
     onChangeCharacter,

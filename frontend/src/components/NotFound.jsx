@@ -1,18 +1,7 @@
-import React, { memo, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React, { memo } from 'react';
 import '../styles/NotFound.css';
 
 const NotFound = memo(() => {
-  const navigate = useNavigate();
-
-  const handleGoHome = useCallback(() => {
-    navigate('/');
-  }, [navigate]);
-
-  const handleGoBack = useCallback(() => {
-    navigate(-1);
-  }, [navigate]);
-
   return (
     <div className="not-found-container">
       <div className="not-found-content">

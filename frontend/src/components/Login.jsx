@@ -10,7 +10,7 @@ import { useAuthState } from '../hooks/useOptimizedSelectors';
 import GLogin from './GoogleLogin';
 
 const Login = memo(() => {
-  const user = useSelector((state) => state.auth);
+  useSelector((state) => state.auth);
   const navigate = useNavigate();
   const { isAuthenticated, loading, error } = useAuthState();
   const { register, handleSubmit, reset } = useForm();

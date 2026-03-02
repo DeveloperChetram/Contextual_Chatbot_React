@@ -467,7 +467,7 @@ const SecurityTab = memo(({ user }) => {
             dispatch(clearChatStore());
             localStorage.removeItem('user');
             navigate('/login');
-        } catch (err) {
+        } catch {
             showToast('Failed to delete account', 'error');
             setDeleting(false);
         }

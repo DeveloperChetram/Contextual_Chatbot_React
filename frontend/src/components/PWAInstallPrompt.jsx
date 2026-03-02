@@ -17,10 +17,10 @@ const PWAInstallPrompt = () => {
 
   const {
     offlineReady: [offlineReadySW, setOfflineReadySW],
-    needRefresh: [needRefreshSW, setNeedRefreshSW],
+    needRefresh: [needRefreshSW],
     updateServiceWorker,
   } = useRegisterSW({
-    onRegistered(r) {
+    onRegistered() {
       // Suppress verbose logging in production
     },
     onRegisterError(error) {

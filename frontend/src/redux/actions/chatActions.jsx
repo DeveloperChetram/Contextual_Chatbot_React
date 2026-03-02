@@ -9,7 +9,6 @@ import {
   setError,
   setActiveChatId,
   setModelTyping,
-  setCharacter,
 } from '../reducers/chatSlice';
 
 /**

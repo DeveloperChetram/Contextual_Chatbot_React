@@ -9,7 +9,7 @@ export const usePerformanceMonitor = (componentName) => {
     const endTime = performance.now();
     const renderTime = endTime - startTime.current;
     
-    if (process.env.NODE_ENV === 'development') {
+    if (import.meta.env.DEV) {
       console.log(`${componentName} rendered ${renderCount.current} times. Render time: ${renderTime.toFixed(2)}ms`);
     }
     

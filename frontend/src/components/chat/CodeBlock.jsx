@@ -8,9 +8,8 @@ const Icon = memo(({ path }) => (
     </svg>
 ));
 
-const CodeBlock = memo(({ language, children, messageId, index }) => {
+const CodeBlock = memo(({ language, children }) => {
     const [copied, setCopied] = useState(false);
-    const codeId = `code-${messageId}-${index}`;
 
     const handleCopy = useCallback(() => {
         navigator.clipboard.writeText(String(children).replace(/\n$/, '')).then(() => {

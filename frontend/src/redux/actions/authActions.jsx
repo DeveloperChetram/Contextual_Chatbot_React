@@ -44,7 +44,7 @@ export const logoutUser = () => async (dispatch) => {
   try {
     // FLAW-06 fix: logout uses POST (not GET)
     await axios.post('/auth/logout');
-  } catch (error) {
+  } catch {
     // Silent fail — clear local state regardless
   } finally {
     dispatch(logoutAction());

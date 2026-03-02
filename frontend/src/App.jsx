@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useCallback } from 'react';
+import React, { useEffect, useCallback } from 'react';
 import MainRoutes from './routes/MainRoutes';
 import { useDispatch } from 'react-redux';
 import { setUserFromStorage } from '../src/redux/reducers/authSlice';
@@ -6,7 +6,7 @@ import { clearChatStore } from '../src/redux/reducers/chatSlice';
 import { getCurrentUser } from '../src/redux/actions/authActions';
 import { GoogleOAuthProvider } from "@react-oauth/google";
 // import { useGoogleLogin } from '@react-oauth/google';
-import { useAuthState, useChatState } from './hooks/useOptimizedSelectors';
+import { useChatState } from './hooks/useOptimizedSelectors';
 import GLogin from './components/GoogleLogin';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import './styles/PWAInstallPrompt.css';
@@ -17,11 +17,7 @@ import { updatePWAThemeColor } from './utils/pwaThemeUpdater';
 
 function App() {
   const dispatch = useDispatch();
-  const { isAuthenticated } = useAuthState();
   const { character } = useChatState();
-
-  // Memoize the Google OAuth client ID to prevent unnecessary re-renders
-  const googleClientId = useMemo(() => import.meta.env.VITE_GOOGLE_CLIENT_ID, []);
 
   const initializeApp = useCallback(() => {
     dispatch(clearChatStore());
