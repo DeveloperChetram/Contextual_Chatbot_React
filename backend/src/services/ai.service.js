@@ -65,7 +65,7 @@ async function generateResponse(content, selectedCharacter = FALLBACK_CHARACTER,
     || characters[FALLBACK_CHARACTER];
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-flash-latest",
     contents: content,
     maxOutputTokens: 1000,
     config: {
