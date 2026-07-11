@@ -9,6 +9,7 @@ const customCharacterRouter = require('./routes/customCharacter.routes');
 const cors = require('cors');
 const responseSanitizer = require('./middlewares/responseSanitizer.middleware');
 const cookieParser = require('cookie-parser');
+const agentRouter = require('./routes/agent.routes');
 const allowedOrigins = require('./config/cors');
 
 const app = express();
@@ -49,6 +50,8 @@ app.use('/api/auth', authRouter);
 app.use('/api/auth', googleAuthRouter);
 app.use('/api/memory', memoryRouter);
 app.use('/api/characters', customCharacterRouter);
+
+app.use('/api/agents', agentRouter);
 
 app.use((err, req, res, next) => {
   if (err.message === 'Not allowed by CORS') {
