@@ -25,19 +25,14 @@ function App() {
     const stored = localStorage.getItem('user');
     if (stored) {
       try {
-        // PHASE 1: Restore from localStorage synchronously — no network wait.
-        // This makes isAuthenticated = true instantly so the router redirects
-        // to ChatInterface without waiting for the server.
+       
         const user = JSON.parse(stored);
         dispatch(setUserFromStorage(user));
 
-        // PHASE 2: Silently validate the token with /auth/me in the background.
-        // If the token is expired or invalid, getCurrentUser will dispatch logout
-        // and redirect via the router. The user sees the app immediately and only
-        // gets kicked out if the token is actually invalid.
+        // verify token in the background
         getCurrentUser(dispatch);
       } catch {
-        // Corrupted localStorage — clear and let the user log in normally
+        // clear iff fails
         localStorage.removeItem('user');
       }
     }
@@ -57,7 +52,7 @@ function App() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
       <MainRoutes />
-      <PWAInstallPrompt />
+      {/* <PWAInstallPrompt /> */}
     </GoogleOAuthProvider>
   );
 };

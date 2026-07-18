@@ -39,10 +39,10 @@ const userSchema = new mongoose.Schema({
     }
 }, {timestamps:true})
 
-// Add a method to transform the user object when converting to JSON
+
 userSchema.methods.toJSON = function() {
     const userObject = this.toObject();
-    // Remove sensitive fields
+   
     delete userObject.passwordHash;
     return userObject;
 };

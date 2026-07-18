@@ -3,6 +3,7 @@ import authSlice from './reducers/authSlice';
 import chatSlice from './reducers/chatSlice';
 import customCharacterReducer from './reducers/customCharacterSlice';
 import memoryReducer from './reducers/memorySlice';
+import agentReducer from './reducers/agentSlice';
 
 const store = configureStore({
   reducer: {
@@ -10,6 +11,7 @@ const store = configureStore({
     chat: chatSlice,
     customCharacters: customCharacterReducer,
     memory: memoryReducer,
+    agent: agentReducer,
   },
 });
 

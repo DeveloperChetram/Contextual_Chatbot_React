@@ -33,3 +33,4 @@ customCharacterSchema.index({ user: 1 });
 
 const CustomCharacter = mongoose.model('customcharacters', customCharacterSchema);
 module.exports = CustomCharacter;
+  

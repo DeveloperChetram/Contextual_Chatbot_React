@@ -1,5 +1,6 @@
 import React, { memo, useCallback, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import CodeBlock from './CodeBlock';
 
 const Icon = memo(({ path, className = '' }) => (
@@ -47,6 +48,7 @@ const MessageBubble = memo(({ msg, index, nextModelMessage, currentCharacter }) 
                 {msg.role === 'model' ? (
                     <ReactMarkdown
                         children={msg.content}
+                        remarkPlugins={[remarkGfm]}
                         components={{
                             code(props) {
                                 const { children, className, ...rest } = props;

@@ -1,6 +1,8 @@
 import React, { memo, useRef, useCallback, useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
 import CharacterInfoCard from './CharacterInfoCard';
+import RadialGlowButton from '../ui/radial-glow-button';
+import { useNavigate } from 'react-router-dom';
 
 // Module-level constants — no useMemo needed for primitives (PERF-04 fix)
 const MAX_PROMPT_CHARS = 1400;
@@ -27,7 +29,7 @@ const ChatInputForm = memo(({
     const [showCharacterInfo, setShowCharacterInfo] = useState(false);
     // Read custom characters from Redux for the selector
     const customCharacters = useSelector(s => s.customCharacters.items);
-
+    const navigate = useNavigate();
     // Auto-resize textarea
     useEffect(() => {
         if (textareaRef.current) {
@@ -102,15 +104,15 @@ const ChatInputForm = memo(({
                             value={character}
                             className={`model-selector ${characterLoading ? 'loading' : ''}`}
                             onChange={onChangeCharacter}
-                            disabled={characterLoading || !isAuthenticated || !activeChatId}
+                            // disabled={characterLoading || !isAuthenticated || !activeChatId}
                         >
-                            <optgroup label="Built-in">
+                          
                                 <option value="atomic">Atomic</option>
                                 <option value="chandni">Chandni</option>
                                 <option value="bhaiya">Harsh Bhaiya</option>
                                 <option value="osho">Osho</option>
-                            </optgroup>
-                            {(customCharacters || []).length > 0 && (
+                          
+                            {/* {(customCharacters || []).length > 0 && (
                                 <optgroup label="My Characters">
                                     {(customCharacters || []).map(c => (
                                         <option key={c._id} value={`custom:${c._id}`}>
@@ -118,7 +120,7 @@ const ChatInputForm = memo(({
                                         </option>
                                     ))}
                                 </optgroup>
-                            )}
+                            )} */}
                         </select>
 
                         <div className="character-info-container">
@@ -150,12 +152,25 @@ const ChatInputForm = memo(({
                             </svg>
                         </button>
 
+                       
+
+
                         <div className={`char-counter ${inputValue.length > MAX_PROMPT_CHARS ? 'error' : ''}`}>
                             {MAX_PROMPT_CHARS - inputValue.length} / {MAX_PROMPT_CHARS}
                         </div>
                     </div>
 
                     <div className="input-footer-right">
+                         <RadialGlowButton
+                            onClick={() => {
+                                if (!isAuthenticated) return; // redirect to login
+                                navigate('/agent');
+                            }}
+                            // disabled={!isAuthenticated}
+                            className="agent-btn"
+                        >
+                           Agent
+                        </RadialGlowButton>
                         <button
                             type="submit"
                             className="send-button"
@@ -163,6 +178,8 @@ const ChatInputForm = memo(({
                         >
                             <Icon path={<><line x1="12" y1="19" x2="12" y2="5" /><polyline points="5 12 12 5 19 12" /></>} />
                         </button>
+                
+
                     </div>
                 </div>
             </form>

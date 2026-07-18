@@ -8,6 +8,7 @@ const Register = lazy(() => import('../components/Register'));
 const ChatInterface = lazy(() => import('../components/ChatInterface'));
 const NotFound = lazy(() => import('../components/NotFound'));
 const ProfilePage = lazy(() => import('../components/ProfilePage'));
+const AgentChat = lazy(() => import('../pages/AgentChat'));
 
 const LoadingFallback = memo(() => <TypingIndicator />);
 
@@ -21,6 +22,7 @@ const MainRoutes = memo(() => {
           <Route path="/" element={<ChatInterface />} />
           <Route path="/home" element={<ChatInterface />} />
           <Route path="/profile" element={<ProfilePage />} />
+          <Route path="/agent" element={<AgentChat />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </Suspense>
