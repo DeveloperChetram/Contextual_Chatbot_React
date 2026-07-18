@@ -25,9 +25,9 @@ const createAgentController = async (req, res) => {
         } = req.body;
 
         // Use uploaded file path or default image
-        let thumbnailPath = "/uploads/agent-logo.png";
+        let thumbnailPath = "uploads/agent-logo.png";
         if (req.file) {
-            thumbnailPath = `/uploads/${req.file.filename}`;
+            thumbnailPath = `uploads/${req.file.filename}`;
         }
 
         const parsedTools = tools ? (typeof tools === 'string' ? JSON.parse(tools) : tools) : [];
@@ -66,7 +66,7 @@ const editAgentController = async (req, res) => {
         const updateData = { ...req.body };
 
         if (req.file) {
-            updateData.thumbnail = `/uploads/${req.file.filename}`;
+            updateData.thumbnail = `uploads/${req.file.filename}`;
         }
 
         if (updateData.tools && typeof updateData.tools === 'string') {
