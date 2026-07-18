@@ -1,14 +1,12 @@
-const { createAgent } = require("langchain");
+const { createReactAgent } = require("@langchain/langgraph/prebuilt");
 
-const createLangChainAgent = ({
-    llm,
-    tools,
-    systemPrompt,
-}) => {
-    return createAgent({
-        model: llm,
+// Uses createReactAgent which correctly uses Groq's NATIVE function calling format.
+// The 'createAgent' from 'langchain' uses old XML-style ReAct prompting which Groq rejects.
+const createLangChainAgent = ({ llm, tools, systemPrompt }) => {
+    return createReactAgent({
+        llm,
         tools,
-        systemPrompt,
+        stateModifier: systemPrompt,
     });
 };
 

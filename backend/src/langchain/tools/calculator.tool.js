@@ -3,6 +3,7 @@ const { z } = require("zod");
 const { evaluate } = require("mathjs");
 
 const calculatorTool = tool(
+    
     async ({ expression }) => {
         try {
             const result = evaluate(expression);
@@ -15,7 +16,7 @@ const calculatorTool = tool(
     {
         name: "calculator",
         description:
-            "Useful for solving mathematical expressions like addition, subtraction, multiplication, division, percentages, powers, square roots, etc.",
+            "Useful ONLY for evaluating pure mathematical numbers and expressions (e.g. 2 + 2, 5 * 10, etc). DO NOT use this tool to write, run, or evaluate programming code like JavaScript, Python, or console.log. If the user asks you to write code, do NOT use this tool; just output the code directly in your chat response.",
 
         schema: z.object({
             expression: z

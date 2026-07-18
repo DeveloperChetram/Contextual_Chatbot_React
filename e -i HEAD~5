@@ -1,0 +1,126 @@
+[33m6acc895[m[33m ([m[1;36mHEAD[m[33m -> [m[1;32matomic-agent-update[m[33m)[m working on the tools
+[33med26be8[m[33m ([m[1;31morigin/atomic-agent-update[m[33m)[m working on agent update of atomic
+[33m3d9aa84[m[33m ([m[1;31morigin/main[m[33m, [m[1;31morigin/HEAD[m[33m, [m[1;32mmain[m[33m)[m add: simulate deploement
+[33m0ae4dbe[m fix: solved lint errors
+[33m3438df1[m fix: move CI to root
+[33m6f55fb9[m fix: move CI to root
+[33m219cd62[m testing CI updated ci.yml
+[33m948584d[m testing CI
+[33m2135c6c[m optmized and improved in new version
+[33mf7b7b92[m Merge pull request #48 from DeveloperChetram/dev
+[33m9ee38c0[m push from new system
+[33m51e2f74[m test
+[33m59e715c[m[33m ([m[1;33mtag: [m[1;33mv.1.0.0-atomic[m[33m)[m Merge pull request #47 from DeveloperChetram/dev
+[33mb3dbae5[m feat:chaarcter-osho info-card PWA
+[33m2d707f5[m Merge pull request #46 from DeveloperChetram/dev
+[33me9a1d29[m fix: google auth timeout
+[33m5ad5a62[m fix: google auth timeout
+[33m58f1954[m[33m ([m[1;33mtag: [m[1;33mv.0.1.1-atom[m[33m)[m Merge pull request #45 from DeveloperChetram/dev
+[33mc4b5262[m fix:google auth production problem-attempt-5
+[33m4585e57[m Merge pull request #44 from DeveloperChetram/dev
+[33m3becf72[m fix:google auth production problem
+[33ma7c6473[m Merge pull request #43 from DeveloperChetram/dev
+[33maacdfb4[m fix:google auth production problem
+[33mb85d111[m Merge pull request #42 from DeveloperChetram/dev
+[33me54efa1[m fix:google auth production problem
+[33m7b9da36[m Merge pull request #41 from DeveloperChetram/dev
+[33m3d7248b[m feat:google auth
+[33m14f04d0[m chore:code update
+[33m4c14329[m Merge pull request #40 from DeveloperChetram/dev
+[33mfd82439[m feat:separate memory of characters, theme update
+[33m43d58ff[m Merge pull request #39 from DeveloperChetram/dev
+[33m8cf9a5a[m chore:update readme
+[33m591bfcc[m[33m ([m[1;33mtag: [m[1;33mv.0.1.0-atom[m[33m)[m Merge pull request #38 from DeveloperChetram/dev
+[33m6b39bb3[m add:readme.md
+[33m952e272[m Merge pull request #37 from DeveloperChetram/dev
+[33mf49f981[m fix:cors error
+[33mfa37c57[m Merge pull request #36 from DeveloperChetram/dev
+[33m0064ac8[m Merge pull request #35 from DeveloperChetram/main
+[33m15f7675[m Merge pull request #34 from DeveloperChetram/dev
+[33m62d40a7[m fix:login issue
+[33m7fdbcc9[m Merge pull request #33 from DeveloperChetram/dev
+[33m7f65536[m fix:add new origin url to server
+[33mb1740b5[m Merge pull request #32 from DeveloperChetram/dev
+[33mdbc1660[m fix hamburger menu issue
+[33mf6edaf2[m fix hamburger menu issue
+[33m1224f1a[m fix: all fixes with user select:none
+[33m0d0341c[m fix:sidebar fix 4
+[33m8639bd6[m fix:sidebar fix 3
+[33m272018c[m fix:sidebar
+[33me3b55c3[m Merge pull request #31 from DeveloperChetram/dev
+[33mda6e466[m fix:sidebar
+[33mae72c1c[m Merge pull request #30 from DeveloperChetram/dev
+[33m4d62250[m fix:sidebar
+[33m842b385[m Merge pull request #29 from DeveloperChetram/dev
+[33m588d97d[m previous
+[33m6f14edc[m Merge pull request #28 from DeveloperChetram/dev
+[33me875327[m fix:styling for mobile
+[33m002ad35[m Merge pull request #27 from DeveloperChetram/dev
+[33m27f02f0[m fix:styling for mobile
+[33me864b9e[m Merge pull request #26 from DeveloperChetram/dev
+[33m93f9070[m final second draft
+[33md4e7b17[m Merge pull request #25 from DeveloperChetram/dev
+[33m55bef41[m fix:deplyment error
+[33md042f1e[m Merge pull request #24 from DeveloperChetram/dev
+[33m28e9ead[m favicon
+[33me76476a[m Merge pull request #23 from DeveloperChetram/dev
+[33m871109a[m fix:mobile cors issue
+[33mf0729e3[m Merge pull request #22 from DeveloperChetram/dev
+[33m76eed03[m first final draft
+[33m720f7ef[m Merge pull request #21 from DeveloperChetram/dev
+[33mf56cc2c[m fix:socket CORS error fix
+[33mc2cd143[m socket server cors
+[33m5fd1b42[m Merge pull request #20 from DeveloperChetram/dev
+[33m3a91c5f[m fix: render api
+[33m4a6458d[m Merge pull request #19 from DeveloperChetram/dev
+[33m0c56ac5[m deployment cookie options in authcontroller fixes
+[33m7649a1a[m Merge pull request #18 from DeveloperChetram/dev
+[33mde95c7d[m deployment cookie options in authcontroller fixes
+[33mfd25169[m Merge pull request #17 from DeveloperChetram/dev
+[33m0537321[m deployment fixes
+[33m8744faf[m Merge pull request #16 from DeveloperChetram/dev
+[33m924d62e[m fix:cors methods and headers fix
+[33ma44f97e[m Merge pull request #15 from DeveloperChetram/dev
+[33m2e3471b[m fix: render api
+[33m0e0acd2[m Merge pull request #14 from DeveloperChetram/dev
+[33mc5aa453[m fix: render api
+[33m9aa85bb[m Merge pull request #13 from DeveloperChetram/dev
+[33mebebb93[m fix:cors error
+[33meab5f81[m Merge pull request #12 from DeveloperChetram/dev
+[33m74f1794[m chore:login page update
+[33m353ffcd[m Merge pull request #11 from DeveloperChetram/dev
+[33m54eeee2[m fix:bug fix
+[33m434e203[m Merge pull request #10 from DeveloperChetram/dev
+[33m9f1de02[m fix:vercel auth.css
+[33m99ced4a[m Merge pull request #9 from DeveloperChetram/dev
+[33m66a2d13[m fix:vercel
+[33m8d13512[m Merge pull request #8 from DeveloperChetram/dev
+[33mac327e5[m fix:vercel import error
+[33m10bec09[m Merge pull request #7 from DeveloperChetram/dev
+[33m551b9b2[m add: vercel configuration for CSR
+[33m2e1fa5e[m feat: characters are chanding
+[33m1d896ed[m Merge pull request #6 from DeveloperChetram/dev
+[33md27dc65[m feat: red credit div color
+[33mb23a968[m error:chat history
+[33m475c807[m error: chat filtering
+[33md760794[m Merge pull request #5 from DeveloperChetram/dev
+[33m3445489[m feat:colors in code
+[33m24d04b8[m Merge pull request #4 from DeveloperChetram/dev
+[33m244ce82[m fix:socket.io
+[33mf475bff[m socket error
+[33md4443c3[m fix:history
+[33md027c1e[m socket client
+[33mef60df5[m feat: post create chat request
+[33mb28257d[m chore: code update
+[33m43b5d55[m Merge pull request #3 from DeveloperChetram/dev
+[33mfd8269b[m style: final first ui
+[33m400b73b[m fix:authentication adn authorization
+[33mc69feec[m fix: redux
+[33m0b2a105[m fix:redux
+[33m4e096fc[m Merge pull request #2 from DeveloperChetram/dev
+[33m64a214f[m feat:add ui
+[33mc5043ac[m chat screen
+[33m4fe9a9c[m Merge pull request #1 from DeveloperChetram/dev
+[33m910c04f[m chore: intialize  frontend
+[33m5650c32[m update pinecone code
+[33m725cfcf[m feat: add pinecone and embedding model

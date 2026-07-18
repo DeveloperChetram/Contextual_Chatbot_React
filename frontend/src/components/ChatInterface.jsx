@@ -120,7 +120,12 @@ const ChatInterface = memo(() => {
   // Close sidebar on outside click (mobile)
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (event.target.closest('.sidebar') || event.target.closest('input') || event.target.closest('textarea')) return;
+      if (
+        event.target.closest('.sidebar') ||
+        event.target.closest('.chat-input-area') ||
+        event.target.closest('input') ||
+        event.target.closest('textarea')
+      ) return;
       if (window.innerWidth < 768 && sidebarOpen) setSidebarOpen(false);
     };
     document.addEventListener('mousedown', handleClickOutside);
@@ -146,6 +151,7 @@ const ChatInterface = memo(() => {
   }, [inputValue, activeChatId, dispatch, socket, character]);
 
   const handleChangeCharacter = useCallback(async (e) => {
+        console.log(e.target.value);
     const newChar = e.target.value;
     setCharacterLoading(true);
     try {

@@ -5,10 +5,13 @@ const agentSchema = new mongoose.Schema(
     user: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
-    //   required: true,
+      required: true,
       index: true,
     },
-
+    isBuiltIn:{
+      type: Boolean,
+      default: false,
+    },
     name: {
       type: String,
       required: true,
@@ -55,7 +58,7 @@ const agentSchema = new mongoose.Schema(
     settings: {
       model: {
         type: String,
-        default: "gemini-2.5-flash",
+        default: "llama-3.3-70b-versatile",
       },
 
       temperature: {

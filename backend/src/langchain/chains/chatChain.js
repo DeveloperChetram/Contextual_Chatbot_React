@@ -1,4 +1,5 @@
-const runAgent = async ({ agent, message }) => {
+const runAgent = async ({ agent, message, callbacks }) => {
+    const config = callbacks ? { callbacks } : {};
     const response = await agent.invoke({
         messages: [
             {
@@ -6,7 +7,7 @@ const runAgent = async ({ agent, message }) => {
                 content: message,
             },
         ],
-    });
+    }, config);
 
     return response;
 };

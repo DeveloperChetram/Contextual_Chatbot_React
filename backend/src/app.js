@@ -40,9 +40,13 @@ app.options('*', (req, res) => res.status(200).end());
 
 app.get('/', (req, res) => res.send('Atomic Server is running'));
 
-app.get('/api/health', (req, res) => {
+app.use('/api/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date().toISOString() });
 });
+
+// Serve uploaded files statically
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'upload')));
 
 app.use('/api', indexRouter);
 app.use('/api/chat', chatRouter);
