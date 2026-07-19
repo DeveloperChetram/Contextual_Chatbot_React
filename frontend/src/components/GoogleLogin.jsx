@@ -16,8 +16,10 @@ const GLogin = () => {
             // console.log("Backend URL:", axios.defaults.baseURL);
             // console.log("Auth Result:", authResult);
             
+            const googleCode = authResult.code || authResult.access_token;
+
             const {data} = await axios.get('auth/google-auth', {
-                params: { code: authResult.access_token },
+                params: { code: googleCode },
             });
             // console.log("Backend Response:", data);
             // console.log("Response has token:", !!data.token);
@@ -86,6 +88,7 @@ const GLogin = () => {
     }
 
     const login = useGoogleLogin({
+        flow: 'auth-code',
         onSuccess: handleGoogleLogin,
         onError: (error) => {
             console.error('Google login error:', error);

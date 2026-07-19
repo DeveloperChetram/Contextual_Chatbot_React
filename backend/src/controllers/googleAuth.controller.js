@@ -12,10 +12,19 @@ const googleAuth = async (req, res) => {
             return res.status(400).json({ message: "No access token provided" });
         }
 
+        let accessToken = code;
+
+        try {
+            const tokenResponse = await oauth2Client.getToken(code);
+            accessToken = tokenResponse?.tokens?.access_token || accessToken;
+        } catch (tokenError) {
+            console.warn("Google auth code exchange failed, trying as access token:", tokenError.message);
+        }
+
         // Use the access token in the Authorization header instead of query params.
         const googleResponse = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo?alt=json', {
             headers: {
-                Authorization: `Bearer ${code}`,
+                Authorization: `Bearer ${accessToken}`,
             },
         });
 
