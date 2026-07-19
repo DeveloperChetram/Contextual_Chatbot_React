@@ -6,8 +6,8 @@ const {syncTools,syncDemoAgents, syncModels} = require('./src/services/agent.ser
 
 connectDB()
 initSocketServer(httpServer)
-// syncTools()
-// syncDemoAgents()
+syncTools()
+syncDemoAgents()
 syncModels()
 
 
