@@ -12,10 +12,12 @@ const googleAuth = async (req, res) => {
             return res.status(400).json({ message: "No access token provided" });
         }
 
-        // Use access token to get user info from Google
-        const googleResponse = await axios.get(
-            `https://www.googleapis.com/oauth2/v3/userinfo?alt=json&access_token=${code}`
-        );
+        // Use the access token in the Authorization header instead of query params.
+        const googleResponse = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo?alt=json', {
+            headers: {
+                Authorization: `Bearer ${code}`,
+            },
+        });
 
         const googleUser = googleResponse.data;
 

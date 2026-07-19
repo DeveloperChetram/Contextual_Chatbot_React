@@ -16,7 +16,9 @@ const GLogin = () => {
             // console.log("Backend URL:", axios.defaults.baseURL);
             // console.log("Auth Result:", authResult);
             
-            const {data} = await axios.get(`auth/google-auth?code=${authResult.access_token}`);
+            const {data} = await axios.get('auth/google-auth', {
+                params: { code: authResult.access_token },
+            });
             // console.log("Backend Response:", data);
             // console.log("Response has token:", !!data.token);
             // console.log("Response has user:", !!data.user);
