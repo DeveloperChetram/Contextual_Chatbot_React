@@ -2,8 +2,10 @@ import axios from 'axios';
 import store from '../redux/store';
 import { logout } from '../redux/reducers/authSlice';
 
-// Debug environment variables in production
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL || "http://localhost:3000/api";
+// Use same-origin API in production so Vercel proxies the request to the backend.
+const BACKEND_URL = import.meta.env.PROD
+  ? '/api'
+  : (import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000/api');
 // console.log('Environment:', import.meta.env.MODE);
 // console.log('Backend URL:', BACKEND_URL);
 // console.log('All env vars:', import.meta.env);
