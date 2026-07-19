@@ -348,7 +348,7 @@ export default function CreateAgentModal({ open, onClose }) {
   return (
     <div
       className={cn(
-        "fixed inset-0 z-[100] flex items-center justify-center transition-opacity px-4",
+        "fixed inset-0 z-[100] flex items-end sm:items-center justify-center transition-opacity px-4 pb-3 sm:pb-0",
         open ? "pointer-events-auto" : "pointer-events-none"
       )}
       style={{ transitionDuration: '400ms', transitionTimingFunction: EASE_OUT }}
@@ -367,7 +367,7 @@ export default function CreateAgentModal({ open, onClose }) {
       <div
         className={cn(
           "relative w-full max-w-2xl shadow-2xl transition-all flex flex-col overflow-hidden",
-          "h-[90vh] sm:h-[560px] max-h-full rounded-2xl bg-[#0a1118] border border-white/10",
+          "h-[78dvh] sm:h-[560px] max-h-[calc(100dvh-1rem)] sm:max-h-full rounded-t-2xl sm:rounded-2xl bg-[#0a1118] border border-white/10",
           open ? "opacity-100 scale-100 translate-y-0" : "opacity-0 scale-95 translate-y-4"
         )}
         style={{

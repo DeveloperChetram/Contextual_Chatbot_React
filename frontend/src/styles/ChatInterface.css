@@ -1249,18 +1249,56 @@ a:hover .icon {
   
   /* Mobile chat input area adjustments */
   .chat-input-area {
-    padding: 20px 16px 16px 16px;
+    padding: 16px 16px 14px 16px;
   }
   
   .input-form {
-    min-width: 250px;
+    min-width: 0;
     max-width: calc(100vw - 32px);
-    padding: 10px 14px;
+    padding: 10px 12px 12px;
   }
   
   .input-wrapper textarea {
     font-size: 16px; /* Prevents zoom on iOS */
     min-height: 24px;
+  }
+
+  .input-footer {
+    flex-wrap: wrap;
+    gap: 10px 8px;
+    align-items: flex-end;
+  }
+
+  .input-footer-left {
+    width: 100%;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .input-footer-left .char-counter {
+    width: 100%;
+    margin-left: 0;
+    text-align: right;
+    order: 10;
+  }
+
+  .input-footer-right {
+    width: 100%;
+    justify-content: flex-end;
+    gap: 8px;
+  }
+
+  .input-footer-right .agent-btn {
+    flex: 1 1 auto;
+    min-width: 0;
+    max-width: calc(100% - 48px);
+  }
+
+  .input-footer-right .send-button {
+    flex: 0 0 40px;
+    width: 40px;
+    height: 40px;
   }
   
   .model-selector {

@@ -1,5 +1,4 @@
 import React, { memo, useRef, useCallback, useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
 import CharacterInfoCard from './CharacterInfoCard';
 import RadialGlowButton from '../ui/radial-glow-button';
 import { useNavigate } from 'react-router-dom';
@@ -27,8 +26,6 @@ const ChatInputForm = memo(({
     const textareaRef = useRef(null);
     const [isRetryActive, setIsRetryActive] = useState(false);
     const [showCharacterInfo, setShowCharacterInfo] = useState(false);
-    // Read custom characters from Redux for the selector
-    const customCharacters = useSelector(s => s.customCharacters.items);
     const navigate = useNavigate();
     // Auto-resize textarea
     useEffect(() => {

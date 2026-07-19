@@ -1,11 +1,13 @@
 import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useNavigate } from 'react-router-dom';
 import { PromptInput } from '../components/ui/ai-chat-input';
 import AgentSidebar, { AgentSidebarToggle } from '../components/ui/AgentSidebar';
 import CreateAgentModal from '../components/ui/CreateAgentModal';
 import ManageAgentsModal from '../components/ui/ManageAgentsModal';
 import { getAgents } from '../redux/actions/agentAction';
 import { cn } from '@/lib/utils';
+import { ArrowLeft } from 'lucide-react';
 
 import ReactMarkdown from 'react-markdown';
 import CodeBlock from '../components/chat/CodeBlock';
@@ -65,7 +67,7 @@ const AgentMessageBubble = ({ msg, isUser }) => {
                 children={msg?.message || ''}
                 components={{
                     code(props) {
-                        const { children, className, node, ...rest } = props;
+                        const { children, className, ...rest } = props;
                         const match = /language-(\w+)/.exec(className || '');
                         if (match) {
                             return (
@@ -87,6 +89,7 @@ const AgentMessageBubble = ({ msg, isUser }) => {
 
 const AgentChat = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { agents, agentChatData, agentStatus } = useSelector((state) => state.agent);
   const [messages, setMessages] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -128,6 +131,17 @@ const AgentChat = () => {
 
   return (
     <div className={`ai-chat-scope agent-page ${messages.length > 0 ? 'chat-active' : 'chat-initial'}`}>
+
+      <div className="flex items-center justify-between gap-3 px-4 pt-4 sm:px-6">
+        <button
+          type="button"
+          onClick={() => navigate('/home')}
+          className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-3 py-2 text-sm text-white/80 transition-colors hover:bg-white/10 hover:text-white"
+        >
+          <ArrowLeft className="size-4" />
+          Back to chat
+        </button>
+      </div>
 
       {/* Focused glow – only around the input, nowhere else. Hides when chat starts. */}
       <div className={`agent-input-glow ${messages.length > 0 ? 'hidden-glow' : ''}`} aria-hidden="true" />
@@ -177,6 +191,10 @@ const AgentChat = () => {
             models={agentModels}
           />
         </div>
+
+        <p className="px-4 text-center text-sm sm:text-base font-medium text-white/80">
+          Hi, I&apos;m Kael by Atomic. How can I help you?
+        </p>
         
         {/* Bottom spacer for centering initially */}
         <div className={`agent-bottom-spacer ${messages.length === 0 ? 'expanded' : 'collapsed'}`} aria-hidden="true" />
