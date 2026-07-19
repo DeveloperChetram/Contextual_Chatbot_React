@@ -136,7 +136,7 @@ export default function ManageAgentsModal({ open, onClose }) {
                     <div className="flex items-center gap-3 overflow-hidden">
                       {agent.thumbnail ? (
                         <img 
-                          src={`${import.meta.env.VITE_BACKEND_URL?.replace('/api', '') || 'http://localhost:3000'}${agent.thumbnail}`} 
+                          src={`${import.meta.env.VITE_BACKEND_URL?.replace('/api', '') || `http://${window.location.hostname}:3000`}${agent.thumbnail}`} 
                           className="w-8 h-8 rounded-full object-cover shrink-0 bg-white/10" 
                           alt={agent.name} 
                         />

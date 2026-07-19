@@ -77,7 +77,10 @@ const ChatInputForm = memo(({
 
     return (
         <section className="chat-input-area">
-            <form className="input-form" onSubmit={onSendMessage}>
+            <form className="input-form" onSubmit={(e) => {
+                textareaRef.current?.blur();
+                onSendMessage(e);
+            }}>
                 <div className="input-wrapper">
                     <textarea
                         ref={textareaRef}
@@ -88,6 +91,7 @@ const ChatInputForm = memo(({
                         onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                                 e.preventDefault();
+                                textareaRef.current?.blur();
                                 onSendMessage(e);
                             }
                         }}

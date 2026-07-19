@@ -80,7 +80,7 @@ const ChatInterface = memo(() => {
   useEffect(() => {
     if (!isAuthenticated) return;
     dispatch(getChats());
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || `http://${window.location.hostname}:3000`;
     const socketUrl = backendUrl.replace('/api', '');
     const newSocket = io(socketUrl, { withCredentials: true });
     setSocket(newSocket);

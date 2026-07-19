@@ -27,8 +27,8 @@ export const PromptInput = React.forwardRef((
   useEffect(() => {
     // if (!isAuthenticated) return;
     // dispatch(getChats());
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000';
-    // const socketUrl = "http://localhost:3000";
+    const backendUrl = import.meta.env.VITE_BACKEND_URL || `http://${window.location.hostname}:3000`;
+    // const socketUrl = `http://${window.location.hostname}:3000`;
     const socketUrl = backendUrl.replace('/api', '');
     const newSocket = io(socketUrl, { withCredentials: true });
     newSocket.on('connect', () => {
@@ -251,6 +251,7 @@ export const PromptInput = React.forwardRef((
     handleValueChange("");
     attachments.forEach((a) => URL.revokeObjectURL(a.url));
     setAttachments([]); setExpanded(false); setIsModelSelectOpen(false);
+    textareaRef.current?.blur();
   };
 
   const cycleEffort = (e) => { e.stopPropagation(); setEffortIndex((prev) => (prev + 1) % efforts.length); };
@@ -350,7 +351,9 @@ export const PromptInput = React.forwardRef((
             <div className="relative">
                           <button type="button" onMouseDown={(e) => e.preventDefault()} onClick={(e) => { e.stopPropagation(); setIsModelSelectOpen((prev) => !prev); }} className={cn("group flex items-center gap-1 rounded-full px-2 py-1 text-foreground/50 transition-all duration-200 outline-none hover:bg-accent/60 hover:text-foreground cursor-default", isModelSelectOpen ? "bg-accent/60 text-foreground" : "")} aria-label={`Select model. Current: ${selectedModel?.name || 'Loading'}`}>
                 {selectedModel?.thumbnail ? (
-                  <img src={`${import.meta.env.VITE_BACKEND_URL?.replace('/api', '') || 'http://localhost:3000'}${selectedModel.thumbnail}`} className="size-4 rounded-full object-cover" alt={selectedModel.name} />
+                  <div className="w-5 h-5 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-zinc-800 border border-white/10 relative -ml-0.5">
+                    <img src={`${import.meta.env.VITE_BACKEND_URL?.replace('/api', '') || `http://${window.location.hostname}:3000`}${selectedModel.thumbnail}`} className="size-4 rounded-full object-cover" alt={selectedModel.name} />
+                  </div>
                 ) : (
                   <ModelIcon model={selectedModel?.name || ''} className="size-3.5 opacity-70 group-hover:opacity-100 transition-opacity" />
                 )}
@@ -438,7 +441,9 @@ export const PromptInput = React.forwardRef((
                       >
                         <span className="flex items-center gap-2 overflow-hidden w-full">
                           {model.thumbnail ? (
-                            <img src={`${import.meta.env.VITE_BACKEND_URL?.replace('/api', '') || 'http://localhost:3000'}${model.thumbnail}`} className="size-4 rounded-full object-cover shrink-0" alt={model.name} />
+                            <div className="w-5 h-5 rounded-full overflow-hidden shrink-0 flex items-center justify-center bg-zinc-800/50 border border-white/5">
+                              <img src={`${import.meta.env.VITE_BACKEND_URL?.replace('/api', '') || `http://${window.location.hostname}:3000`}${model.thumbnail}`} className="size-4 rounded-full object-cover shrink-0" alt={model.name} />
+                            </div>
                           ) : (
                             <ModelIcon
                               model={model.name? model.name: model}

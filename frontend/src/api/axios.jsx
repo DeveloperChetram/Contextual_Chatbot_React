@@ -5,7 +5,7 @@ import { logout } from '../redux/reducers/authSlice';
 // Use same-origin API in production so Vercel proxies the request to the backend.
 const BACKEND_URL = import.meta.env.PROD
   ? '/api'
-  : (import.meta.env.VITE_BACKEND_URL || 'http://localhost:3000/api');
+  : (import.meta.env.VITE_BACKEND_URL || `http://${window.location.hostname}:3000/api`);
 // console.log('Environment:', import.meta.env.MODE);
 // console.log('Backend URL:', BACKEND_URL);
 // console.log('All env vars:', import.meta.env);
