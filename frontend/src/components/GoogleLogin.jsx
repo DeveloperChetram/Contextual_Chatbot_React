@@ -88,7 +88,6 @@ const GLogin = () => {
     }
 
     const login = useGoogleLogin({
-        flow: 'auth-code',
         onSuccess: handleGoogleLogin,
         onError: (error) => {
             console.error('Google login error:', error);
