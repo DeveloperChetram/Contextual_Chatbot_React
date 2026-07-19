@@ -45,6 +45,12 @@ export const PromptInput = React.forwardRef((
       dispatch(setAgentStatus(""));
       dispatch(addAgentChatData({ agent: res.agent, message: `⚠️ ${res.message}`, role: 'agent', isError: true }));
     });
+    
+    newSocket.on('connect_error', (err) => {
+      console.error("Socket Connection Error:", err.message);
+      dispatch(setAgentStatus("Connection Error: " + err.message));
+    });
+
     setSocket(newSocket);
     return () => newSocket.disconnect();
   }, [dispatch]);
