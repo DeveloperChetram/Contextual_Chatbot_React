@@ -132,7 +132,7 @@ const AgentChat = () => {
   return (
     <div className={`ai-chat-scope agent-page ${messages.length > 0 ? 'chat-active' : 'chat-initial'}`}>
 
-      <div className="flex items-center justify-between gap-3 px-4 pt-4 sm:px-6">
+      <div className="absolute left-4 top-4 z-30 sm:left-6 sm:top-6">
         <button
           type="button"
           onClick={() => navigate('/home')}
@@ -162,7 +162,7 @@ const AgentChat = () => {
       <div className="agent-content">
 
       {/* Scrollable Message feed (acts as top flex-spacer) */}
-<div className="agent-message-feed flex flex-col gap-4">
+<div className={`agent-message-feed flex flex-col gap-4 ${messages.length > 0 ? 'agent-message-feed--active' : 'agent-message-feed--idle'}`}>
   {agentChatData?.map((msg, index) => {
     const isUser = msg?.role === 'user';
     return <AgentMessageBubble key={index} msg={msg} isUser={isUser} />;
@@ -171,7 +171,7 @@ const AgentChat = () => {
   {/* Agent Status */}
   {agentStatus && (
     <div className="flex w-full justify-start">
-      <div className="px-4 py-2 text-sm text-white/70 flex items-center gap-3 animate-pulse bg-transparent">
+      <div className="px-4 py-2 text-sm text-white/70 flex items-center gap-3 bg-transparent">
         <div className="size-2 rounded-full bg-primary animate-ping"></div>
         <p className="text-xs font-medium italic">{agentStatus}</p>
       </div>
@@ -181,23 +181,24 @@ const AgentChat = () => {
   <div ref={feedEndRef} />
 </div>
 
-        {/* Prompt input */}
-        <div className="w-full max-w-lg flex justify-center px-4 shrink-0 z-20 relative">
-          <PromptInput 
-            onSubmit={handleSubmit} 
-            placeholder="Ask anything..." 
-            onCreateAgent={() => setIsCreateAgentOpen(true)}
-            onManageAgents={() => setIsManageAgentsOpen(true)}
-            models={agentModels}
-          />
-        </div>
+        <div className={`agent-bottom-stack w-full flex flex-col items-center gap-3 px-4 pb-3 sm:pb-4 shrink-0 z-20 relative ${messages.length === 0 ? 'agent-bottom-stack--centered' : 'agent-bottom-stack--bottom'}`}>
+          {messages.length === 0 && (
+            <p className="text-center text-sm sm:text-base font-medium text-white/80">
+              Hi, I&apos;m Kael by Atomic. How can I help you?
+            </p>
+          )}
 
-        <p className="px-4 text-center text-sm sm:text-base font-medium text-white/80">
-          Hi, I&apos;m Kael by Atomic. How can I help you?
-        </p>
-        
-        {/* Bottom spacer for centering initially */}
-        <div className={`agent-bottom-spacer ${messages.length === 0 ? 'expanded' : 'collapsed'}`} aria-hidden="true" />
+          {/* Prompt input */}
+          <div className="w-full max-w-lg flex justify-center shrink-0 relative">
+            <PromptInput 
+              onSubmit={handleSubmit} 
+              placeholder="Ask anything..." 
+              onCreateAgent={() => setIsCreateAgentOpen(true)}
+              onManageAgents={() => setIsManageAgentsOpen(true)}
+              models={agentModels}
+            />
+          </div>
+        </div>
 
       </div>
     </div>
