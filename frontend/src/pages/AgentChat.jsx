@@ -91,51 +91,34 @@ const AgentChat = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { agents, agentChatData, agentStatus } = useSelector((state) => state.agent);
-  const [messages, setMessages] = useState([]);
+  
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [isCreateAgentOpen, setIsCreateAgentOpen] = useState(false);
   const [isManageAgentsOpen, setIsManageAgentsOpen] = useState(false);
   const feedEndRef = useRef(null);
 
-  // console.log('agents', agents)
   useEffect(() => {
-    console.log("AgentChat useEffect is firing! Dispatching getAgents...");
     dispatch(getAgents()).catch(console.error);
   }, [dispatch]);
 
   const agentModels = useMemo(() => {
-    const fetchedAgents = agents?.map(a => a) || [];
-    return fetchedAgents;
+    return agents?.map(a => a) || [];
   }, [agents]);
 
-  console.log('agentModels', agentModels)
+  // UI FIX: The layout now listens to Redux data, NOT an empty local state array
+  const hasActiveChat = agentChatData && agentChatData.length > 0;
 
-  // Auto-scroll to bottom when new messages arrive
   useEffect(() => {
     feedEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, agentChatData, agentStatus]);
+  }, [agentChatData, agentStatus]);
 
   const handleSubmit = (value, meta) => {
     if (!value.trim() && meta.attachments.length === 0) return;
-    
-    // Add user message to local state
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: Date.now(),
-        role: 'user',
-        content: value,
-        model: meta.model,
-        effort: meta.effort,
-      },
-    ]);
-    
-    // Note: The actual socket emission is handled within PromptInput component
-    // The component emits 'agent-chat' event when socket is available
+    // Input handling happens inside PromptInput
   };
 
   return (
-    <div className={`ai-chat-scope agent-page ${messages.length > 0 ? 'chat-active' : 'chat-initial'}`}>
+    <div className={`ai-chat-scope agent-page ${hasActiveChat ? 'chat-active' : 'chat-initial'}`}>
 
       <div className="absolute left-4 top-4 z-30 sm:left-6 sm:top-6">
         <button
@@ -148,52 +131,39 @@ const AgentChat = () => {
         </button>
       </div>
 
-      {/* Focused glow – only around the input, nowhere else. Hides when chat starts. */}
-      <div className={`agent-input-glow ${messages.length > 0 ? 'hidden-glow' : ''}`} aria-hidden="true" />
+      <div className={`agent-input-glow ${hasActiveChat ? 'hidden-glow' : ''}`} aria-hidden="true" />
 
-      {/* ── Sidebar toggle (top-left) ── */}
-      {/* <AgentSidebarToggle onClick={() => setSidebarOpen(true)} open={sidebarOpen} /> */}
-
-      {/* ── Sidebar panel ── */}
       <AgentSidebar open={sidebarOpen} onClose={() => setSidebarOpen(false)} />
-      
-      {/* ── Create Agent Modal ── */}
       <CreateAgentModal open={isCreateAgentOpen} onClose={() => setIsCreateAgentOpen(false)} />
-
-      {/* ── Manage Agents Modal ── */}
       <ManageAgentsModal open={isManageAgentsOpen} onClose={() => setIsManageAgentsOpen(false)} />
 
-      {/* Page content */}
       <div className="agent-content">
 
-      {/* Scrollable Message feed (acts as top flex-spacer) */}
-<div className={`agent-message-feed flex flex-col gap-4 ${messages.length > 0 ? 'agent-message-feed--active' : 'agent-message-feed--idle'}`}>
-  {agentChatData?.map((msg, index) => {
-    const isUser = msg?.role === 'user';
-    return <AgentMessageBubble key={index} msg={msg} isUser={isUser} />;
-  })}
-  
-  {/* Agent Status */}
-  {agentStatus && (
-    <div className="flex w-full justify-start">
-      <div className="px-4 py-2 text-sm text-white/70 flex items-center gap-3 bg-transparent">
-        <div className="size-2 rounded-full bg-primary animate-ping"></div>
-        <p className="text-xs font-medium italic">{agentStatus}</p>
-      </div>
-    </div>
-  )}
+        <div className={`agent-message-feed flex flex-col gap-4 ${hasActiveChat ? 'agent-message-feed--active' : 'agent-message-feed--idle'}`}>
+          {agentChatData?.map((msg, index) => {
+            const isUser = msg?.role === 'user';
+            return <AgentMessageBubble key={index} msg={msg} isUser={isUser} />;
+          })}
+          
+          {agentStatus && (
+            <div className="flex w-full justify-start">
+              <div className="px-4 py-2 text-sm text-white/70 flex items-center gap-3 bg-transparent">
+                <div className="size-2 rounded-full bg-primary animate-ping"></div>
+                <p className="text-xs font-medium italic">{agentStatus}</p>
+              </div>
+            </div>
+          )}
 
-  <div ref={feedEndRef} />
-</div>
+          <div ref={feedEndRef} />
+        </div>
 
-        <div className={`agent-bottom-stack w-full flex flex-col items-center gap-3 px-4 pb-3 sm:pb-4 shrink-0 z-20 relative ${messages.length === 0 ? 'agent-bottom-stack--centered' : 'agent-bottom-stack--bottom'}`}>
-          {messages.length === 0 && (
+        <div className={`agent-bottom-stack w-full flex flex-col items-center gap-3 px-4 pb-3 sm:pb-4 shrink-0 z-20 relative ${!hasActiveChat ? 'agent-bottom-stack--centered' : 'agent-bottom-stack--bottom'}`}>
+          {!hasActiveChat && (
             <p className="text-center text-sm sm:text-base font-medium text-white/80">
               Hi, I&apos;m Kael by Atomic. How can I help you?
             </p>
           )}
 
-          {/* Prompt input */}
           <div className="w-full max-w-lg flex justify-center shrink-0 relative">
             <PromptInput 
               onSubmit={handleSubmit} 
@@ -207,8 +177,9 @@ const AgentChat = () => {
 
       </div>
     </div>
-    
   );
 };
 
 export default AgentChat;
+
+// export default AgentChat;

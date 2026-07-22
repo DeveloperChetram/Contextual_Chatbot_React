@@ -21,10 +21,21 @@ useEffect(() => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL || `http://${window.location.hostname}:3000`;
     const socketUrl = backendUrl.replace('/api', '');
     
-    // No need for localStorage checks! 
-    // withCredentials: true tells the browser to automatically send the 'token' cookie.
+    // 1. Exact match to ChatInterface logic
+    const token = localStorage.getItem('token');
+    const actualToken = token && token !== 'google-auth-token' ? token : null;
+    
+    if (!actualToken) {
+      console.warn('⚠️ No token found in localStorage for Agent Socket.');
+    }
+    
+    // 2. Exact match to ChatInterface configuration
     const newSocket = io(socketUrl, {
       withCredentials: true,
+      auth: { token: actualToken }, 
+      extraHeaders: {
+        'Authorization': `Bearer ${actualToken}`
+      },
       transports: ['websocket', 'polling'], 
       allowEIO3: true,
       reconnectionAttempts: 5,
@@ -34,7 +45,7 @@ useEffect(() => {
     });
     
     newSocket.on('connect', () => {
-      console.log('✅ Agent socket connected using cookie auth:', newSocket.id);
+      console.log('✅ Agent socket connected:', newSocket.id);
     });
     
     newSocket.on('agent-status', (res) => {
@@ -70,7 +81,6 @@ useEffect(() => {
     setSocket(newSocket);
     return () => newSocket.disconnect();
   }, [dispatch]);
-
   const [expanded, setExpanded] = useState(true);
   const [isSmoothResize, setIsSmoothResize] = useState(false);
   const [localValue, setLocalValue] = useState(defaultValue);
