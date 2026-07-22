@@ -85,14 +85,32 @@ const ChatInterface = memo(() => {
     
     // Get token from localStorage for socket authentication
     const token = localStorage.getItem('token');
-    console.log('🔑 Socket init - Token:', token ? 'present' : 'MISSING');
+    console.log('🔑 Socket init - Token:', token ? token.substring(0, 20) + '...' : 'MISSING');
     console.log('🌐 Connecting to:', socketUrl);
+    
+
+
+    
+    // Debug: Check what's actually in localStorage
+    console.log('📦 localStorage token:', localStorage.getItem('token'));
+    console.log('📦 localStorage user:', localStorage.getItem('user'));
+    
+    // ❌ REMOVE any placeholder token logic
+    // ✅ Use ONLY the actual JWT token from backend
+    const actualToken = token && token !== 'google-auth-token' ? token : null;
+    
+    if (!actualToken) {
+      console.error('💥 CRITICAL: No valid JWT token found for WebSocket authentication!');
+      console.error('🔧 This will cause authentication failures.');
+      // Don't initialize socket without proper authentication
+      return;
+    }
     
     const newSocket = io(socketUrl, {
       withCredentials: true,
-      auth: { token },
+      auth: { token: actualToken }, // Use actual JWT token
       extraHeaders: {
-        'Authorization': token ? `Bearer ${token}` : ''
+        'Authorization': `Bearer ${actualToken}` // Use actual JWT token
       },
       transports: ['websocket', 'polling'], // Prefer WebSocket, fallback to polling
       allowEIO3: true,
@@ -104,12 +122,15 @@ const ChatInterface = memo(() => {
     
     newSocket.on('connect', () => {
       console.log('✅ Socket connected:', newSocket.id);
+      console.log('🔑 Socket auth token:', actualToken.substring(0, 20) + '...');
     });
     
     newSocket.on('connect_error', (err) => {
       console.error('❌ Socket connection error:', err.message);
       if (err.message.includes('CORS')) {
         console.error('💥 CORS issue detected! Check backend CORS configuration.');
+      } else if (err.message.includes('Invalid token')) {
+        console.error('💥 Token validation failed! Check token format.');
       }
     });
     

@@ -44,7 +44,9 @@ const initSocketServer = (httpServer) => {
     try {
       // Try to get token from handshake auth (for production cross-domain)
       let token = socket.handshake.auth?.token || socket.handshake.headers?.authorization?.split(' ')[1];
-      
+
+      console.log('Socket handshake auth:', socket.handshake)
+      console.log('token in socket ', token)
       // Fallback to cookies (for development/localhost)
       if (!token) {
         const cookies = cookie.parse(socket.handshake.headers?.cookie || "");
