@@ -4,7 +4,6 @@ const jwt = require('jsonwebtoken');
 const cookieOptions = require('../utils/cookieOptions');
 const chatModel = require('../models/chat.model');
 const messageModel = require('../models/message.model');
-
 const registerController = async (req, res) => {
     try {
         const { fullName, email, password } = req.body;
@@ -24,7 +23,13 @@ const registerController = async (req, res) => {
 
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '5d' });
         res.cookie('token', token, cookieOptions);
-        res.status(201).json({ message: 'User successfully registered', user: sanitize(user) });
+        
+        // FIX: Added 'token' to the JSON response so frontend can save it to localStorage
+        res.status(201).json({ 
+            message: 'User successfully registered', 
+            user: sanitize(user),
+            token: token 
+        });
     } catch (error) {
         console.error('registerController error:', error.message);
         res.status(500).json({ message: 'Internal server error' });
@@ -44,7 +49,13 @@ const loginController = async (req, res) => {
 
         const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: '5d' });
         res.cookie('token', token, cookieOptions);
-        res.status(200).json({ message: 'User logged in', user: sanitize(user) });
+        
+        // FIX: Added 'token' to the JSON response so frontend can save it to localStorage
+        res.status(200).json({ 
+            message: 'User logged in', 
+            user: sanitize(user),
+            token: token 
+        });
     } catch (error) {
         console.error('loginController error:', error.message);
         res.status(500).json({ message: 'Internal server error' });
@@ -52,10 +63,12 @@ const loginController = async (req, res) => {
 };
 
 const logoutController = async (req, res) => {
-    res.clearCookie('token', cookieOptions);
+    // FIX: Destructure cookieOptions to exclude maxAge, resolving the Express deprecation warning
+    const { maxAge, ...clearOptions } = cookieOptions;
+    
+    res.clearCookie('token', clearOptions);
     res.status(200).json({ message: 'User logged out' });
 };
-
 const getMeController = async (req, res) => {
     res.status(200).json({ user: sanitize(req.user) });
 };

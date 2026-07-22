@@ -54,7 +54,7 @@ const googleAuth = async (req, res) => {
             return res.status(500).json({ message: "Server configuration error" });
         }
 
-        const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "5d" });
+      const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: "5d" });
 
         // Set JWT as httpOnly cookie
         res.cookie("token", token, cookieOptions);
@@ -68,6 +68,8 @@ const googleAuth = async (req, res) => {
                 credits: user.credits,
                 picture: user.picture,
             },
+            // FIX: Added token here so legacy Google auth also gives the frontend the token
+            token: token 
         });
     } catch (error) {
         console.error("Google auth error:", error.message);

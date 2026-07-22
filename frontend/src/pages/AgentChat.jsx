@@ -117,6 +117,8 @@ const AgentChat = () => {
 
   const handleSubmit = (value, meta) => {
     if (!value.trim() && meta.attachments.length === 0) return;
+    
+    // Add user message to local state
     setMessages((prev) => [
       ...prev,
       {
@@ -127,6 +129,9 @@ const AgentChat = () => {
         effort: meta.effort,
       },
     ]);
+    
+    // Note: The actual socket emission is handled within PromptInput component
+    // The component emits 'agent-chat' event when socket is available
   };
 
   return (
@@ -202,6 +207,7 @@ const AgentChat = () => {
 
       </div>
     </div>
+    
   );
 };
 

@@ -29,24 +29,18 @@ const initSocketServer = (httpServer) => {
       allowedHeaders: ["Authorization", "Content-Type", "X-Requested-With"],
       exposedHeaders: ["Set-Cookie"],
     },
-    // Enable connection state recovery for reliability
     connectionStateRecovery: {
       maxDisconnectionDuration: 2 * 60 * 1000,
       skipMiddlewares: true,
     },
-    // Configure transports to prefer WebSocket
     transports: ["websocket", "polling"],
-    // Allow EIO3 protocol
     allowEIO3: true,
   });
 
   io.use(async (socket, next) => {
     try {
-      // Try to get token from handshake auth (for production cross-domain)
       let token = socket.handshake.auth?.token || socket.handshake.headers?.authorization?.split(' ')[1];
 
-      console.log('Socket handshake auth:', socket.handshake)
-      console.log('token in socket ', token)
       // Fallback to cookies (for development/localhost)
       if (!token) {
         const cookies = cookie.parse(socket.handshake.headers?.cookie || "");
@@ -69,11 +63,10 @@ const initSocketServer = (httpServer) => {
   });
 
   io.on("connection", (socket) => {
-    console.log(`User connected: ${socket?.fullName?.firstName}, ID: ${socket.user._id}`);
+    console.log(`User connected: ${socket?.fullName?.firstName || "Unknown"}, ID: ${socket.user._id}`);
 
     socket.on("user-message", async (messagePayload) => {
       try {
-     
         const updatedUser = await userModel.findOne(
           { _id: socket.user._id, credits: { $gt: 0 } },
         ).select("credits");
@@ -122,8 +115,7 @@ const initSocketServer = (httpServer) => {
           {
             role: "user",
             parts: [{
-              text: `Here are relevant memories about the user: ${pineconeData.map((item) => `- ${item.metadata.message}`).join("\n")
-                }`,
+              text: `Here are relevant memories about the user: ${pineconeData.map((item) => `- ${item.metadata.message}`).join("\n")}`,
             }],
           },
         ];
@@ -139,7 +131,7 @@ const initSocketServer = (httpServer) => {
           character: responseCharacter,
         });
 
-        const finalUpdatedUser =  userModel.findOneAndUpdate(
+        const finalUpdatedUser = await userModel.findOneAndUpdate(
           { _id: socket.user._id },
           { $inc: { credits: -1 } },
           { new: true }
@@ -199,14 +191,17 @@ const initSocketServer = (httpServer) => {
  
         const agentConfig = await Agent.findById(agentPayload.agentId);
         if (!agentConfig) {
-            return socket.emit("error", { message: "Agent not found." });
+            // FIX: Changed to agent-error so frontend UI displays the error in chat
+            return socket.emit("agent-error", { 
+              agent: { agentName: "System", agentId: agentPayload.agentId },
+              message: "Agent not found. Please select a valid agent model." 
+            });
         }
  
         const llm = await useGroq({
             apiKey: process.env.GROQ_API_KEY,
             model: agentConfig.settings.model,
             temperature: agentConfig.settings.temperature,
-            // Cap maxTokens to 1024 to avoid hitting TPM limits on responses
             maxTokens: Math.min(agentConfig.settings.maxTokens || 2048, 1024),
         });
  
@@ -217,7 +212,6 @@ const initSocketServer = (httpServer) => {
             systemPrompt: `Your name is ${agentConfig.name}. ${agentConfig.settings.systemPrompt}\n\nIMPORTANT: When using tools, you must output strictly valid JSON. Do not wrap your JSON in parentheses like '({...})'. Output the JSON object directly.`,
         });
 
-        // Helper: retry once on 429 after waiting the retry-after seconds
         const runWithRetry = async () => {
             try {
                 return await runAgent({
@@ -239,12 +233,10 @@ const initSocketServer = (httpServer) => {
                     ]
                 });
             } catch (err) {
-                // If rate limited, wait and retry once
                 if (err?.status === 429) {
                     const retryAfter = parseInt(err?.headers?.get?.('retry-after') || '15', 10);
                     socket.emit("agent-status", { status: `Rate limit hit. Retrying in ${retryAfter}s...` });
                     await new Promise(resolve => setTimeout(resolve, retryAfter * 1000));
-                    // Retry once
                     return await runAgent({
                         agent,
                         tools,
@@ -260,12 +252,11 @@ const initSocketServer = (httpServer) => {
 
         const finalMessageContent = response.messages[response.messages.length - 1].content;
 
-        // Truncate if unusually long (safety net)
         const finalOutput = typeof finalMessageContent === 'string' && finalMessageContent.length > 4000
             ? finalMessageContent.substring(0, 4000) + '\n\n*(Response truncated due to length)*'
             : finalMessageContent;
 
-        socket.emit("agent-status", { status: "" }); // clear status
+        socket.emit("agent-status", { status: "" }); 
         socket.emit("agent-response", {
            agent: {
             agentName: agentConfig.name,
@@ -274,7 +265,7 @@ const initSocketServer = (httpServer) => {
            agentResponse: finalOutput,
         });
          
-        userModel.findOneAndUpdate(
+        await userModel.findOneAndUpdate(
            { _id: socket.user._id },
            { $inc: { credits: -1 } },
            { new: true }
@@ -290,7 +281,7 @@ const initSocketServer = (httpServer) => {
          errorMessage = `Error: ${error.message}`;
        }
        
-       socket.emit("agent-status", { status: "" }); // always clear status on error
+       socket.emit("agent-status", { status: "" }); 
        socket.emit("agent-error", {
          agent: {
            agentName: agentPayload.agentName || "Agent",
@@ -299,7 +290,6 @@ const initSocketServer = (httpServer) => {
          message: errorMessage
        });
      }
-
     });
 
     socket.on("disconnect", () => {

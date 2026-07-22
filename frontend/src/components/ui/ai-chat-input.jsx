@@ -2,62 +2,30 @@ import * as React from "react";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
 import { io } from "socket.io-client";
-import { useDispatch , useSelector} from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { addAgentChatData, setAgentStatus } from "@/redux/reducers/agentSlice";
 
 const SPRING_TRANSITION = "max-width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), height 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)";
 const SMOOTH_HEIGHT_TRANSITION = "max-width 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), height 0.15s ease-out";
-
 
 export const PromptInput = React.forwardRef((
   { onSubmit, placeholder = "Ask anything", className, models = [], efforts = ["Low", "Medium", "Max Effort"], defaultValue = "", value: controlledValue, onChange, maxAttachments = 6, onCreateAgent, onManageAgents },
   ref
 ) => {
 
-  console.log('models', models)
-
   const [socket, setSocket] = useState(null);
-  const [agentResponse, setAgentResponse] = useState(null);
-
-  // __________socket instance__________
-
   const dispatch = useDispatch();
   const agentChatData = useSelector((state) => state.agent.agentChatData);
-  console.log('agent chat data ',agentChatData)
-  useEffect(() => {
-    // if (!isAuthenticated) return;
-    // dispatch(getChats());
+  
+useEffect(() => {
     const backendUrl = import.meta.env.VITE_BACKEND_URL || `http://${window.location.hostname}:3000`;
-    // const socketUrl = `http://${window.location.hostname}:3000`;
     const socketUrl = backendUrl.replace('/api', '');
     
-    // Get token from localStorage for socket authentication
-    const token = localStorage.getItem('token');
-    console.log('🔑 Agent socket init - Token:', token ? token.substring(0, 20) + '...' : 'MISSING');
-    console.log('🌐 Connecting to:', socketUrl);
-    
-    // Debug: Check what's actually in localStorage
-    console.log('📦 localStorage token:', localStorage.getItem('token'));
-    console.log('📦 localStorage user:', localStorage.getItem('user'));
-    
-    // ❌ REMOVE any placeholder token logic
-    // ✅ Use ONLY the actual JWT token from backend
-    const actualToken = token && token !== 'google-auth-token' ? token : null;
-    
-    if (!actualToken) {
-      console.error('💥 CRITICAL: No valid JWT token found for agent socket authentication!');
-      console.error('🔧 This will cause authentication failures.');
-      // Don't initialize socket without proper authentication
-      return;
-    }
-    
+    // No need for localStorage checks! 
+    // withCredentials: true tells the browser to automatically send the 'token' cookie.
     const newSocket = io(socketUrl, {
       withCredentials: true,
-      auth: { token: actualToken }, // Use actual JWT token
-      extraHeaders: {
-        'Authorization': `Bearer ${actualToken}` // Use actual JWT token
-      },
-      transports: ['websocket', 'polling'], // Prefer WebSocket, fallback to polling
+      transports: ['websocket', 'polling'], 
       allowEIO3: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
@@ -66,18 +34,16 @@ export const PromptInput = React.forwardRef((
     });
     
     newSocket.on('connect', () => {
-      console.log('✅ Agent socket connected:', newSocket.id);
-      console.log('🔑 Agent socket auth token:', actualToken.substring(0, 20) + '...');
+      console.log('✅ Agent socket connected using cookie auth:', newSocket.id);
     });
-    
     
     newSocket.on('agent-status', (res) => {
       dispatch(setAgentStatus(res.status));
     });
     
     newSocket.on('agent-response', (res) => {
-      dispatch(setAgentStatus("")); // clear status
-      dispatch(addAgentChatData({ agent: {agentName:res.agent.agentName, agentId: res.agent.agentId}, message: res.agentResponse, role: 'agent' }));
+      dispatch(setAgentStatus("")); 
+      dispatch(addAgentChatData({ agent: {agentName: res.agent.agentName, agentId: res.agent.agentId}, message: res.agentResponse, role: 'agent' }));
     });
     
     newSocket.on('agent-error', (res) => {
@@ -85,13 +51,19 @@ export const PromptInput = React.forwardRef((
       dispatch(addAgentChatData({ agent: res.agent, message: `⚠️ ${res.message}`, role: 'agent', isError: true }));
     });
     
+    newSocket.on('error', (err) => {
+      console.error("❌ Socket backend error:", err.message || err);
+      dispatch(setAgentStatus(""));
+      dispatch(addAgentChatData({ 
+        agent: { agentName: 'System' }, 
+        message: `⚠️ ${err.message || err}`, 
+        role: 'agent', 
+        isError: true 
+      }));
+    });
+
     newSocket.on('connect_error', (err) => {
-      console.error("❌ Agent socket error:", err.message);
-      if (err.message.includes('CORS')) {
-        console.error('💥 CORS issue detected! Check backend CORS configuration.');
-      } else if (err.message.includes('Invalid token')) {
-        console.error('💥 Token validation failed! Check token format.');
-      }
+      console.error("❌ Agent socket connect error:", err.message);
       dispatch(setAgentStatus("Connection Error: " + err.message));
     });
 
@@ -99,28 +71,17 @@ export const PromptInput = React.forwardRef((
     return () => newSocket.disconnect();
   }, [dispatch]);
 
-
-
-  // const socket = io('http://localhost:3000') 
-
-
-
-  // _____________________________________
-
-
   const [expanded, setExpanded] = useState(true);
   const [isSmoothResize, setIsSmoothResize] = useState(false);
   const [localValue, setLocalValue] = useState(defaultValue);
   const [selectedModel, setSelectedModel] = useState(models[0]);
   
-  // Auto-select the first model when models are loaded asynchronously
   useEffect(() => {
     if (!selectedModel && models && models.length > 0) {
       setSelectedModel(models[0]);
     }
   }, [models, selectedModel]);
   
-  console.log('selected modelsl', selectedModel)
   const [effortIndex, setEffortIndex] = useState(1);
   const [isModelSelectOpen, setIsModelSelectOpen] = useState(false);
   const [attachments, setAttachments] = useState([]);
@@ -134,11 +95,7 @@ export const PromptInput = React.forwardRef((
   const recognitionRef = useRef(null);
   const demoIntervalRef = useRef(null);
   const demoTextIntervalRef = useRef(null);
-  const [hoverStyle, setHoverStyle] = useState({
-    opacity: 0,
-    transform: "translateY(0px)",
-    height: 32,
-  });
+  const [hoverStyle, setHoverStyle] = useState({ opacity: 0, transform: "translateY(0px)", height: 32 });
   const [containerHeight, setContainerHeight] = useState(100);
   const [textareaHeight, setTextareaHeight] = useState(52);
   const [isScrolling, setIsScrolling] = useState(false);
@@ -153,7 +110,6 @@ export const PromptInput = React.forwardRef((
   const fileInputRef = useRef(null);
   const thumbRefs = useRef(new Map());
 
-  // console.log(value)
   useEffect(() => { valueRef.current = value; }, [value]);
 
   const updateFades = () => {
@@ -168,7 +124,6 @@ export const PromptInput = React.forwardRef((
   };
 
   const handleValueChange = useCallback((val) => {
-    // console.log(val)
     setIsSmoothResize(true);
     if (!isControlled) setLocalValue(val);
     onChange?.(val);
@@ -280,21 +235,19 @@ export const PromptInput = React.forwardRef((
   };
 
   const handleInputSubmit = () => {
-    console.log("Submitted value:", value);
-    if (socket) {
+    if (socket && value.trim() !== "") {
       socket.emit('agent-chat', {
         message: value,
-        agentId: selectedModel?._id,
-        
-      })
+        agentId: selectedModel?._id || selectedModel, // Fallback if _id is missing
+        agentName: selectedModel?.name || selectedModel
+      });
 
       dispatch(addAgentChatData({
         message: value,
         role: 'user'
-      }))
-
-
+      }));
     }
+
     if (value.trim() === "" && !hasAttachments) return;
     setIsSmoothResize(false);
     onSubmit?.(value, { model: selectedModel, effort: efforts[effortIndex], attachments: attachments.map((a) => a.file) });
@@ -334,16 +287,12 @@ export const PromptInput = React.forwardRef((
     thumbRefs.current.delete(id);
   };
 
-  const showArrow = hasValue; // Show arrow when there's text
+  const showArrow = hasValue; 
   const showStop =  false;
   const showMic =  false;
 
   const onActionButtonClick = (e) => {
     e.preventDefault();
-    // Voice mode disabled
-    // if (isRecording) stopRecording();
-    // else if (hasValue) handleInputSubmit();
-    // else startRecording();
     if (hasValue) handleInputSubmit();
   };
 
@@ -446,7 +395,6 @@ export const PromptInput = React.forwardRef((
                 <div className="my-1 h-px bg-border shrink-0" />
 
                 <div className="relative flex flex-col gap-0.5 max-h-[220px] overflow-y-auto prompt-scrollbar pr-1 -mr-1">
-                  {/*__________________ hover div ______________ */}
                   <div
                     className="absolute left-0 right-1 pointer-events-none transition-all z-0"
                     style={{
@@ -464,7 +412,7 @@ export const PromptInput = React.forwardRef((
 
                     {models.map((model, idx) => (
                       <button
-                        key={model._id? model._id: model}
+                        key={model._id ? model._id : model}
                         type="button"
                         onMouseDown={(e) => e.preventDefault()}
                         onMouseEnter={(e) => {
@@ -496,11 +444,11 @@ export const PromptInput = React.forwardRef((
                             </div>
                           ) : (
                             <ModelIcon
-                              model={model.name? model.name: model}
+                              model={model.name ? model.name : model}
                               className="size-3.5 opacity-85 shrink-0 group-hover:opacity-100 transition-opacity"
                             />
                           )}
-                          <span className="truncate text-left w-full">{model.name?model.name:model}</span>
+                          <span className="truncate text-left w-full">{model.name ? model.name : model}</span>
                         </span>
                       </button>
                     ))}
@@ -524,8 +472,6 @@ export const PromptInput = React.forwardRef((
           <button type="button" onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); }} onClick={onActionButtonClick} aria-label={showArrow ? "Send prompt" : showStop ? "Stop recording" : "Use voice input"} style={{ borderRadius: 9999 }} className="absolute right-2 bottom-2 z-[10] flex h-8 w-8 items-center justify-center bg-primary text-primary-foreground transition-all duration-300 hover:opacity-90 outline-none focus-visible:ring-2 focus-visible:ring-ring cursor-default">
             <span className="relative flex h-full w-full items-center justify-center">
               <span className={cn("absolute inset-0 flex items-center justify-center transition-all duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]", showArrow ? "opacity-100 scale-100 rotate-0  blur-none" : "opacity-100 scale-100 rotate-0   pointer-events-none")}><ArrowUpIcon /></span>
-              {/* <span className={cn("absolute inset-0 flex items-center justify-center transition-all duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]", showMic ? "opacity-100 scale-100 rotate-0 blur-none" : "opacity-0 scale-50 -rotate-45 blur-[1px] pointer-events-none")}><MicIcon /></span> */}
-              {/* <span className={cn("absolute inset-0 flex items-center justify-center transition-all duration-300 ease-[cubic-bezier(0.175,0.885,0.32,1.275)]", showStop ? "opacity-100 scale-100 rotate-0 blur-none" : "opacity-0 scale-50 rotate-45 blur-[1px] pointer-events-none")}><StopIcon /></span> */}
             </span>
           </button>
         </div>
@@ -536,8 +482,10 @@ export const PromptInput = React.forwardRef((
       )}
     </>
   );
-
 });
+
+// The remaining sub-components (AttachmentGalleryModal, MorphingText, Icons, etc.) 
+// can be left exactly as you had them, as there were no bugs inside those visual elements.
 
 function AttachmentGalleryModal({ attachment, originRect, onClose }) {
   const [phase, setPhase] = useState("opening");
@@ -594,7 +542,6 @@ function AttachmentGalleryModal({ attachment, originRect, onClose }) {
   );
 }
 
-
 function MorphingText({ text }) {
   const [width, setWidth] = useState("auto");
   const spanRef = useRef(null);
@@ -623,23 +570,6 @@ function ArrowUpIcon() {
   return (
     <svg width="12" height="12" viewBox="0 0 14 14" fill="none" aria-hidden="true">
       <path d="M7 12V2M7 2L2.5 6.5M7 2L11.5 6.5" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
-
-function MicIcon() {
-  return (
-    <svg width="13" height="13" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-      <rect x="5" y="1" width="4" height="7" rx="2" stroke="currentColor" strokeWidth="1.5" />
-      <path d="M2.75 6.5V7a4.25 4.25 0 0 0 8.5 0v-.5M7 11.25V13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
-    </svg>
-  );
-}
-
-function StopIcon() {
-  return (
-    <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
-      <rect x="3.5" y="3.5" width="7" height="7" rx="1.5" fill="currentColor" />
     </svg>
   );
 }
@@ -711,7 +641,5 @@ function SettingsIcon() {
     </svg>
   );
 }
-
-
 
 PromptInput.displayName = "PromptInput";
