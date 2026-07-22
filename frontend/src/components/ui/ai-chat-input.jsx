@@ -36,7 +36,7 @@ useEffect(() => {
       extraHeaders: {
         'Authorization': `Bearer ${actualToken}`
       },
-      transports: ['websocket', 'polling'], 
+      transports: ['websocket'], 
       allowEIO3: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
