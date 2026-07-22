@@ -42,6 +42,7 @@ const initSocketServer = (httpServer) => {
       // 1. PRIMARY: Extract token securely from the HttpOnly cookie
       const cookies = cookie.parse(socket.handshake.headers?.cookie || "");
       let token = cookies.token;
+      console.log("Socket Auth: Token from cookie:", token ? "Found" + token : "Not Found")
 
       // 2. FALLBACK: If cookie is missing, check auth payload or headers 
       // (This ensures older modules don't break while you transition everything to cookies)
