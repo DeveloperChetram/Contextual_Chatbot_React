@@ -112,7 +112,7 @@ const ChatInterface = memo(() => {
       extraHeaders: {
         'Authorization': `Bearer ${actualToken}` // Use actual JWT token
       },
-      transports: ['websocket', 'polling'], // Prefer WebSocket, fallback to polling
+      transports: ['websocket'], // Prefer WebSocket, fallback to polling
       allowEIO3: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
