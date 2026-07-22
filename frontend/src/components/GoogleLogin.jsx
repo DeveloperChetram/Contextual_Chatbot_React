@@ -45,7 +45,9 @@ const GLogin = () => {
                 // Save token if available
                 if (data.token) {
                     localStorage.setItem('token', data.token)
-                    console.log("Token saved to localStorage")
+                    console.log("Token saved to localStorage:", data.token)
+                } else {
+                    console.warn("No token received from backend, this will cause WebSocket issues")
                 }
 
                 // Update Redux state
