@@ -24,7 +24,7 @@ const initSocketServer = (httpServer) => {
           callback(new Error("Not allowed by CORS"));
         }
       },
-      credentials: true,
+      credentials: true, // This is required to accept cookies
       methods: ["GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"],
       allowedHeaders: ["Authorization", "Content-Type", "X-Requested-With"],
       exposedHeaders: ["Set-Cookie"],
@@ -39,15 +39,20 @@ const initSocketServer = (httpServer) => {
 
   io.use(async (socket, next) => {
     try {
-      let token = socket.handshake.auth?.token || socket.handshake.headers?.authorization?.split(' ')[1];
+      // 1. PRIMARY: Extract token securely from the HttpOnly cookie
+      const cookies = cookie.parse(socket.handshake.headers?.cookie || "");
+      let token = cookies.token;
 
-      // Fallback to cookies (for development/localhost)
+      // 2. FALLBACK: If cookie is missing, check auth payload or headers 
+      // (This ensures older modules don't break while you transition everything to cookies)
       if (!token) {
-        const cookies = cookie.parse(socket.handshake.headers?.cookie || "");
-        token = cookies.token;
+        token = socket.handshake.auth?.token || socket.handshake.headers?.authorization?.split(' ')[1];
       }
       
-      if (!token) return next(new Error("Unauthorized: Token not found"));
+      if (!token) {
+        console.error("Socket Auth Error: No token found in cookies or headers.");
+        return next(new Error("Unauthorized: Token not found"));
+      }
       
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const user = await userModel.findById(decoded.id).select("credits");
@@ -191,7 +196,6 @@ const initSocketServer = (httpServer) => {
  
         const agentConfig = await Agent.findById(agentPayload.agentId);
         if (!agentConfig) {
-            // FIX: Changed to agent-error so frontend UI displays the error in chat
             return socket.emit("agent-error", { 
               agent: { agentName: "System", agentId: agentPayload.agentId },
               message: "Agent not found. Please select a valid agent model." 
