@@ -11,8 +11,10 @@ import GLogin from './components/GoogleLogin';
 import PWAInstallPrompt from './components/PWAInstallPrompt';
 import './styles/PWAInstallPrompt.css';
 import { updatePWAThemeColor } from './utils/pwaThemeUpdater';
+import { SocketProvider } from './contexts/socket.context';
 // import { useGoogleLogin } from "@react-oauth/google";
 // import { useGoogleLogout } from "@react-oauth/google";
+// SocketProvider
 // import PrivateRoute from "./components/PrivateRoute";
 
 function App() {
@@ -51,8 +53,10 @@ function App() {
 
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_GOOGLE_CLIENT_ID}>
-      <MainRoutes />
-      {/* <PWAInstallPrompt /> */}
+      <SocketProvider>
+        <MainRoutes />
+        {/* <PWAInstallPrompt /> */}
+      </SocketProvider>
     </GoogleOAuthProvider>
   );
 };

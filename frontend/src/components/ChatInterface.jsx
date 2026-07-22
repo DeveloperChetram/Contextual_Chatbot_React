@@ -8,7 +8,7 @@ import { addMessage, setModelTyping, setCharacter } from '../redux/reducers/chat
 import { setCustomCharacters } from '../redux/reducers/customCharacterSlice';
 import { logoutUser } from '../redux/actions/authActions';
 import { useAuthState, useChatState } from '../hooks/useOptimizedSelectors.js';
-
+import { useSocket } from "@/context/SocketContext";
 // Split components
 import Sidebar from './chat/Sidebar';
 import ChatHeader from './chat/ChatHeader';
@@ -18,12 +18,13 @@ import ChatInputForm from './chat/ChatInputForm';
 import '../styles/ChatInterface.css';
 
 const ChatInterface = memo(() => {
+  const socket = useSocket(); // Use the socket from context
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthState();
   const { chats, allMessages, activeChatId, loading, creatingChat, isModelTyping, character } = useChatState();
 
-  const [socket, setSocket] = useState(null);
+  // const [socket, setSocket] = useState(null);
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
   const [inputValue, setInputValue] = useState('');
   const [lastPrompt, setLastPrompt] = useState('');
@@ -77,66 +78,45 @@ const ChatInterface = memo(() => {
   }, [isAuthenticated, dispatch]);
 
   // Socket init
+// 1. Pull the global socket from your context at the top of your component
+  // const socket = useSocket(); 
+
   useEffect(() => {
-    if (!isAuthenticated) return;
+    // 2. If the user isn't logged in, or the global socket hasn't mounted yet, do nothing.
+    if (!isAuthenticated || !socket) return;
+
+    // 3. Fetch initial chats
     dispatch(getChats());
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || `http://${window.location.hostname}:3000`;
-    const socketUrl = backendUrl.replace('/api', '');
-    
-    // Get token from localStorage for socket authentication
-    const token = localStorage.getItem('token');
-    console.log('🔑 Socket init - Token:', token ? token.substring(0, 20) + '...' : 'MISSING');
-    console.log('🌐 Connecting to:', socketUrl);
-    
 
+    // 4. Define your message listeners
+    const handleResponse = ({ chatId, response, character: respChar, error }) => {
+      dispatch(setModelTyping({ chatId, isTyping: false }));
+      dispatch(addMessage({
+        chatId,
+        message: {
+          _id: `model-${Date.now()}`,
+          chatId,
+          content: response,
+          role: 'model',
+          character: respChar,
+          error: error === 'quota-exceeded',
+        },
+      }));
+      if (error !== 'quota-exceeded') handleCreditsClick();
+    };
 
-    
-    // Debug: Check what's actually in localStorage
-    console.log('📦 localStorage token:', localStorage.getItem('token'));
-    console.log('📦 localStorage user:', localStorage.getItem('user'));
-    
-    // ❌ REMOVE any placeholder token logic
-    // ✅ Use ONLY the actual JWT token from backend
-    const actualToken = token && token !== 'google-auth-token' ? token : null;
-    
-    if (!actualToken) {
-      console.error('💥 CRITICAL: No valid JWT token found for WebSocket authentication!');
-      console.error('🔧 This will cause authentication failures.');
-      // Don't initialize socket without proper authentication
-      return;
-    }
-    
-    const newSocket = io(socketUrl, {
-      withCredentials: true,
-      auth: { token: actualToken }, // Use actual JWT token
-      extraHeaders: {
-        'Authorization': `Bearer ${actualToken}` // Use actual JWT token
-      },
-      transports: ['websocket'], // Prefer WebSocket, fallback to polling
-      allowEIO3: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      timeout: 20000,
-    });
-    
-    newSocket.on('connect', () => {
-      console.log('✅ Socket connected:', newSocket.id);
-      console.log('🔑 Socket auth token:', actualToken.substring(0, 20) + '...');
-    });
-    
-    newSocket.on('connect_error', (err) => {
-      console.error('❌ Socket connection error:', err.message);
-      if (err.message.includes('CORS')) {
-        console.error('💥 CORS issue detected! Check backend CORS configuration.');
-      } else if (err.message.includes('Invalid token')) {
-        console.error('💥 Token validation failed! Check token format.');
-      }
-    });
-    
-    setSocket(newSocket);
-    return () => newSocket.disconnect();
-  }, [dispatch, isAuthenticated]);
+    const handleError = (error) => console.error('Socket error:', error.message);
+
+    // 5. Attach the listeners to the global socket
+    socket.on('ai-response', handleResponse);
+    socket.on('error', handleError);
+
+    // 6. CLEANUP: Only remove the listeners. NEVER call socket.disconnect() here!
+    return () => {
+      socket.off('ai-response', handleResponse);
+      socket.off('error', handleError);
+    };
+  }, [socket, isAuthenticated, dispatch, handleCreditsClick]);
 
   // Socket events
   useEffect(() => {

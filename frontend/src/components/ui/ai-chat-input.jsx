@@ -1,6 +1,7 @@
 import * as React from "react";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
+import { useSocket } from "@/context/SocketContext";
 import { io } from "socket.io-client";
 import { useDispatch, useSelector } from "react-redux";
 import { addAgentChatData, setAgentStatus } from "@/redux/reducers/agentSlice";
@@ -13,74 +14,94 @@ export const PromptInput = React.forwardRef((
   ref
 ) => {
 
-  const [socket, setSocket] = useState(null);
+  // const [socket, setSocket] = useState(null);
+  const socket = useSocket();
   const dispatch = useDispatch();
   const agentChatData = useSelector((state) => state.agent.agentChatData);
   
+// useEffect(() => {
+//     const backendUrl = import.meta.env.VITE_BACKEND_URL || `http://${window.location.hostname}:3000`;
+//     const socketUrl = backendUrl.replace('/api', '');
+    
+//     // 1. Exact match to ChatInterface logic
+//     const token = localStorage.getItem('token');
+//     const actualToken = token && token !== 'google-auth-token' ? token : null;
+    
+//     if (!actualToken) {
+//       console.warn('⚠️ No token found in localStorage for Agent Socket.');
+//     }
+    
+//     // 2. Exact match to ChatInterface configuration
+//     const newSocket = io(socketUrl, {
+//       withCredentials: true,
+//       auth: { token: actualToken }, 
+//       extraHeaders: {
+//         'Authorization': `Bearer ${actualToken}`
+//       },
+//       transports: ['websocket'], 
+//       allowEIO3: true,
+//       reconnectionAttempts: 5,
+//       reconnectionDelay: 1000,
+//       reconnectionDelayMax: 5000,
+//       timeout: 20000,
+//     });
+    
+//     newSocket.on('connect', () => {
+//       console.log('✅ Agent socket connected:', newSocket.id);
+//     });
+    
+//     newSocket.on('agent-status', (res) => {
+//       dispatch(setAgentStatus(res.status));
+//     });
+    
+//     newSocket.on('agent-response', (res) => {
+//       dispatch(setAgentStatus("")); 
+//       dispatch(addAgentChatData({ agent: {agentName: res.agent.agentName, agentId: res.agent.agentId}, message: res.agentResponse, role: 'agent' }));
+//     });
+    
+//     newSocket.on('agent-error', (res) => {
+//       dispatch(setAgentStatus(""));
+//       dispatch(addAgentChatData({ agent: res.agent, message: `⚠️ ${res.message}`, role: 'agent', isError: true }));
+//     });
+    
+//     newSocket.on('error', (err) => {
+//       console.error("❌ Socket backend error:", err.message || err);
+//       dispatch(setAgentStatus(""));
+//       dispatch(addAgentChatData({ 
+//         agent: { agentName: 'System' }, 
+//         message: `⚠️ ${err.message || err}`, 
+//         role: 'agent', 
+//         isError: true 
+//       }));
+//     });
+
+//     newSocket.on('connect_error', (err) => {
+//       console.error("❌ Agent socket connect error:", err.message);
+//       dispatch(setAgentStatus("Connection Error: " + err.message));
+//     });
+
+//     setSocket(newSocket);
+//     return () => newSocket.disconnect();
+//   }, [dispatch]);
+
 useEffect(() => {
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || `http://${window.location.hostname}:3000`;
-    const socketUrl = backendUrl.replace('/api', '');
-    
-    // 1. Exact match to ChatInterface logic
-    const token = localStorage.getItem('token');
-    const actualToken = token && token !== 'google-auth-token' ? token : null;
-    
-    if (!actualToken) {
-      console.warn('⚠️ No token found in localStorage for Agent Socket.');
-    }
-    
-    // 2. Exact match to ChatInterface configuration
-    const newSocket = io(socketUrl, {
-      withCredentials: true,
-      auth: { token: actualToken }, 
-      extraHeaders: {
-        'Authorization': `Bearer ${actualToken}`
-      },
-      transports: ['websocket'], 
-      allowEIO3: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      timeout: 20000,
-    });
-    
-    newSocket.on('connect', () => {
-      console.log('✅ Agent socket connected:', newSocket.id);
-    });
-    
-    newSocket.on('agent-status', (res) => {
-      dispatch(setAgentStatus(res.status));
-    });
-    
-    newSocket.on('agent-response', (res) => {
+    if (!socket) return; // Wait until socket is ready
+
+    const handleAgentStatus = (res) => dispatch(setAgentStatus(res.status));
+    const handleAgentResponse = (res) => {
       dispatch(setAgentStatus("")); 
-      dispatch(addAgentChatData({ agent: {agentName: res.agent.agentName, agentId: res.agent.agentId}, message: res.agentResponse, role: 'agent' }));
-    });
-    
-    newSocket.on('agent-error', (res) => {
-      dispatch(setAgentStatus(""));
-      dispatch(addAgentChatData({ agent: res.agent, message: `⚠️ ${res.message}`, role: 'agent', isError: true }));
-    });
-    
-    newSocket.on('error', (err) => {
-      console.error("❌ Socket backend error:", err.message || err);
-      dispatch(setAgentStatus(""));
-      dispatch(addAgentChatData({ 
-        agent: { agentName: 'System' }, 
-        message: `⚠️ ${err.message || err}`, 
-        role: 'agent', 
-        isError: true 
-      }));
-    });
+      dispatch(addAgentChatData({ agent: res.agent, message: res.agentResponse, role: 'agent' }));
+    };
 
-    newSocket.on('connect_error', (err) => {
-      console.error("❌ Agent socket connect error:", err.message);
-      dispatch(setAgentStatus("Connection Error: " + err.message));
-    });
+    socket.on('agent-status', handleAgentStatus);
+    socket.on('agent-response', handleAgentResponse);
 
-    setSocket(newSocket);
-    return () => newSocket.disconnect();
-  }, [dispatch]);
+    // Cleanup listeners when component unmounts (don't disconnect the socket itself!)
+    return () => {
+      socket.off('agent-status', handleAgentStatus);
+      socket.off('agent-response', handleAgentResponse);
+    };
+  }, [socket, dispatch]);
   const [expanded, setExpanded] = useState(true);
   const [isSmoothResize, setIsSmoothResize] = useState(false);
   const [localValue, setLocalValue] = useState(defaultValue);
