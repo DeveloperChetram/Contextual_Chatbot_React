@@ -85,14 +85,34 @@ const ChatInterface = memo(() => {
     
     // Get token from localStorage for socket authentication
     const token = localStorage.getItem('token');
+    console.log('🔑 Socket init - Token:', token ? 'present' : 'MISSING');
+    console.log('🌐 Connecting to:', socketUrl);
     
     const newSocket = io(socketUrl, {
       withCredentials: true,
       auth: { token },
       extraHeaders: {
-        'Authorization': `Bearer ${token}`
+        'Authorization': token ? `Bearer ${token}` : ''
+      },
+      transports: ['websocket', 'polling'], // Prefer WebSocket, fallback to polling
+      allowEIO3: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
+    });
+    
+    newSocket.on('connect', () => {
+      console.log('✅ Socket connected:', newSocket.id);
+    });
+    
+    newSocket.on('connect_error', (err) => {
+      console.error('❌ Socket connection error:', err.message);
+      if (err.message.includes('CORS')) {
+        console.error('💥 CORS issue detected! Check backend CORS configuration.');
       }
     });
+    
     setSocket(newSocket);
     return () => newSocket.disconnect();
   }, [dispatch, isAuthenticated]);

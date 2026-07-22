@@ -33,31 +33,46 @@ export const PromptInput = React.forwardRef((
     
     // Get token from localStorage for socket authentication
     const token = localStorage.getItem('token');
+    console.log('🔑 Agent socket init - Token:', token ? 'present' : 'MISSING');
+    console.log('🌐 Connecting to:', socketUrl);
     
     const newSocket = io(socketUrl, {
       withCredentials: true,
       auth: { token },
       extraHeaders: {
-        'Authorization': `Bearer ${token}`
-      }
+        'Authorization': token ? `Bearer ${token}` : ''
+      },
+      transports: ['websocket', 'polling'], // Prefer WebSocket, fallback to polling
+      allowEIO3: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
+      reconnectionDelayMax: 5000,
+      timeout: 20000,
     });
+    
     newSocket.on('connect', () => {
-      console.log('Connected to server' + newSocket.id);
+      console.log('✅ Agent socket connected:', newSocket.id);
     });
+    
     newSocket.on('agent-status', (res) => {
       dispatch(setAgentStatus(res.status));
     });
+    
     newSocket.on('agent-response', (res) => {
       dispatch(setAgentStatus("")); // clear status
       dispatch(addAgentChatData({ agent: {agentName:res.agent.agentName, agentId: res.agent.agentId}, message: res.agentResponse, role: 'agent' }));
     });
+    
     newSocket.on('agent-error', (res) => {
       dispatch(setAgentStatus(""));
       dispatch(addAgentChatData({ agent: res.agent, message: `⚠️ ${res.message}`, role: 'agent', isError: true }));
     });
     
     newSocket.on('connect_error', (err) => {
-      console.error("Socket Connection Error:", err.message);
+      console.error("❌ Agent socket error:", err.message);
+      if (err.message.includes('CORS')) {
+        console.error('💥 CORS issue detected! Check backend CORS configuration.');
+      }
       dispatch(setAgentStatus("Connection Error: " + err.message));
     });
 

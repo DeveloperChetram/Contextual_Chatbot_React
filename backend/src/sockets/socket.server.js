@@ -17,12 +17,27 @@ const initSocketServer = (httpServer) => {
     cors: {
       origin: function (origin, callback) {
         if (!origin) return callback(null, true);
-        if (allowedOrigins.includes(origin)) callback(null, true);
-        else callback(new Error("Not allowed by CORS"));
+        if (allowedOrigins.includes(origin)) {
+          callback(null, true);
+        } else {
+          console.error(`🚫 CORS blocked: ${origin}`);
+          callback(new Error("Not allowed by CORS"));
+        }
       },
       credentials: true,
-      methods: ["GET", "POST", "OPTIONS"],
+      methods: ["GET", "POST", "OPTIONS", "PUT", "PATCH", "DELETE"],
+      allowedHeaders: ["Authorization", "Content-Type", "X-Requested-With"],
+      exposedHeaders: ["Set-Cookie"],
     },
+    // Enable connection state recovery for reliability
+    connectionStateRecovery: {
+      maxDisconnectionDuration: 2 * 60 * 1000,
+      skipMiddlewares: true,
+    },
+    // Configure transports to prefer WebSocket
+    transports: ["websocket", "polling"],
+    // Allow EIO3 protocol
+    allowEIO3: true,
   });
 
   io.use(async (socket, next) => {
