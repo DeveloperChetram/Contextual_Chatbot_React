@@ -33,7 +33,7 @@ const initSocketServer = (httpServer) => {
       maxDisconnectionDuration: 2 * 60 * 1000,
       skipMiddlewares: true,
     },
-    transports: ["websocket"],
+    transports: ["websocket", "polling"],
     allowEIO3: true,
   });
 

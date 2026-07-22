@@ -8,7 +8,7 @@ import { addMessage, setModelTyping, setCharacter } from '../redux/reducers/chat
 import { setCustomCharacters } from '../redux/reducers/customCharacterSlice';
 import { logoutUser } from '../redux/actions/authActions';
 import { useAuthState, useChatState } from '../hooks/useOptimizedSelectors.js';
-import { useSocket } from "@/context/SocketContext";
+import { useSocket } from "../contexts/socket.context.jsx";
 // Split components
 import Sidebar from './chat/Sidebar';
 import ChatHeader from './chat/ChatHeader';

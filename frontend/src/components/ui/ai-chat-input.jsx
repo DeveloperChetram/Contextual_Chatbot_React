@@ -1,7 +1,7 @@
 import * as React from "react";
 import { useRef, useState, useEffect, useCallback } from "react";
 import { cn } from "@/lib/utils";
-import { useSocket } from "@/context/SocketContext";
+import { useSocket } from "../../contexts/socket.context.jsx";
 import { io } from "socket.io-client";
 import { useDispatch, useSelector } from "react-redux";
 import { addAgentChatData, setAgentStatus } from "@/redux/reducers/agentSlice";
@@ -85,21 +85,46 @@ export const PromptInput = React.forwardRef((
 //   }, [dispatch]);
 
 useEffect(() => {
-    if (!socket) return; // Wait until socket is ready
+    if (!socket) {
+      console.warn("⏳ PromptInput is waiting for the global socket...");
+      console.log(socket)
+      return; 
+    }
+    
+    console.log("✅ PromptInput connected to global socket!");
 
-    const handleAgentStatus = (res) => dispatch(setAgentStatus(res.status));
+    const handleAgentStatus = (res) => {
+      dispatch(setAgentStatus(res.status));
+    };
+
     const handleAgentResponse = (res) => {
       dispatch(setAgentStatus("")); 
-      dispatch(addAgentChatData({ agent: res.agent, message: res.agentResponse, role: 'agent' }));
+      dispatch(addAgentChatData({ 
+        agent: { agentName: res.agent.agentName, agentId: res.agent.agentId }, 
+        message: res.agentResponse, 
+        role: 'agent' 
+      }));
+    };
+
+    // You were missing these error listeners!
+    const handleAgentError = (res) => {
+      dispatch(setAgentStatus(""));
+      dispatch(addAgentChatData({ 
+        agent: res.agent, 
+        message: `⚠️ ${res.message}`, 
+        role: 'agent', 
+        isError: true 
+      }));
     };
 
     socket.on('agent-status', handleAgentStatus);
     socket.on('agent-response', handleAgentResponse);
+    socket.on('agent-error', handleAgentError);
 
-    // Cleanup listeners when component unmounts (don't disconnect the socket itself!)
     return () => {
       socket.off('agent-status', handleAgentStatus);
       socket.off('agent-response', handleAgentResponse);
+      socket.off('agent-error', handleAgentError);
     };
   }, [socket, dispatch]);
   const [expanded, setExpanded] = useState(true);
