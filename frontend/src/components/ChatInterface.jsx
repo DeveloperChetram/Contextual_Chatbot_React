@@ -82,7 +82,17 @@ const ChatInterface = memo(() => {
     dispatch(getChats());
     const backendUrl = import.meta.env.VITE_BACKEND_URL || `http://${window.location.hostname}:3000`;
     const socketUrl = backendUrl.replace('/api', '');
-    const newSocket = io(socketUrl, { withCredentials: true });
+    
+    // Get token from localStorage for socket authentication
+    const token = localStorage.getItem('token');
+    
+    const newSocket = io(socketUrl, {
+      withCredentials: true,
+      auth: { token },
+      extraHeaders: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
     setSocket(newSocket);
     return () => newSocket.disconnect();
   }, [dispatch, isAuthenticated]);

@@ -27,10 +27,18 @@ const initSocketServer = (httpServer) => {
 
   io.use(async (socket, next) => {
     try {
-      const cookies = cookie.parse(socket.handshake.headers?.cookie || "");
-      if (!cookies.token) return next(new Error("Unauthorized: Token not found"));
-      const decoded = jwt.verify(cookies.token, process.env.JWT_SECRET);
-
+      // Try to get token from handshake auth (for production cross-domain)
+      let token = socket.handshake.auth?.token || socket.handshake.headers?.authorization?.split(' ')[1];
+      
+      // Fallback to cookies (for development/localhost)
+      if (!token) {
+        const cookies = cookie.parse(socket.handshake.headers?.cookie || "");
+        token = cookies.token;
+      }
+      
+      if (!token) return next(new Error("Unauthorized: Token not found"));
+      
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const user = await userModel.findById(decoded.id).select("credits");
 
       if (!user) return next(new Error("Unauthorized: User not found"));
@@ -38,7 +46,8 @@ const initSocketServer = (httpServer) => {
       socket.user = user;
       next();
     } catch (error) {
-      next(new Error("Invalid token"));
+      console.error("Socket authentication error:", error.message);
+      next(new Error("Invalid token: " + error.message));
     }
   });
 
