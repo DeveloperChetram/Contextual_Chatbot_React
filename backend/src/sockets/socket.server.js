@@ -44,13 +44,27 @@ const initSocketServer = (httpServer) => {
       let token = cookies.token;
       console.log("Socket Auth: Token from cookie:", token ? "Found" + token : "Not Found")
 
-      // 2. FALLBACK: If cookie is missing, check auth payload or headers 
-      // (This ensures older modules don't break while you transition everything to cookies)
-     if (!token) {
-      token = socket.handshake.auth?.token || socket.handshake.headers?.authorization?.split(' ')[1];
-    }
+      // 2. FALLBACK: Check auth payload (sent via `auth` option in client)
       if (!token) {
-        console.error("Socket Auth Error: No token found in cookies or headers.");
+        token = socket.handshake.auth?.token;
+      }
+
+      // 3. FALLBACK: Check Authorization header
+      if (!token && socket.handshake.headers?.authorization) {
+        const parts = socket.handshake.headers.authorization.split(' ');
+        if (parts[0] === 'Bearer' && parts[1]) {
+          token = parts[1];
+        }
+      }
+
+      // 4. FALLBACK: Check query parameter (survives all proxies)
+      if (!token && socket.handshake.query?.token) {
+        token = socket.handshake.query.token;
+        console.log("Socket Auth: Token from query param: Found");
+      }
+
+      if (!token) {
+        console.error("Socket Auth Error: No token found in cookies, auth, headers, or query.");
         return next(new Error("Unauthorized: Token not found"));
       }
       

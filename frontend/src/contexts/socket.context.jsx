@@ -50,8 +50,12 @@ export const SocketProvider = ({ children }) => {
     console.log(`🔌 Socket connecting to: ${BACKEND_ORIGIN} (env: ${import.meta.env.PROD ? 'production' : 'development'})`);
 
     // ── Create the socket ──────────────────────────────────────────────
+    // Add token as query param — guaranteed to survive any proxy (Vercel, etc.)
+    const query = { token: activeToken };
+
     const newSocket = io(BACKEND_ORIGIN, {
       auth: { token: activeToken },
+      query,
       withCredentials: true,
       // Polling-only in production (Vercel can't proxy WebSocket).
       // WebSocket is okay in local dev.
