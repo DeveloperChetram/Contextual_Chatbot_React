@@ -103,8 +103,10 @@ const sanitizeResponse = (data) => {
         // For other objects, recursively sanitize
         const sanitized = {};
         Object.keys(docData).forEach(key => {
-            // Skip sensitive fields
-            if (['passwordHash', 'password', 'secret', 'token', 'refreshToken'].includes(key)) {
+            // Skip sensitive internal fields — but KEEP 'token' because it's
+            // intentionally sent at the top level of auth responses for the
+            // frontend to use in WebSocket authentication.
+            if (['passwordHash', 'password', 'secret'].includes(key)) {
                 return;
             }
 
