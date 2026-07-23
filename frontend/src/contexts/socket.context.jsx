@@ -38,13 +38,16 @@ export const SocketProvider = ({ children }) => {
     console.log('🚀 User authenticated! Connecting socket...');
 
     // ── Pick the right URL for the environment ─────────────────────────
-    // Production: connect DIRECTLY to Render (Vercel cannot proxy WebSocket)
-    // Local: connect to local backend
-    const BACKEND_ORIGIN = import.meta.env.VITE_BACKEND_URL
-      ? import.meta.env.VITE_BACKEND_URL.replace('/api', '')
-      : import.meta.env.PROD
-        ? 'https://contextual-chatbot-react.onrender.com'
-        : `http://${window.location.hostname}:3000`;
+    // Production: connect via Vercel proxy (same-origin → no CORS issues)
+    //   Vercel rewrites /socket.io/* → Render backend
+    // Local: connect directly to the local backend
+    const BACKEND_ORIGIN = import.meta.env.PROD
+      ? '/'  // Same origin — Vercel proxy handles the rest
+      : (import.meta.env.VITE_BACKEND_URL
+          ? import.meta.env.VITE_BACKEND_URL.replace(/\/api\/?$/, '')
+          : `http://${window.location.hostname}:3000`);
+
+    console.log(`🔌 Socket connecting to: ${BACKEND_ORIGIN} (env: ${import.meta.env.PROD ? 'production' : 'development'})`);
 
     // ── Create the socket ──────────────────────────────────────────────
     const newSocket = io(BACKEND_ORIGIN, {
@@ -54,10 +57,11 @@ export const SocketProvider = ({ children }) => {
       // WebSocket is okay in local dev.
       transports: import.meta.env.PROD ? ['polling'] : ['polling', 'websocket'],
       allowEIO3: true,
-      reconnectionAttempts: 10,
-      reconnectionDelay: 1000,
-      reconnectionDelayMax: 5000,
-      timeout: 20000,
+      reconnectionAttempts: Infinity,
+      reconnectionDelay: 2000,
+      reconnectionDelayMax: 10000,
+      randomizationFactor: 0.5,
+      timeout: import.meta.env.PROD ? 45000 : 20000,
     });
 
     // ── Connection lifecycle ───────────────────────────────────────────

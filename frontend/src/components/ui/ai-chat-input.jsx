@@ -313,15 +313,26 @@ useEffect(() => {
         role: 'user'
       }));
     } else {
-      // Socket not connected — show an error in the chat feed
+      const reason = !socket
+        ? 'Socket instance not created'
+        : !connected
+          ? `Socket is ${socket.connected ? 'technically open but marked disconnected' : 'still connecting'}`
+          : 'Unknown';
+
+      // Show a visible error in the chat feed
       dispatch(setAgentStatus(''));
       dispatch(addAgentChatData({
         agent: { agentName: 'System' },
-        message: `⚠️ Connection to AI server lost. Please wait for reconnection or refresh the page.`,
+        message: `⚠️ Could not send message — connection to AI server is not ready (${reason}). Please wait a moment and try again, or refresh the page.`,
         role: 'agent',
         isError: true
       }));
-      console.error('Agent socket not connected. Message not sent:', value);
+      console.error(`Agent socket not connected. ${reason}. Message not sent:`, value);
+
+      // Trigger an immediate reconnection attempt
+      if (socket && !socket.connected) {
+        socket.connect();
+      }
     }
 
     setIsSmoothResize(false);

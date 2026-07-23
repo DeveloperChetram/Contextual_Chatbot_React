@@ -3,11 +3,13 @@ import store from '../redux/store';
 import { logout } from '../redux/reducers/authSlice';
 
 // ── Backend URL ─────────────────────────────────────────────────────────────
-// Production: connect DIRECTLY to Render (Vercel strips auth headers/cookies).
-// Local: connect to the local backend server.
-const BACKEND_URL = import.meta.env.PROD
-  ? 'https://contextual-chatbot-react.onrender.com/api'
-  : (import.meta.env.VITE_BACKEND_URL || `http://${window.location.hostname}:3000/api`);
+// Production: connect DIRECTLY to Render for API calls.
+// The Vite env var takes priority so it can be configured per-deployment.
+const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
+  ? import.meta.env.VITE_BACKEND_URL.replace(/\/+$/, '')  // strip trailing slash
+  : import.meta.env.PROD
+    ? 'https://contextual-chatbot-react.onrender.com/api'
+    : `http://${window.location.hostname}:3000/api`;
 
 export const axiosInstance = axios.create({
   baseURL: BACKEND_URL,
