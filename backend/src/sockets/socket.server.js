@@ -39,42 +39,10 @@ const initSocketServer = (httpServer) => {
 
   io.use(async (socket, next) => {
     try {
-      // 1. PRIMARY: Extract token securely from the HttpOnly cookie
-      const cookies = cookie.parse(socket.handshake.headers?.cookie || "");
-      let token = cookies.token;
-      console.log("Socket Auth: Token from cookie:", token ? "Found" + token : "Not Found")
-
-      // 2. FALLBACK: Check auth payload (sent via `auth` option in client)
-      if (!token) {
-        token = socket.handshake.auth?.token;
-      }
-
-      // 3. FALLBACK: Check Authorization header
-      if (!token && socket.handshake.headers?.authorization) {
-        const parts = socket.handshake.headers.authorization.split(' ');
-        if (parts[0] === 'Bearer' && parts[1]) {
-          token = parts[1];
-        }
-      }
-
-      // 4. FALLBACK: Check query parameter (survives all proxies)
-      if (!token && socket.handshake.query?.token) {
-        token = socket.handshake.query.token;
-        console.log("Socket Auth: Token from query param: Found");
-      }
-
-      if (!token) {
-        console.error("Socket Auth Error: No token found in cookies, auth, headers, or query.");
-        return next(new Error("Unauthorized: Token not found"));
-      }
-      
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      const user = await userModel.findById(decoded.id).select("credits");
-
-      if (!user) return next(new Error("Unauthorized: User not found"));
-
-      socket.user = user;
-      next();
+      // ── DEV MODE: bypass all auth, create a mock user ─────────────────
+      const mockUser = { _id: 'dev-user-id', credits: 999999 };
+      socket.user = mockUser;
+      return next();
     } catch (error) {
       console.error("Socket authentication error:", error.message);
       next(new Error("Invalid token: " + error.message));
