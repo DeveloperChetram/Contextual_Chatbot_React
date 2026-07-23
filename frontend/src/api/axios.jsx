@@ -3,20 +3,25 @@ import store from '../redux/store';
 import { logout } from '../redux/reducers/authSlice';
 
 // ── Backend URL ─────────────────────────────────────────────────────────────
-// Production: connect DIRECTLY to Render for API calls.
-// The Vite env var takes priority so it can be configured per-deployment.
-const BACKEND_URL = import.meta.env.VITE_BACKEND_URL
-  ? import.meta.env.VITE_BACKEND_URL.replace(/\/+$/, '')  // strip trailing slash
-  : import.meta.env.PROD
-    ? 'https://contextual-chatbot-react.onrender.com/api'
-    : `http://${window.location.hostname}:3000/api`;
+// Production: use Vercel proxy (/api → Render). Same-origin = no CORS issues.
+// Local: connect to the local backend server.
+const BACKEND_URL = import.meta.env.PROD
+  ? '/api'
+  : (import.meta.env.VITE_BACKEND_URL
+      ? import.meta.env.VITE_BACKEND_URL.replace(/\/+$/, '')
+      : `http://${window.location.hostname}:3000/api`);
 
 export const axiosInstance = axios.create({
   baseURL: BACKEND_URL,
   withCredentials: true,
 });
 
-// ── Inject JWT into every request (second line of defence) ──────────────────
+// ── Inject JWT into every request ──────────────────────────────────────────
+// Vercel strips Authorization and Cookie headers when proxying to external
+// destinations, so we send the token via multiple channels:
+//   1. Authorization header (standard, works for direct connections)
+//   2. x-auth-token header (custom — Vercel typically forwards unknown headers)
+//   3. Query parameter ?token= (always forwarded by Vercel)
 axiosInstance.interceptors.request.use(
   (config) => {
     const state = store.getState();
@@ -24,6 +29,8 @@ axiosInstance.interceptors.request.use(
 
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
+      config.headers['x-auth-token'] = token;
+      config.params = { ...config.params, token };
     }
 
     return config;
