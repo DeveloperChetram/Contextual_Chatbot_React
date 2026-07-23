@@ -38,10 +38,10 @@ console.log(data)
     }
     console.log('🚀 User authenticated! Connecting socket with HttpOnly cookies...');
 
-    // Production: use the same rewrite path as the API proxy
-    // In production, Vercel rewrites /socket.io/* to the Render backend
+    // Production: use the current origin with Socket.IO default path
+    // Vercel rewrites /socket.io/* to the Render backend
     const socketUrl = import.meta.env.PROD
-      ? '/socket.io'
+      ? '/'
       : (import.meta.env.VITE_BACKEND_URL || `http://${window.location.hostname}:3000`).replace('/api', '');
 
     const newSocket = io(socketUrl, {

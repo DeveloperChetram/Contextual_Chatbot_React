@@ -5,8 +5,8 @@
       "destination": "https://contextual-chatbot-react.onrender.com/api/$1"
     },
     {
-      "source": "/socket.io/(.*)",
-      "destination": "https://contextual-chatbot-react.onrender.com/socket.io/$1"
+      "source": "/socket.io/:match*",
+      "destination": "https://contextual-chatbot-react.onrender.com/socket.io/:match*"
     },
     {
       "source": "/(.*)",
@@ -24,7 +24,7 @@
       ]
     },
     {
-      "source": "/socket.io/(.*)",
+      "source": "/socket.io/:match*",
       "headers": [
         {
           "key": "Access-Control-Allow-Origin",

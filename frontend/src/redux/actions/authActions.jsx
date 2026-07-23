@@ -14,9 +14,10 @@ export const registerUser = async (dispatch, data) => {
   dispatch(registerRequest());
   try {
     const response = await axios.post('/auth/register', data);
-    dispatch(registerSuccess(response.data.user));
+    dispatch(registerSuccess(response.data));
     dispatch(clearChatStore());
     localStorage.setItem('user', JSON.stringify(response.data.user));
+    if (response.data.token) localStorage.setItem('token', response.data.token);
     return { success: true };
   } catch (error) {
     const errorMessage = error.response?.data?.message || error.message || 'Something went wrong';
@@ -30,9 +31,10 @@ export const loginUser = async (dispatch, data) => {
   try {
     const response = await axios.post('/auth/login', data);
     console.log('loginUser response:', response.data); // Debugging line
-    dispatch(loginSuccess(response.data.user));
+    dispatch(loginSuccess(response.data));
     dispatch(clearChatStore());
     localStorage.setItem('user', JSON.stringify(response.data.user));
+    if (response.data.token) localStorage.setItem('token', response.data.token);
     return { success: true };
   } catch (error) {
     const errorMessage = error.response?.data?.message || error.message || 'Something went wrong';
@@ -62,7 +64,7 @@ export const logoutUser = () => async (dispatch) => {
 export const getCurrentUser = async (dispatch) => {
   try {
     const response = await axios.get('/auth/me');
-    dispatch(loginSuccess(response.data.user));
+    dispatch(loginSuccess(response.data));
     localStorage.setItem('user', JSON.stringify(response.data.user));
     return { success: true };
   } catch (error) {

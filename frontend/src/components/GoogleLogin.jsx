@@ -50,8 +50,8 @@ const GLogin = () => {
                     console.warn("No token received from backend, this will cause WebSocket issues")
                 }
 
-                // Update Redux state
-                dispatch(loginSuccess(loginPayload))
+                // Update Redux state — pass both user and token
+                dispatch(loginSuccess({ user: loginPayload, token: data.token }))
 
                 console.log("Redux state updated, navigating to /home")
 
