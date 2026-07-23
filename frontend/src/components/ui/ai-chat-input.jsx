@@ -15,7 +15,7 @@ export const PromptInput = React.forwardRef((
 ) => {
 
   // const [socket, setSocket] = useState(null);
-  const socket = useSocket();
+  const { socket, connected } = useSocket();
   const dispatch = useDispatch();
   const agentChatData = useSelector((state) => state.agent.agentChatData);
   
@@ -291,10 +291,20 @@ useEffect(() => {
   };
 
   const handleInputSubmit = () => {
-    if (socket && value.trim() !== "") {
+    if (value.trim() === "") {
+      if (!hasAttachments) return;
+      setIsSmoothResize(false);
+      onSubmit?.(value, { model: selectedModel, effort: efforts[effortIndex], attachments: attachments.map((a) => a.file) });
+      handleValueChange("");
+      attachments.forEach((a) => URL.revokeObjectURL(a.url));
+      setAttachments([]); setExpanded(false);
+      return;
+    }
+
+    if (socket && connected) {
       socket.emit('agent-chat', {
         message: value,
-        agentId: selectedModel?._id || selectedModel, // Fallback if _id is missing
+        agentId: selectedModel?._id || selectedModel,
         agentName: selectedModel?.name || selectedModel
       });
 
@@ -302,9 +312,18 @@ useEffect(() => {
         message: value,
         role: 'user'
       }));
+    } else {
+      // Socket not connected — show an error in the chat feed
+      dispatch(setAgentStatus(''));
+      dispatch(addAgentChatData({
+        agent: { agentName: 'System' },
+        message: `⚠️ Connection to AI server lost. Please wait for reconnection or refresh the page.`,
+        role: 'agent',
+        isError: true
+      }));
+      console.error('Agent socket not connected. Message not sent:', value);
     }
 
-    if (value.trim() === "" && !hasAttachments) return;
     setIsSmoothResize(false);
     onSubmit?.(value, { model: selectedModel, effort: efforts[effortIndex], attachments: attachments.map((a) => a.file) });
     handleValueChange("");

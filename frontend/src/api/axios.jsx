@@ -2,25 +2,38 @@ import axios from 'axios';
 import store from '../redux/store';
 import { logout } from '../redux/reducers/authSlice';
 
-// Use same-origin API in production so Vercel proxies the request to the backend.
+// ── Backend URL ─────────────────────────────────────────────────────────────
+// Production: connect DIRECTLY to Render (Vercel strips auth headers/cookies).
+// Local: connect to the local backend server.
 const BACKEND_URL = import.meta.env.PROD
-  ? '/api'
+  ? 'https://contextual-chatbot-react.onrender.com/api'
   : (import.meta.env.VITE_BACKEND_URL || `http://${window.location.hostname}:3000/api`);
-// console.log('Environment:', import.meta.env.MODE);
-// console.log('Backend URL:', BACKEND_URL);
-// console.log('All env vars:', import.meta.env);
 
 export const axiosInstance = axios.create({
   baseURL: BACKEND_URL,
   withCredentials: true,
-  // timeout: 10000, // 10 second timeout
 });
 
+// ── Inject JWT into every request (second line of defence) ──────────────────
+axiosInstance.interceptors.request.use(
+  (config) => {
+    const state = store.getState();
+    const token = state.auth?.token || localStorage.getItem('token');
+
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`;
+    }
+
+    return config;
+  },
+  (error) => Promise.reject(error)
+);
+
+// ── Auto-logout on 401 / 404 ────────────────────────────────────────────────
 axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response && (error.response.status === 401 || error.response.status === 404)) {
-      // Don't logout for credits endpoint as it's used for token validation
       if (!error.config.url.includes('/credits')) {
         store.dispatch(logout());
         localStorage.removeItem('user');

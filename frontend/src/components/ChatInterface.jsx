@@ -18,7 +18,7 @@ import ChatInputForm from './chat/ChatInputForm';
 import '../styles/ChatInterface.css';
 
 const ChatInterface = memo(() => {
-  const socket = useSocket(); // Use the socket from context
+  const { socket } = useSocket(); // Use the socket from context
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuthState();
