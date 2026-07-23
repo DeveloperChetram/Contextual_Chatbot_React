@@ -46,10 +46,9 @@ const initSocketServer = (httpServer) => {
 
       // 2. FALLBACK: If cookie is missing, check auth payload or headers 
       // (This ensures older modules don't break while you transition everything to cookies)
-      if (!token) {
-        token = socket.handshake.auth?.token || socket.handshake.headers?.authorization?.split(' ')[1];
-      }
-      
+     if (!token) {
+      token = socket.handshake.auth?.token || socket.handshake.headers?.authorization?.split(' ')[1];
+    }
       if (!token) {
         console.error("Socket Auth Error: No token found in cookies or headers.");
         return next(new Error("Unauthorized: Token not found"));

@@ -133,7 +133,10 @@ const googleCredentialAuth = async (req, res) => {
                 updatedAt: user.updatedAt,
             },
             token: token, // Include token in response for WebSocket authentication
+
         });
+
+        console.log("Google credential auth successful for user:", token);
     } catch (error) {
         console.error("Google credential auth error:", error.message);
         res.status(500).json({ message: "Authentication failed", error: error.message });

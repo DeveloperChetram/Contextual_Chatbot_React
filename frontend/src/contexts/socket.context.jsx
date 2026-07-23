@@ -18,24 +18,38 @@ export const SocketProvider = ({ children }) => {
   // We only care if the app considers the user logged in. 
   // The browser will handle the cookie securely!
   const isAuthenticated = useSelector((state) => state.auth.isAuthenticated);
+const reduxToken = useSelector((state) => state.auth.token);
+const data = useSelector((state) => state.auth);
+console.log(data)
 
   useEffect(() => {
     // If Redux says we aren't logged in yet, wait.
+
+    const activeToken = reduxToken || localStorage.getItem('token');
+
     if (!isAuthenticated) {
       console.log('⏳ Waiting for user to be authenticated...');
       return;
     }
 
+    if (!activeToken) {
+      console.warn("⚠️ User is authenticated in Redux, but no token string was found.");
+      return;
+    }
     console.log('🚀 User authenticated! Connecting socket with HttpOnly cookies...');
 
-    const backendUrl = import.meta.env.VITE_BACKEND_URL || `http://${window.location.hostname}:3000`;
-    const socketUrl = backendUrl.replace('/api', '');
+    // Production: use the same rewrite path as the API proxy
+    // In production, Vercel rewrites /socket.io/* to the Render backend
+    const socketUrl = import.meta.env.PROD
+      ? '/socket.io'
+      : (import.meta.env.VITE_BACKEND_URL || `http://${window.location.hostname}:3000`).replace('/api', '');
 
     const newSocket = io(socketUrl, {
-      // 🛑 THIS is the magic flag. It tells the browser to attach the HttpOnly cookie.
-      withCredentials: true, 
-      // 🛑 Polling MUST be first for cross-origin cookies to attach during the handshake.
-      transports: ['polling', 'websocket'], 
+      auth: {
+        token: activeToken
+      },
+      withCredentials: true,
+      transports: ['polling', 'websocket'],
       allowEIO3: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,

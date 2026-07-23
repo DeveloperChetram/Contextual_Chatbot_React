@@ -29,6 +29,7 @@ export const loginUser = async (dispatch, data) => {
   dispatch(loginRequest());
   try {
     const response = await axios.post('/auth/login', data);
+    console.log('loginUser response:', response.data); // Debugging line
     dispatch(loginSuccess(response.data.user));
     dispatch(clearChatStore());
     localStorage.setItem('user', JSON.stringify(response.data.user));
